@@ -3,7 +3,7 @@ API NestJS (architecture hexagonale / DDD) qui synchronise mes données Garmin C
 
 ## Démarrage local
 
-Prérequis : Node 24 (voir `.nvmrc`) et Docker.
+Prérequis : Node 26 (voir `.nvmrc`) et Docker.
 
 ```bash
 npm install
