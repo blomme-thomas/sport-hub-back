@@ -8,7 +8,7 @@ sport-hub-back est une API NestJS (architecture hexagonale / DDD) qui synchronis
 
 ## État actuel
 
-**Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS 12 (ES modules), configuration validée par zod (`src/core/config/`), Prisma 7 avec un schéma vide, route `GET /api/health`, Swagger (`/swagger`), tests Vitest, CI GitHub Actions et garde-fou d'architecture (`npm run deps:check`). `src/modules/` est vide : l'arborescence par module décrite dans `instructions/` est une **convention cible** à appliquer dès le premier module ; le reste (stack, commandes, configuration, tests) décrit l'existant.
+**Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS 12 (ES modules), configuration validée par zod (`src/core/config/`), Prisma 7 avec un schéma vide, route `GET /api/health`, Swagger (`/swagger`), format d'erreur uniforme RFC 9457 Problem Details (filtre global `src/core/filters/`, middleware de correlation id `src/core/middlewares/`, `DomainError` dans `src/shared/domain/` ; voir `docs/technique/erreurs-api.md`), tests Vitest, CI GitHub Actions et garde-fou d'architecture (`npm run deps:check`). `src/modules/` est vide : l'arborescence par module décrite dans `instructions/` est une **convention cible** à appliquer dès le premier module ; le reste (stack, commandes, configuration, tests) décrit l'existant.
 
 ## Règles d'architecture : `instructions/`
 

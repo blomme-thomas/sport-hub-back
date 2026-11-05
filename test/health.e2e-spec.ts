@@ -25,6 +25,23 @@ describe('Health (e2e)', () => {
       .expect({ status: 'ok' });
   });
 
+  it('GET /api/health expose le header X-Correlation-Id', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/health')
+      .expect(200);
+
+    expect(res.headers['x-correlation-id']).toEqual(expect.any(String));
+  });
+
+  it('GET /api/inexistant renvoie 404 en application/problem+json', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/inexistant')
+      .expect(404);
+
+    expect(res.headers['content-type']).toMatch(/application\/problem\+json/);
+    expect(res.body.code).toBe('NOT_FOUND');
+  });
+
   it('GET /health sans préfixe renvoie 404', () => {
     return request(app.getHttpServer()).get('/health').expect(404);
   });

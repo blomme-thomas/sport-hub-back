@@ -4,7 +4,7 @@ applyTo: '**'
 ---
 # Conventions du dépôt (sport-hub-back)
 
-> **Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (schéma vide), route `/api/health`, tests, CI et garde-fou d'architecture. Il n'y a pas encore de module dans `src/modules/` : l'arborescence par module ci-dessous est une **convention cible** à appliquer dès le premier module. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
+> **Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (schéma vide), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Il n'y a pas encore de module dans `src/modules/` : l'arborescence par module ci-dessous est une **convention cible** à appliquer dès le premier module. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
 
 ## Stack
 
@@ -50,9 +50,16 @@ src/modules/<module>/
 ```
 
 Transversal (hors modules) :
-- `src/core/` : infrastructure partagée, à plat (pas de sous-dossier `domain`/`infrastructure` imbriqué) — `src/core/config/` (`AppConfigModule`, un namespace par domaine ; voir §Configuration), `src/core/health/` (route `GET /health`), `src/core/prisma/` (`PrismaModule`/`PrismaService`, client généré dans `src/core/prisma/generated`, ignoré par Git), `src/core/cache/` (`CacheModule` Redis, optionnel), `src/core/http/` (wrapper HTTP générique, ex. `@nestjs/axios` configuré, réutilisé par les adapters ayant besoin d'appels sortants), `src/core/filters/` (filtres d'exceptions globaux).
-- `src/app.setup.ts` : `configureApp(app)` applique les réglages HTTP communs (préfixe global, `ValidationPipe`, CORS, niveaux de log) ; utilisé par `main.ts` **et** par les tests e2e pour qu'ils voient les mêmes routes qu'en production. Swagger est initialisé dans `main.ts` (`/swagger`, hors préfixe).
-- `src/shared/domain/` : **classes de base réellement partagées** (du vrai code, pas des templates) : `aggregate-root.ts` (collecte des Domain Events via `addDomainEvent`/`pullDomainEvents`), `entity.ts` (id + `equals` par identité), `value-object.ts` (`equals` par valeur), `domain-error.ts`. Les Entities/Aggregate Roots/Value Objects concrets étendent ces bases — à créer dès le premier module.
+- `src/core/` : infrastructure partagée, à plat (pas de sous-dossier `domain`/`infrastructure` imbriqué) — `src/core/config/` (`AppConfigModule`, un namespace par domaine ; voir §Configuration), `src/core/health/` (route `GET /health`, soit `/api/health` avec le préfixe global), `src/core/prisma/` (`PrismaModule`/`PrismaService`, client généré dans `src/core/prisma/generated`, ignoré par Git), `src/core/cache/` (`CacheModule` Redis, optionnel), `src/core/http/` (wrapper HTTP générique, ex. `@nestjs/axios` configuré, réutilisé par les adapters ayant besoin d'appels sortants), `src/core/filters/` (filtre d'exceptions global `ProblemDetailsExceptionFilter`, table `code → statut HTTP`, factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`), `src/core/middlewares/` (middleware de correlation id, `AsyncLocalStorage`).
+- `src/app.setup.ts` : `configureApp(app)` applique les réglages HTTP communs (préfixe global, middleware de correlation id, `ValidationPipe` avec `exceptionFactory`, filtre global d'erreurs, CORS avec `X-Correlation-Id` exposé, niveaux de log) ; utilisé par `main.ts` **et** par les tests e2e pour qu'ils voient les mêmes routes qu'en production. Swagger est initialisé dans `main.ts` (`/swagger`, hors préfixe) via `buildOpenApiDocument` de `src/swagger.setup.ts`, ce qui rend l'OpenAPI testable.
+- `src/shared/domain/` : **classes de base réellement partagées** (du vrai code, pas des templates). Existant : `domain-error.ts` (classe abstraite portant un `code` stable, sans dépendance NestJS ni HTTP). **À créer avec le premier module qui en a besoin** : `aggregate-root.ts` (collecte des Domain Events via `addDomainEvent`/`pullDomainEvents`), `entity.ts` (id + `equals` par identité), `value-object.ts` (`equals` par valeur). Les Entities/Aggregate Roots/Value Objects concrets étendent ces bases.
+
+### Erreurs HTTP
+
+- Toute erreur de l'API est renvoyée au format **RFC 9457 Problem Details** (`application/problem+json`) avec les extensions `code` (stable), `errors[]` (validation) et `correlationId` (aussi dans le header `X-Correlation-Id`). Aucune route ne formate elle-même une erreur HTTP : elle lève une `DomainError`, une `HttpException` ou laisse la validation du DTO échouer, le filtre global traduit.
+- Une Business Error étend `DomainError` et déclare `readonly code` (UPPER_SNAKE_CASE, préfixé par le concept métier). Son statut HTTP est déclaré dans la table centralisée `DOMAIN_ERROR_STATUS` (`src/core/filters/error-status.table.ts`) ; un code absent de la table donne un 422 et un warn. Un `code` est un contrat public : il ne se renomme pas.
+- Chaque route documente ses erreurs avec `@ApiProblemResponses(...statuts)`.
+- Détail, exemples et marche à suivre : `docs/technique/erreurs-api.md`.
 
 Un module Nest n'importe pas le Domain d'un autre module sans passer par un contrat explicite ; le transverse va dans `src/core` ou `src/shared` (cf. `04`).
 

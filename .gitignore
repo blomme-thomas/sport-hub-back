@@ -26,3 +26,6 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+# Plans d'architecte écrits par ship-feature (.claude/plans/<n°-issue>.md)
+/.claude/plans/

@@ -35,6 +35,8 @@ applyTo: 'src/modules/*/domain/entities/**,src/modules/*/domain/value-objects/**
 ## Business Errors
 - Exprimées en langage métier (`OrderAlreadyShipped`), distinctes des Technical Errors.
 - Le Domain les signale (exception ou type résultat selon la convention du dépôt) ; la traduction (code HTTP, message) se fait aux frontières (`08`).
+- Le **message** d'une Business Error est renvoyé tel quel au client (champ `detail` de la réponse Problem Details) : il doit être sûr, en langage métier, sans donnée interne, token, corps de réponse d'un système externe ni détail technique. Les détails techniques vont dans `cause` (jamais renvoyée) ou dans les logs.
+- Une Business Error étend `DomainError` (`src/shared/domain/domain-error.ts`) et porte un `code` stable (UPPER_SNAKE_CASE), contrat public lu par le front : il ne se renomme pas (voir `11` §Erreurs HTTP).
 
 ## Dans ce dépôt
 - Entities dans `domain/entities/*.entity.ts`, Value Objects dans `domain/value-objects/*.vo.ts` : classes TS pures, **sans décorateur Prisma** (le modèle de persistance est généré par Prisma à partir de `prisma/schema.prisma`, mappé via `infrastructure/persistence/prisma/*.mapper.ts`, voir `11`/`06`).
