@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';
 import appConfig, { type AppConfig } from './core/config/app/app.config.js';
+import { buildOpenApiDocument } from './swagger.setup.js';
 
 async function bootstrap(): Promise<void> {
   // abortOnError: false pour que l'échec (ex. configuration invalide) passe par le catch ci-dessous.
@@ -13,12 +14,7 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get<AppConfig>(appConfig.KEY);
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle(config.name)
-    .setVersion(process.env.npm_package_version ?? '0.0.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('swagger', app, document);
+  SwaggerModule.setup('swagger', app, buildOpenApiDocument(app));
 
   await app.listen(config.port, config.host);
 }
