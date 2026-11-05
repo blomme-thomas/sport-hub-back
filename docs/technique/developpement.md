@@ -2,7 +2,7 @@
 
 ## Prérequis
 
-- Node.js 24 (version fixée dans `.nvmrc`).
+- Node.js 26 (version fixée dans `.nvmrc`).
 - npm.
 - Docker (pour la base PostgreSQL locale via `docker-compose.yml`).
 
