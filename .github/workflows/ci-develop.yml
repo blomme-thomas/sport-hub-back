@@ -1,0 +1,82 @@
+name: ci-develop
+
+# Validation complète quand une PR est fusionnée dans develop : tests, e2e, build.
+on:
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: ci-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Valeur factice : prisma generate lit DATABASE_URL (prisma.config.ts) sans se connecter.
+  DATABASE_URL: postgresql://sporthub:sporthub@localhost:5432/sporthub_test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Tests unitaires
+        run: npm run test
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sporthub
+          POSTGRES_PASSWORD: sporthub
+          POSTGRES_DB: sporthub_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sporthub"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://sporthub:sporthub@localhost:5432/sporthub_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Pas de migration tant qu'il n'y a aucun modèle.
+      - name: Migrations
+        run: |
+          if [ -d prisma/migrations ]; then
+            npx prisma migrate deploy
+          else
+            echo "Aucune migration à appliquer."
+          fi
+      - name: Tests e2e
+        run: npm run test:e2e
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Build
+        run: npm run build

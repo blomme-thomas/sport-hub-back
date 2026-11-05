@@ -1,0 +1,11 @@
+// Schéma Prisma de sport-hub-back. Aucun modèle pour l'instant : ils arrivent avec le premier module.
+// L'URL de connexion est lue dans prisma.config.ts (DATABASE_URL).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/core/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
