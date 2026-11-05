@@ -1,0 +1,180 @@
+---
+description: 'Conventions concrètes de sport-hub-back : stack, arborescence par module, nommage, templates de code, spécificités Garmin/IA. Source de vérité citée par tous les autres fichiers (« 11 »).'
+applyTo: '**'
+---
+# Conventions du dépôt (sport-hub-back)
+
+> **Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (schéma vide), route `/api/health`, tests, CI et garde-fou d'architecture. Il n'y a pas encore de module dans `src/modules/` : l'arborescence par module ci-dessous est une **convention cible** à appliquer dès le premier module. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
+
+## Stack
+
+- NestJS (TypeScript) — monolithe modulaire, un module Nest = un Bounded Context.
+- Persistance : Prisma + PostgreSQL.
+- Cache : Redis, **optionnel**, introduit seulement sur besoin réel (`06`).
+- IA : Claude (Anthropic SDK, `@anthropic-ai/sdk`) pour la génération de séances d'entraînement.
+- Source de données externe : Garmin Connect (sync des activités).
+- Tests : Vitest (+ supertest pour les e2e).
+- Qualité : oxlint (lint typé), Prettier (format), `dependency-cruiser` (règles de couches, `npm run deps:check`).
+- Modules ES (`"type": "module"`, TypeScript `nodenext`) : les imports relatifs s'écrivent **avec l'extension `.js`** (ex. `import { X } from './x.js'`), même si le fichier source est en `.ts`.
+- Configuration : `@nestjs/config` avec validation par **zod** (voir §Configuration).
+- Authentification : **aucune** — usage strictement local, un seul utilisateur (cf. `08`).
+
+## Arborescence par module
+
+```
+src/modules/<module>/
+  domain/
+    entities/<name>.entity.ts                 # Entity *ou* Aggregate Root (Aggregate Root = Entity qui étend AggregateRoot)
+    value-objects/<name>.vo.ts
+    events/<name>.event.ts                    # Domain Event, participe passé
+    errors/<name>.error.ts                    # Business Error, étend shared DomainError
+    services/<name>.service.ts                # Domain Service — dernier recours (cf. 02)
+    specifications/<name>.specification.ts    # Specification/Policy — si réutilisée/composée
+    factories/<name>.factory.ts               # Factory — seulement si extraite d'une Entity
+    ports/
+      outbound/<name>.repository.port.ts      # interface I<Name>Repository + token Symbol
+      outbound/<name>.port.ts                 # ex: garmin-connect-client.port.ts, workout-ai-generator.port.ts
+  application/
+    use-cases/<verb-noun>.use-case.ts         # @Injectable(), execute(...), injecte les Ports
+    dtos/<name>.dto.ts                        # Application DTO (pas de class-validator ici)
+  infrastructure/
+    persistence/prisma/<name>.repository.adapter.ts  # implements I<Name>Repository, injecte PrismaService
+    persistence/prisma/<name>.mapper.ts               # Domain Entity <-> modèle Prisma
+    adapters/<name>.adapter.ts                 # ex: garmin-connect.adapter.ts, claude-workout-generator.adapter.ts
+    scheduler/<name>.scheduler.ts              # Inbound Adapter planifié (@nestjs/schedule)
+  presentation/
+    http/controllers/<name>.controller.ts
+    http/dtos/<name>.request.dto.ts
+    http/dtos/<name>.response.dto.ts           # Transport DTOs (class-validator + class-transformer)
+  <module>.module.ts                           # composition root : { provide: TOKEN, useClass: Adapter }
+```
+
+Transversal (hors modules) :
+- `src/core/` : infrastructure partagée, à plat (pas de sous-dossier `domain`/`infrastructure` imbriqué) — `src/core/config/` (`AppConfigModule`, un namespace par domaine ; voir §Configuration), `src/core/health/` (route `GET /health`), `src/core/prisma/` (`PrismaModule`/`PrismaService`, client généré dans `src/core/prisma/generated`, ignoré par Git), `src/core/cache/` (`CacheModule` Redis, optionnel), `src/core/http/` (wrapper HTTP générique, ex. `@nestjs/axios` configuré, réutilisé par les adapters ayant besoin d'appels sortants), `src/core/filters/` (filtres d'exceptions globaux).
+- `src/app.setup.ts` : `configureApp(app)` applique les réglages HTTP communs (préfixe global, `ValidationPipe`, CORS, niveaux de log) ; utilisé par `main.ts` **et** par les tests e2e pour qu'ils voient les mêmes routes qu'en production. Swagger est initialisé dans `main.ts` (`/swagger`, hors préfixe).
+- `src/shared/domain/` : **classes de base réellement partagées** (du vrai code, pas des templates) : `aggregate-root.ts` (collecte des Domain Events via `addDomainEvent`/`pullDomainEvents`), `entity.ts` (id + `equals` par identité), `value-object.ts` (`equals` par valeur), `domain-error.ts`. Les Entities/Aggregate Roots/Value Objects concrets étendent ces bases — à créer dès le premier module.
+
+Un module Nest n'importe pas le Domain d'un autre module sans passer par un contrat explicite ; le transverse va dans `src/core` ou `src/shared` (cf. `04`).
+
+**Read Models / Projections** (ex. agrégations de stats d'entraînement, lecture divergente de l'écriture) : requête Prisma de lecture directe dans `infrastructure/persistence/prisma/<name>.read-model.ts`, exposée par un Use Case de lecture dédié dans `application/use-cases/` (ex. `get-training-stats.use-case.ts`). **Pas** de dossier `application/queries/` séparé tant que CQRS n'est pas explicitement justifié (`05`) — le Use Case suffit à nommer l'intention de lecture.
+
+## Chaque concept DDD n'est pas forcément un fichier
+
+Le glossaire (`00`) décrit des concepts, pas des fichiers obligatoires (`00` §chapeau). Règle de décision pour ce dépôt :
+
+| Concept | Fichier dédié ? | Règle |
+|---|---|---|
+| Entity / Aggregate Root | `domain/entities/*.entity.ts` | Toujours un fichier. Aggregate Root = Entity qui étend `AggregateRoot` |
+| Value Object | `domain/value-objects/*.vo.ts` | Toujours un fichier |
+| Domain Event | `domain/events/*.event.ts` | Toujours un fichier |
+| Business Error | `domain/errors/*.error.ts` | Toujours un fichier |
+| Domain Service | `domain/services/*.service.ts` | Seulement si la règle n'a pas de propriétaire naturel (dernier recours, `02`) |
+| Factory | méthode statique `create()` / `reconstitute()` sur l'Entity | Fichier dédié `domain/factories/*.factory.ts` seulement si la construction est complexe et partagée entre plusieurs classes |
+| Specification / Policy | `domain/specifications/*.specification.ts` | Seulement si la règle est réutilisée ou composée ; sinon un simple `if` dans l'Entity suffit |
+| Repository (Outbound Port) | `domain/ports/outbound/*.repository.port.ts` | Toujours un fichier, un par Aggregate Root |
+| Autre Outbound Port (client externe, IA, horloge, id) | `domain/ports/outbound/*.port.ts` | Toujours un fichier |
+| Inbound Port | interface dédiée dans `application/` | Seulement si plusieurs Adapters entrants appellent le même Use Case ou si une vraie substitution est nécessaire ; sinon le Use Case (classe + `execute()`) fait office de contrat (`04` §Pragmatisme) |
+
+## Nommage
+
+| Artefact | Fichier | Classe/Interface |
+|---|---|---|
+| Entity | `<name>.entity.ts` | `<Name>` (nom métier, pas `<Name>Entity`) |
+| Value Object | `<name>.vo.ts` | `<Name>` |
+| Domain Event | `<name>.event.ts` | `<ParticipePasse>Event` (ex. `ActivitySyncedEvent`) |
+| Business Error | `<name>.error.ts` | `<Name>Error` |
+| Domain Service | `<name>.service.ts` | `<Name>` (verbe/nom métier, pas `Manager`/`Helper`) |
+| Use Case | `<verb-noun>.use-case.ts` | `<VerbNoun>UseCase` |
+| Application DTO | `<name>.dto.ts` | `<Name>Dto` |
+| Outbound Port (repository) | `<name>.repository.port.ts` | `I<Name>Repository` + `export const <NAME>_REPOSITORY = Symbol('<NAME>_REPOSITORY')` |
+| Outbound Port (autre) | `<name>.port.ts` | `I<Name>` + token `Symbol` associé |
+| Repository Adapter | `<name>.repository.adapter.ts` | `Prisma<Name>RepositoryAdapter` |
+| Mapper (persistance) | `<name>.mapper.ts` | `<Name>Mapper` (méthodes statiques `toDomain`/`toPersistence`) |
+| Mapper (Adapter externe / ACL) | `<name>.external-mapper.ts` | `<Name>ExternalMapper` — seulement si l'extraire hors de l'Adapter apporte de la lisibilité (sinon inline, voir §Spécificités du domaine) |
+| Controller | `<name>.controller.ts` | `<Name>Controller` |
+| Transport DTO | `<name>.request.dto.ts` / `<name>.response.dto.ts` | `<Name>RequestDto` / `<Name>ResponseDto` |
+
+## Ports et tokens
+
+Chaque Outbound Port expose une interface **et** un token d'injection dans le même fichier :
+
+```ts
+export interface IActivityRepository { /* ... */ }
+export const ACTIVITY_REPOSITORY = Symbol('ACTIVITY_REPOSITORY');
+```
+
+Câblage dans `<module>.module.ts` :
+
+```ts
+providers: [{ provide: ACTIVITY_REPOSITORY, useClass: PrismaActivityRepositoryAdapter }]
+```
+
+Un Use Case injecte via `@Inject(ACTIVITY_REPOSITORY) private readonly activities: IActivityRepository`.
+
+## Templates de code (squelettes)
+
+Pour éviter d'alourdir les fichiers `instructions/*.md` avec de longs blocs de code, chaque artefact a un squelette TypeScript valide (noms d'exemple `Example...`) dans `instructions/templates/`. Ces fichiers sont **exclus du build/lint/test** (`tsconfig.json` : `exclude: ["instructions/templates"]` ; le build, oxlint et Vitest ne couvrent que `src/` et `test/`) : ce sont des gabarits à copier/renommer, pas du code exécuté. Les imports relatifs d'un gabarit copié doivent prendre l'extension `.js`.
+
+| Artefact | Template |
+|---|---|
+| Entity (non-root) | `instructions/templates/entity.template.ts` |
+| Aggregate Root | `instructions/templates/aggregate-root.template.ts` |
+| Value Object | `instructions/templates/value-object.template.ts` |
+| Domain Event | `instructions/templates/domain-event.template.ts` |
+| Domain Service | `instructions/templates/domain-service.template.ts` |
+| Specification / Policy | `instructions/templates/specification.template.ts` |
+| Business Error | `instructions/templates/domain-error.template.ts` |
+| Repository Port | `instructions/templates/outbound-port.template.ts` |
+| Autre Outbound Port | `instructions/templates/external-port.template.ts` |
+| Use Case | `instructions/templates/use-case.template.ts` |
+| Application DTO | `instructions/templates/application-dto.template.ts` |
+| Repository Adapter (Prisma) | `instructions/templates/repository-adapter.template.ts` |
+| Mapper | `instructions/templates/mapper.template.ts` |
+| Controller | `instructions/templates/controller.template.ts` |
+| Transport DTO | `instructions/templates/transport-dto.template.ts` |
+
+## Spécificités du domaine
+
+### Synchronisation Garmin Connect
+- Outbound Port `domain/ports/outbound/garmin-connect-client.port.ts` (`IGarminConnectClient`) — contrat exprimé en langage du domaine (ex. `fetchActivitiesSince(athleteId, since): Promise<RawGarminActivity[]>`), pas en termes de l'API Garmin.
+- Adapter `infrastructure/adapters/garmin-connect.adapter.ts` : encapsule la librairie/les appels HTTP Garmin Connect et fait office d'**Anti-Corruption Layer** — traduit le modèle externe vers le modèle du domaine ; le Domain ne voit jamais le payload Garmin brut. Traduction gardée **inline** dans l'Adapter tant qu'elle est simple ; si elle grossit (plusieurs formats, règles de mapping non triviales), l'extraire dans `infrastructure/adapters/garmin-connect.external-mapper.ts` (voir §Nommage).
+- Déclenchement : `infrastructure/scheduler/garmin-sync.scheduler.ts` (`@nestjs/schedule`, `@Cron(...)`) — un Inbound Adapter comme un autre, sans logique métier, qui appelle un Use Case `SyncGarminActivities`.
+- Idempotence : la synchronisation doit pouvoir être rejouée sans dupliquer (upsert par identifiant externe, typé en Value Object `GarminActivityId`).
+
+### Génération de séances par IA (Claude)
+- Outbound Port `domain/ports/outbound/workout-ai-generator.port.ts` (`IWorkoutAiGenerator`), ex. `generate(input: GenerateWorkoutInput): Promise<GeneratedWorkout>`.
+- Adapter `infrastructure/adapters/claude-workout-generator.adapter.ts` : encapsule `@anthropic-ai/sdk`, construit le prompt (les gabarits de prompt sont un détail technique, ex. `infrastructure/adapters/prompts/`), parse la réponse. Le Domain ne connaît ni le SDK ni le format de réponse du modèle.
+- Le résultat généré doit être validé par les invariants du Domain avant persistance (passer par la Factory/`create()` de l'Entity concernée) : un contenu généré invalide est rejeté comme n'importe quelle construction invalide, pas fait confiance aveuglément.
+- Un échec d'appel au modèle (timeout, erreur API) est une **Technical Error**, pas une Business Error (`00` §5).
+
+## Authentification
+
+Aucune (cf. décision actée) : l'API est exposée uniquement en local, pas de guard global. Si l'exposition change (accès distant), ce choix devra être révisé explicitement ici et dans `08`.
+
+## Configuration
+
+- Code dans `src/core/config/` : `env.validation.ts` (schémas zod par domaine, `validateEnv`), un fichier `<domaine>/<domaine>.config.ts` par namespace (`registerAs`, clé exportée, type `ConfigType`), `AppConfigModule` (global, charge les namespaces).
+- **Toute variable d'environnement est déclarée et validée dans `env.validation.ts`** ; le code lit la configuration typée (`@Inject(<namespace>Config.KEY)`), jamais `process.env` directement.
+- La validation a lieu au démarrage et liste toutes les erreurs d'un coup. Les variables de l'application ont des valeurs par défaut ; celles de la base (`DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DATABASE_URL`) sont obligatoires, et `DATABASE_URL` (lue par Prisma) doit correspondre aux variables `DB_*` (vérifié au démarrage, valeurs jamais affichées).
+- `DATABASE_URL` est écrite en clair dans `.env` : la CLI Prisma n'étend pas les `${variables}`.
+- `.env.template` (versionné, sans secret) doit rester synchronisé avec les schémas ; `.env` est ignoré par Git. Une nouvelle variable = schéma + `.env.template` + (si utile) `vitest.config.e2e.ts`.
+- Un nouveau module technique ou métier qui a besoin de configuration ajoute son namespace et le déclare dans `AppConfigModule`. Les clés secrètes (Anthropic, Garmin) sont obligatoires seulement quand le code les utilise, jamais avant (la CI n'a aucun secret).
+
+## Garde-fou d'architecture
+
+`npm run deps:check` (`dependency-cruiser`, règles dans `.dependency-cruiser.cjs`, exécuté par `ci-branch`) vérifie : pas de cycle ; le Domain ne dépend ni des autres couches ni de NestJS, de client ou d'ORM ; l'Application ne dépend ni de l'Infrastructure, ni de la Presentation, ni de client ou d'ORM (`@nestjs/common` autorisé) ; la Presentation n'appelle pas l'Infrastructure ; `src/core` et `src/shared` ne dépendent pas de `src/modules` ; pas d'import de `devDependencies` en production. L'isolation entre modules est un simple avertissement tant que le contrat entre modules n'est pas défini. Si une règle bloque un cas légitime, la discuter plutôt que la contourner.
+
+## Tests
+
+- Vitest, fichiers `*.spec.ts` **colocalisés** à côté du fichier source (config : `vitest.config.ts`), pas d'arborescence miroir séparée. Les globals Vitest (`describe`, `it`, `expect`) sont activés.
+- Tests e2e dans `test/` (fichiers `*.e2e-spec.ts`, config `vitest.config.e2e.ts`, supertest), ciblés sur les parcours critiques. Ils appellent `configureApp` (`src/app.setup.ts`) et ne dépendent pas du `.env` de la machine : l'environnement de test est fixé dans `vitest.config.e2e.ts`, avec la base du service PostgreSQL de la CI.
+- Commandes cibles : `npm run test`, `npm run test:watch`, `npm run test:cov`, `npm run test:e2e`.
+
+## Commandes cibles
+
+- Démarrage : `docker compose up -d postgres` (base locale ; identifiants lus dans `.env`), `npm run start:dev`, `npm run build`.
+- Qualité : `npm run format:check` (`npm run format` pour corriger), `npm run lint`, `npm run deps:check`, `npm run test`, `npm run test:e2e`, `npm audit --audit-level=high`.
+- Prisma : `npm run prisma:generate` (client, à relancer après chaque modification du schéma et après un `npm install` sur un dépôt neuf), `npm run prisma:validate`, `npm run prisma:migrate` (`prisma migrate dev`), `npm run prisma:studio` ; `npx prisma migrate deploy` en production.
+- `prisma generate` lit `DATABASE_URL` (via `prisma.config.ts`) même sans se connecter : elle doit être définie dans l'environnement, valeur factice acceptée (c'est ce que fait la CI).
+
+Le schéma Prisma est vide à ce jour (aucun modèle, aucune migration) : ne pas supposer de schéma existant ni utiliser `db push` en production — `prisma migrate` dès la première migration.

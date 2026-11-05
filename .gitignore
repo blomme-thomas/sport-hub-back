@@ -3,6 +3,10 @@
 /node_modules
 /build
 /tmp
+*.tsbuildinfo
+
+# Client Prisma généré (npm run prisma:generate)
+/src/core/prisma/generated
 
 # Logs
 logs

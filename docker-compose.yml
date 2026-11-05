@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME manquant dans .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME manquant dans .env}
+    ports:
+      # Liée à 127.0.0.1 : la base n'est pas joignable depuis le réseau.
+      - '127.0.0.1:${DB_PORT:?DB_PORT manquant dans .env}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

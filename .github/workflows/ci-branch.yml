@@ -1,0 +1,49 @@
+name: ci-branch
+
+# Contrôle rapide à chaque push d'une branche de travail : format, lint, architecture, audit.
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
+
+concurrency:
+  group: ci-branch-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Valeur factice : prisma generate lit DATABASE_URL (prisma.config.ts) sans se connecter.
+  DATABASE_URL: postgresql://sporthub:sporthub@localhost:5432/sporthub_test
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Le client Prisma généré est nécessaire au lint typé.
+      - run: npx prisma generate
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      # Règles de couches hexagonales (.dependency-cruiser.cjs).
+      - name: Architecture
+        run: npm run deps:check
+
+      # Échoue seulement pour les vulnérabilités high et critical.
+      - name: Audit des dépendances
+        run: npm audit --audit-level=high
