@@ -33,9 +33,9 @@ applyTo: 'src/modules/*/presentation/**,src/modules/*/infrastructure/adapters/**
 - Secrets et URL par configuration, jamais dans le code.
 
 ## Dans ce dépôt
-- API REST NestJS ; controllers dans `presentation/http/controllers/*.controller.ts` (squelette `instructions/templates/controller.template.ts`), DTO dans `presentation/http/dtos/` (class-validator + class-transformer, `ValidationPipe({ transform: true })` global, squelette `instructions/templates/transport-dto.template.ts`).
+- API REST NestJS ; controllers dans `presentation/http/controllers/*.controller.ts` (squelette `instructions/templates/controller.template.ts`), DTO dans `presentation/http/dtos/` (class-validator + class-transformer, `ValidationPipe` global (`transform`, `whitelist`, `forbidNonWhitelisted` et `exceptionFactory` qui renvoie toutes les erreurs par champ, voir `11` §Erreurs HTTP), squelette `instructions/templates/transport-dto.template.ts`).
 - Authentification : **aucune** — usage strictement local, décision actée en `11`. Pas de guard global, pas d'utilisateur courant à extraire.
-- Erreurs : Business Errors du Domain traduites par un filtre global dédié (`core/filters`) en réponse HTTP cohérente ; erreurs techniques (appel Garmin/Claude en échec) traduites en 5xx sans détail interne.
+- Erreurs : Business Errors du Domain traduites par un filtre global dédié (`core/filters`) en réponse RFC 9457 Problem Details (`code` stable, `errors[]`, `correlationId`) ; le statut HTTP vient de la table centralisée (voir `11` §Erreurs HTTP) ; erreurs techniques (appel Garmin/Claude en échec) traduites en 5xx sans détail interne.
 - Ne jamais renvoyer un modèle Prisma ni une Entity de domaine ; toujours un DTO de réponse.
 - Systèmes externes propres à ce dépôt : Garmin Connect (sync, lecture seule côté domaine) et Claude/Anthropic (génération de séances) — encapsulés dans `infrastructure/adapters/`, en Anti-Corruption Layer pour Garmin (voir `11` §Spécificités du domaine) ; URL, clés API et secrets via la configuration typée (variables d'environnement déclarées et validées par zod dans `src/core/config`, voir `11` §Configuration), jamais dans le code.
 

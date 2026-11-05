@@ -7,11 +7,15 @@ API NestJS (ESM, TypeScript) en architecture hexagonale / DDD. Conventions déta
 Seul le socle technique est livré, dans `src/` :
 
 - `main.ts` : démarrage, Swagger (`/swagger`).
-- `app.setup.ts` : réglages HTTP partagés avec les tests e2e (logger, préfixe global, CORS, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted` et `transform`).
+- `swagger.setup.ts` : `buildOpenApiDocument`, construction du document OpenAPI (isolée de `main.ts` pour être testable ; enregistre les modèles d'erreur).
+- `app.setup.ts` : réglages HTTP partagés avec les tests e2e (middleware de correlation id en premier, logger, préfixe global, CORS avec `X-Correlation-Id` exposé, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted`, `transform` et `exceptionFactory`, filtre global d'erreurs).
 - `app.module.ts` : assemble `AppConfigModule`, `PrismaModule` et `HealthModule`.
 - `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app` et `database`.
 - `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`, sans connexion au démarrage) ; client généré dans `generated/`.
 - `src/core/health` : route technique `GET /api/health`.
+- `src/core/filters` : filtre d'exceptions global `ProblemDetailsExceptionFilter`, table code vers statut HTTP (`error-status.table.ts`), factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`. Voir [Erreurs de l'API](erreurs-api.md).
+- `src/core/middlewares` : middleware d'identifiant de corrélation et son `AsyncLocalStorage`.
+- `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
 
 Aucun module métier (`src/modules/`) n'existe encore.
 

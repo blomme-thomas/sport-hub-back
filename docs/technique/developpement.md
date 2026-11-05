@@ -26,6 +26,8 @@ npm run start:dev
 - API sur `http://localhost:3000`, préfixe global `/api` (valeurs par défaut, configurables).
 - Route technique de santé : `GET /api/health` renvoie `{ "status": "ok" }`. Elle ne touche pas la base.
 - Swagger : `/swagger` (hors préfixe `/api`).
+- Header `X-Correlation-Id` : présent sur toutes les réponses ; envoyer le sien (`/^[A-Za-z0-9._:-]{1,128}$/`) pour le retrouver dans les logs, sinon un UUID est généré.
+- Erreurs : toutes au format `application/problem+json` (RFC 9457), voir [Erreurs de l'API](erreurs-api.md).
 - Prisma ne se connecte qu'à la première requête : l'application démarre même sans base.
 - Une configuration invalide (variable manquante ou incorrecte) fait échouer le démarrage avec le détail des erreurs.
 

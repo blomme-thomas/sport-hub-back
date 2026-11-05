@@ -1,14 +1,17 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma initialisé sans modèle, route de santé, CI, garde-fou d'architecture). Aucun module métier ni aucune fonctionnalité livrés à ce jour. Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma initialisé sans modèle, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture). Aucun module métier ni aucune fonctionnalité livrés à ce jour. Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
 - [Workflow Git](technique/workflow-git.md)
 - [Données](technique/donnees.md)
 - [Développement](technique/developpement.md)
+- [Erreurs de l'API](technique/erreurs-api.md) (RFC 9457, codes, correlation id)
 - Contextes (`technique/contextes/<nom>.md`) : à compléter, aucun contexte livré.
-- Décisions (`technique/decisions/`) : à compléter, aucun ADR.
+- Décisions (`technique/decisions/`) :
+  - [0001 : table centralisée code vers statut HTTP](technique/decisions/0001-table-centralisee-code-statut.md)
+  - [0002 : correlation id par middleware et AsyncLocalStorage](technique/decisions/0002-correlation-id-middleware-als.md)
 
 ## Fonctionnel
 - [Fonctionnalités](fonctionnel/fonctionnalites.md)
