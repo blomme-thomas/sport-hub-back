@@ -172,6 +172,59 @@ describe('validateEnv', () => {
     });
   });
 
+  describe('Garmin Personal API', () => {
+    it("laisse la clé absente et applique l'URL de base par défaut", () => {
+      const env = validateEnv(validDatabase);
+
+      expect(env.GARMIN_PERSONAL_API_KEY).toBeUndefined();
+      expect(env.GARMIN_PERSONAL_API_BASE_URL).toBe(
+        'https://personal.connectapi.garmin.com',
+      );
+    });
+
+    it('traite une clé vide comme absente', () => {
+      expect(
+        validateEnv({ ...validDatabase, GARMIN_PERSONAL_API_KEY: '' })
+          .GARMIN_PERSONAL_API_KEY,
+      ).toBeUndefined();
+    });
+
+    it('conserve une clé fournie', () => {
+      expect(
+        validateEnv({ ...validDatabase, GARMIN_PERSONAL_API_KEY: 'abc-123' })
+          .GARMIN_PERSONAL_API_KEY,
+      ).toBe('abc-123');
+    });
+
+    it('accepte une URL de base personnalisée', () => {
+      expect(
+        validateEnv({
+          ...validDatabase,
+          GARMIN_PERSONAL_API_BASE_URL: 'http://127.0.0.1:9999',
+        }).GARMIN_PERSONAL_API_BASE_URL,
+      ).toBe('http://127.0.0.1:9999');
+    });
+
+    it("rejette une URL de base qui n'est pas une URL", () => {
+      expect(() =>
+        validateEnv({
+          ...validDatabase,
+          GARMIN_PERSONAL_API_BASE_URL: 'garmin',
+        }),
+      ).toThrow('GARMIN_PERSONAL_API_BASE_URL');
+    });
+
+    it("n'affiche jamais la clé dans l'erreur de validation", () => {
+      expect(() =>
+        validateEnv({
+          ...validDatabase,
+          GARMIN_PERSONAL_API_KEY: 'cle-secrete-longue',
+          APP_PORT: 'abc',
+        }),
+      ).toThrow(/^(?![\s\S]*cle-secrete-longue)/);
+    });
+  });
+
   it('liste ensemble les erreurs de champs de plusieurs domaines', () => {
     expect(() =>
       validateEnv({ ...validDatabase, APP_PORT: 'abc', DB_PORT: 'abc' }),
