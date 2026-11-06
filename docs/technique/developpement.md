@@ -83,6 +83,15 @@ Base de données (toutes obligatoires, sans défaut) :
 | `DB_PORT` | entier 1 à 65535 |
 | `DATABASE_URL` | URL `postgresql://` (ou `postgres://`) dont hôte, port, utilisateur, mot de passe et base doivent correspondre aux variables `DB_*`, sinon le démarrage échoue |
 
+API Garmin Personal (toutes optionnelles) :
+
+| Variable | Défaut | Contrainte |
+|---|---|---|
+| `GARMIN_PERSONAL_API_KEY` | absente | chaîne ; vide = absente. Sans clé, l'API démarre normalement et `GarminPersonalApiTokenProvider` lève `GarminAuthenticationError` (`KEY_MISSING`) à la première demande de jeton |
+| `GARMIN_PERSONAL_API_BASE_URL` | `https://personal.connectapi.garmin.com` | URL |
+
+Voir [API Garmin Personal](garmin-personal-api.md). La clé est un secret : la renseigner uniquement dans `.env`.
+
 `DATABASE_URL` est lue par Prisma (`prisma.config.ts`) et doit être écrite en clair : la CLI Prisma n'étend pas les `${variables}`. Les variables `DB_*` sont aussi lues par `docker-compose.yml`.
 
 ## CI (GitHub Actions, `.github/workflows/`)

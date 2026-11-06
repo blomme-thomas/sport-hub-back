@@ -9,16 +9,16 @@ Seul le socle technique est livré, dans `src/` :
 - `main.ts` : démarrage, Swagger (`/swagger`).
 - `swagger.setup.ts` : `buildOpenApiDocument`, construction du document OpenAPI (isolée de `main.ts` pour être testable ; enregistre les modèles d'erreur).
 - `app.setup.ts` : réglages HTTP partagés avec les tests e2e (middleware de correlation id en premier, logger, préfixe global, CORS avec `X-Correlation-Id` exposé, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted`, `transform` et `exceptionFactory`, filtre global d'erreurs).
-- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule` et `HealthModule`.
-- `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app` et `database`.
+- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule`, `HealthModule` et `GarminSyncModule`.
+- `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app`, `database` et `garmin` (`GARMIN_PERSONAL_API_KEY` optionnelle, vide = absente ; `GARMIN_PERSONAL_API_BASE_URL`).
 - `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`) : vérifie la base au démarrage (`onModuleInit`) et lève `DatabaseUnavailableError` si elle ne répond pas, voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md) ; client généré dans `generated/`.
 - `src/core/health` : route technique `GET /api/health` (200 si la base répond via `DatabaseHealthIndicator`, sinon 503 `SERVICE_UNAVAILABLE`).
 - `src/core/filters` : filtre d'exceptions global `ProblemDetailsExceptionFilter`, table code vers statut HTTP (`error-status.table.ts`), `DependencyUnavailableException` (dépendance technique indisponible, rendue en 503), factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`. Voir [Erreurs de l'API](erreurs-api.md).
 - `src/core/middlewares` : middleware d'identifiant de corrélation et son `AsyncLocalStorage`.
-- `src/core/http` : client HTTP sortant commun (`HttpClientModule` exporte `HttpClientService`), non global et pas encore importé dans `AppModule` (aucun consommateur). Détail ci-dessous.
+- `src/core/http` : client HTTP sortant commun (`HttpClientModule` exporte `HttpClientService`), non global ; seul consommateur à ce jour : `GarminSyncModule`. Détail ci-dessous.
 - `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
 
-Aucun module métier (`src/modules/`) n'existe encore.
+Un seul module existe dans `src/modules/` : `garmin-sync`, réduit à ce jour à la couche Infrastructure. `GarminSyncModule` importe `HttpClientModule` et exporte `GarminPersonalApiTokenProvider` (`infrastructure/adapters/`), qui obtient et met en cache le jeton d'accès de l'API Garmin Personal ; erreurs `GarminAuthenticationError`. Détail : [API Garmin Personal](garmin-personal-api.md). Ni Domain, ni Application, ni Presentation, ni synchronisation d'activités n'existent encore.
 
 ## Client HTTP sortant (`src/core/http`)
 
@@ -60,10 +60,10 @@ dependency-cruiser (`.dependency-cruiser.cjs`) vérifie ces règles sur `src/`, 
 
 Avertissement seulement : `modules-isolated` (un module n'importe pas l'intérieur d'un autre), le contrat entre modules n'étant pas encore défini. Le client Prisma généré est exclu de l'analyse.
 
-Ces règles ne s'exercent pas encore, faute de modules.
+Ces règles s'exercent à ce jour sur le seul module `garmin-sync` (Infrastructure uniquement).
 
 ## Bounded contexts
-À compléter (aucun module livré).
+`garmin-sync` : en cours (authentification seulement). Fiche `contextes/garmin-sync.md` : à compléter.
 
 ## Flux entre contextes
 À compléter.
