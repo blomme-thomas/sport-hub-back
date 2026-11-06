@@ -1,6 +1,5 @@
 name: ci-branch
 
-# Contrôle rapide à chaque push d'une branche de travail : format, lint, architecture, audit.
 on:
   push:
     branches:
@@ -15,7 +14,6 @@ permissions:
   contents: read
 
 env:
-  # Valeur factice : prisma generate lit DATABASE_URL (prisma.config.ts) sans se connecter.
   DATABASE_URL: postgresql://sporthub:sporthub@localhost:5432/sporthub_test
 
 jobs:
@@ -31,7 +29,6 @@ jobs:
 
       - run: npm ci
 
-      # Le client Prisma généré est nécessaire au lint typé.
       - run: npx prisma generate
 
       - name: Format
@@ -40,10 +37,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # Règles de couches hexagonales (.dependency-cruiser.cjs).
       - name: Architecture
         run: npm run deps:check
 
-      # Échoue seulement pour les vulnérabilités high et critical.
       - name: Audit des dépendances
         run: npm audit --audit-level=high

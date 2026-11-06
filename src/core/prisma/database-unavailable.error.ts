@@ -2,7 +2,7 @@ const SAFE_CODE = /^[A-Za-z0-9_]{1,40}$/;
 const MAX_CAUSE_DEPTH = 3;
 
 /**
- * Code d'erreur (ex. ECONNREFUSED) lu sur l'erreur puis sur ses causes (profondeur 3).
+ * Extrait le code d'erreur (ex. `ECONNREFUSED`) de l'erreur puis de ses causes (profondeur 3).
  * Seul un code court alphanumérique est renvoyé : jamais de texte libre, qui pourrait
  * contenir une URL de connexion ou un secret.
  */
@@ -17,7 +17,10 @@ export function safeErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
-/** Erreur technique (pas une Business Error) : la base est injoignable. Sans secret ni cause. */
+/**
+ * Signale que la base est injoignable ; erreur technique, pas une Business Error.
+ * Le message ne contient ni secret ni cause d'origine.
+ */
 export class DatabaseUnavailableError extends Error {
   constructor(
     target: { host: string; port: number; name: string },

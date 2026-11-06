@@ -16,8 +16,7 @@ export function getCorrelationId(): string | undefined {
 }
 
 /**
- * Reprend l'identifiant entrant s'il est sûr (anti injection dans les logs et
- * les headers), sinon en génère un.
+ * Reprend l'identifiant entrant s'il est sûr (anti injection dans les logs et les headers), sinon en génère un.
  */
 export function resolveCorrelationId(
   incoming: string | string[] | undefined,

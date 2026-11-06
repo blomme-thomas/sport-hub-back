@@ -1,6 +1,5 @@
 name: ci-release
 
-# Garde-fou de version pour les branches release/x.y.z et leur PR vers main.
 on:
   push:
     branches:
@@ -14,7 +13,6 @@ permissions:
 
 jobs:
   version:
-    # Sur une PR vers main, ne s'applique qu'aux PR issues d'une branche release/**.
     if: github.event_name == 'push' || startsWith(github.head_ref, 'release/')
     runs-on: ubuntu-latest
     env:
@@ -29,21 +27,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          # 1. Nom de branche release/x.y.z
           if [[ ! "$BRANCH" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "::error::La branche '$BRANCH' ne respecte pas le format release/x.y.z"
             exit 1
           fi
           VERSION="${BASH_REMATCH[1]}"
 
-          # 2. Version de l'application = version de la branche
           PKG_VERSION="$(node -p "require('./package.json').version")"
           if [ "$PKG_VERSION" != "$VERSION" ]; then
             echo "::error::package.json est en version $PKG_VERSION, la branche annonce $VERSION"
             exit 1
           fi
 
-          # 3. Version nouvelle : tag absent et supérieure au dernier tag
           if git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null; then
             echo "::error::Le tag v$VERSION existe déjà"
             exit 1
@@ -57,7 +52,6 @@ jobs:
             fi
           fi
 
-          # 4. CHANGELOG mentionne la version
           ESC="${VERSION//./\\.}"
           if ! grep -Eq "^## \[?v?${ESC}\]?( |$)" CHANGELOG.md; then
             echo "::error::CHANGELOG.md n'a pas de section pour $VERSION"

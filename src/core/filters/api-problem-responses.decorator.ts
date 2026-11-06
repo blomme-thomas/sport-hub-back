@@ -7,7 +7,6 @@ import {
 } from './problem-details.dto.js';
 import { PROBLEM_JSON_CONTENT_TYPE } from './problem-details.js';
 
-/** Documente les réponses d'erreur Problem Details d'une route (500 toujours inclus). */
 export function ApiProblemResponses(
   ...statuses: number[]
 ): MethodDecorator & ClassDecorator {

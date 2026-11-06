@@ -13,7 +13,6 @@ const appConfig = registerAs(APP_CONFIG_KEY, () => {
     globalPrefix: env.APP_GLOBAL_PREFIX,
     env: env.NODE_ENV,
     logLevel: env.APP_LOG_LEVEL,
-    // Niveau choisi et tous les niveaux plus sévères.
     logLevels: LOG_LEVEL_VALUES.slice(
       LOG_LEVEL_VALUES.indexOf(env.APP_LOG_LEVEL),
     ),

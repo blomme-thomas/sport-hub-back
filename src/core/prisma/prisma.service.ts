@@ -14,7 +14,6 @@ import {
 } from './database-unavailable.error.js';
 import { PrismaClient } from './generated/client.js';
 
-/** pg n'a pas de timeout de connexion par défaut. */
 const CONNECTION_TIMEOUT_MS = 5_000;
 
 /**

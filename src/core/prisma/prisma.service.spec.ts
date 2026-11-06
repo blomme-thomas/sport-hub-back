@@ -12,7 +12,6 @@ describe('PrismaService', () => {
     url: 'postgresql://sporthub:sporthub@localhost:5432/sporthub',
   };
 
-  // Port 1 : refus de connexion immédiat. Mot de passe factice pour vérifier l'absence de fuite.
   const unreachable = {
     name: 'sporthub_unreachable',
     host: '127.0.0.1',
@@ -27,7 +26,6 @@ describe('PrismaService', () => {
   });
 
   it('se construit sans ouvrir de connexion', () => {
-    // Pas de toBeInstanceOf : le client Prisma est un Proxy, que l'assertion ne sait pas inspecter.
     expect(() => new PrismaService(config)).not.toThrow();
   });
 

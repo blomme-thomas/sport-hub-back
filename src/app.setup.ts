@@ -6,13 +6,13 @@ import { validationExceptionFactory } from './core/filters/validation-exception.
 import { correlationIdMiddleware } from './core/middlewares/correlation-id.middleware.js';
 
 /**
- * Réglages HTTP communs à l'application et aux tests e2e, pour que les tests
- * voient les mêmes routes (préfixe, validation, erreurs, CORS) qu'en production.
+ * Applique les réglages HTTP communs à l'application et aux tests e2e (préfixe, validation, erreurs, CORS).
+ *
+ * Le middleware de corrélation est monté en premier pour que l'identifiant existe pour toute requête, 404 compris.
  */
 export function configureApp(app: INestApplication): void {
   const config = app.get<AppConfig>(appConfig.KEY);
 
-  // En premier : l'identifiant de corrélation doit exister pour toute requête, 404 compris.
   app.use(correlationIdMiddleware);
   app.useLogger(config.logLevels);
   app.setGlobalPrefix(config.globalPrefix);

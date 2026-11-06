@@ -10,7 +10,6 @@ import {
   ValidationErrorItemDto,
 } from './core/filters/problem-details.dto.js';
 
-/** Construit le document OpenAPI ; isolé de main.ts pour être testable. */
 export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
   const config = app.get<AppConfig>(appConfig.KEY);
   const swaggerConfig = new DocumentBuilder()

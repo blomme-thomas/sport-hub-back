@@ -1,6 +1,5 @@
 name: ci-main
 
-# Tag vX.Y.Z et release GitHub automatiques après le merge d'une release/x.y.z dans main.
 on:
   push:
     branches:
@@ -15,7 +14,6 @@ permissions:
 
 jobs:
   release:
-    # Ne s'applique qu'au merge commit d'une branche release/** (pas à un autre push sur main).
     if: contains(github.event.head_commit.message, 'release/')
     runs-on: ubuntu-latest
     steps:
@@ -33,13 +31,11 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           TAG="v$VERSION"
 
-          # Relance sans risque : si le tag existe déjà, rien à faire.
           if git rev-parse -q --verify "refs/tags/$TAG" > /dev/null; then
             echo "Le tag $TAG existe déjà, rien à faire."
             exit 0
           fi
 
-          # Notes : section de cette version dans CHANGELOG.md, sinon notes générées par GitHub.
           ESC="${VERSION//./\\.}"
           : > notes.md
           START="$(grep -nE "^## \[?v?${ESC}\]?( |$)" CHANGELOG.md | head -n 1 | cut -d: -f1 || true)"

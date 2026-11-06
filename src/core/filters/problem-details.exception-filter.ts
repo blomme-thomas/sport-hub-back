@@ -63,15 +63,6 @@ interface RequestLike {
   body?: unknown;
 }
 
-/**
- * Nest (platform-express `mapException`) transforme l'erreur de body-parser avant
- * le filtre : un JSON invalide devient une BadRequestException(message) sans cause
- * (le `type` est perdu), un corps trop gros une HttpException dont `cause` garde
- * le `type`. Un JSON invalide est donc reconnu à l'indice suivant : BadRequestException
- * sans cause, alors que la requête porte un corps JSON non vide que body-parser n'a
- * pas pu renseigner (`req.body` indéfini). Une erreur de pipe survient après un
- * parsing réussi (`req.body` défini) ; une URIError n'a pas de corps.
- */
 function isUnparsableJsonBody(
   exception: HttpException,
   req: RequestLike,
@@ -95,7 +86,6 @@ function toKebab(code: string): string {
 
 const MAX_LOGGED_MESSAGE_LENGTH = 500;
 
-/** Message assaini pour les logs : pas de saut de ligne, longueur limitée. */
 function messageOf(exception: unknown): string {
   const raw =
     exception instanceof Error ? exception.message : String(exception);
@@ -115,6 +105,16 @@ function parserErrorProblem(type: string): Resolved {
     : { ...generic('MALFORMED_REQUEST_BODY'), detail: MALFORMED_BODY_DETAIL };
 }
 
+/**
+ * Convertit toute exception HTTP en réponse Problem Details (RFC 9457) avec `code` et `correlationId`.
+ *
+ * Nest transforme l'erreur de body-parser avant ce filtre : un JSON invalide devient une
+ * `BadRequestException` sans cause (le `type` est perdu), un corps trop gros une `HttpException`
+ * dont `cause` garde le `type`. Un JSON invalide est donc reconnu à l'indice suivant :
+ * `BadRequestException` sans cause, avec un corps JSON non vide que body-parser n'a pas pu
+ * renseigner (`req.body` indéfini). Une erreur de pipe survient après un parsing réussi
+ * (`req.body` défini) ; une `URIError` n'a pas de corps.
+ */
 @Catch()
 export class ProblemDetailsExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(ProblemDetailsExceptionFilter.name);

@@ -56,8 +56,6 @@ describe('Health avec base injoignable (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
-    // Faux client : l'init réussit, mais toute requête échoue avec une erreur
-    // qui contient des secrets, pour vérifier qu'ils ne fuient pas.
     const unreachablePrisma = {
       onModuleInit: () => Promise.resolve(),
       onModuleDestroy: () => Promise.resolve(),
