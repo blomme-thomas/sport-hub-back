@@ -57,6 +57,14 @@ module.exports = {
       },
     },
     {
+      name: 'domain-application-no-http-client',
+      severity: 'error',
+      comment:
+        "Le client HTTP sortant (src/core/http) est un détail d'Infrastructure : ni le Domain ni l'Application ne l'importent (instructions/04).",
+      from: { path: '^src/modules/[^/]+/(domain|application)/' },
+      to: { path: '^src/core/http/' },
+    },
+    {
       name: 'presentation-no-infrastructure',
       severity: 'error',
       comment:

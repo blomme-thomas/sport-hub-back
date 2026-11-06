@@ -142,6 +142,10 @@ Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les aut
 
 Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`), à ce jour aucun.
 
+## Échec d'un service externe (`ExternalServiceError`)
+
+Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) lève `ExternalServiceError` quand un système externe échoue après les réessais. Ce n'est ni une `DomainError` ni une `HttpException` : le filtre la traite comme une exception inconnue et renvoie un 500 `INTERNAL_ERROR` avec le `detail` fixe `Une erreur interne est survenue.` (jamais le message, la cible ni le statut amont). L'erreur est loguée en `error` avec sa stack, et n'a pas de `cause`. Aucun code dédié n'existe à ce jour ; un Use Case peut la capturer pour la traduire en Business Error.
+
 ## Business Errors : règle du statut
 
 Le statut d'une `DomainError` vient de `DOMAIN_ERROR_STATUS` (table centralisée code vers statut). Un code absent de la table donne un 422 (`DEFAULT_DOMAIN_ERROR_STATUS`) et un log `warn` indiquant le code non mappé. Le `detail` est le `message` de l'erreur, renvoyé tel quel.
