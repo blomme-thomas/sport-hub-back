@@ -1,5 +1,8 @@
 export const PROBLEM_JSON_CONTENT_TYPE = 'application/problem+json';
 
+/** État d'une dépendance technique (base de données...). */
+export type DependencyStatus = 'up' | 'down';
+
 export interface ValidationErrorItem {
   field: string;
   code: string;
@@ -16,4 +19,5 @@ export interface ProblemDetails {
   code: string;
   correlationId: string;
   errors?: ValidationErrorItem[];
+  checks?: Readonly<Record<string, DependencyStatus>>;
 }

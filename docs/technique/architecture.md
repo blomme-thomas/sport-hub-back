@@ -11,9 +11,9 @@ Seul le socle technique est livré, dans `src/` :
 - `app.setup.ts` : réglages HTTP partagés avec les tests e2e (middleware de correlation id en premier, logger, préfixe global, CORS avec `X-Correlation-Id` exposé, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted`, `transform` et `exceptionFactory`, filtre global d'erreurs).
 - `app.module.ts` : assemble `AppConfigModule`, `PrismaModule` et `HealthModule`.
 - `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app` et `database`.
-- `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`, sans connexion au démarrage) ; client généré dans `generated/`.
-- `src/core/health` : route technique `GET /api/health`.
-- `src/core/filters` : filtre d'exceptions global `ProblemDetailsExceptionFilter`, table code vers statut HTTP (`error-status.table.ts`), factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`. Voir [Erreurs de l'API](erreurs-api.md).
+- `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`) : vérifie la base au démarrage (`onModuleInit`) et lève `DatabaseUnavailableError` si elle ne répond pas, voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md) ; client généré dans `generated/`.
+- `src/core/health` : route technique `GET /api/health` (200 si la base répond via `DatabaseHealthIndicator`, sinon 503 `SERVICE_UNAVAILABLE`).
+- `src/core/filters` : filtre d'exceptions global `ProblemDetailsExceptionFilter`, table code vers statut HTTP (`error-status.table.ts`), `DependencyUnavailableException` (dépendance technique indisponible, rendue en 503), factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`. Voir [Erreurs de l'API](erreurs-api.md).
 - `src/core/middlewares` : middleware d'identifiant de corrélation et son `AsyncLocalStorage`.
 - `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
 

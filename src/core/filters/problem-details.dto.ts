@@ -69,4 +69,13 @@ export class ProblemDetailsDto {
     description: 'Présent uniquement pour VALIDATION_FAILED',
   })
   errors?: ValidationErrorItemDto[];
+
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: { type: 'string', enum: ['up', 'down'] },
+    example: { database: 'down' },
+    description:
+      'Présent uniquement pour SERVICE_UNAVAILABLE : état des dépendances',
+  })
+  checks?: Record<string, 'up' | 'down'>;
 }
