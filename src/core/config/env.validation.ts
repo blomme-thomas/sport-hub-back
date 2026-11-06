@@ -75,9 +75,23 @@ function checkDatabaseUrl(env: DatabaseEnv, ctx: z.RefinementCtx): void {
   }
 }
 
+export const DEFAULT_GARMIN_PERSONAL_API_BASE_URL =
+  'https://personal.connectapi.garmin.com';
+
+export const garminEnvSchema = z.object({
+  GARMIN_PERSONAL_API_KEY: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().optional(),
+  ),
+  GARMIN_PERSONAL_API_BASE_URL: z
+    .url()
+    .default(DEFAULT_GARMIN_PERSONAL_API_BASE_URL),
+});
+
 export const databaseEnvSchema = databaseEnvShape.superRefine(checkDatabaseUrl);
 
 export const envSchema = appEnvSchema
+  .extend(garminEnvSchema.shape)
   .extend(databaseEnvShape.shape)
   .superRefine(checkDatabaseUrl);
 
