@@ -49,7 +49,12 @@ npm run start:dev
 | `deps:check` | Garde-fou d'architecture (dependency-cruiser) |
 | `prisma:validate` / `prisma:generate` / `prisma:migrate` / `prisma:studio` | Commandes Prisma (validate / generate / migrate dev / studio) |
 
-Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker-compose.yml` ne la crée pas (il ne crée que `DB_NAME`) ; en local, la créer à la main, par exemple : `docker exec <conteneur postgres> psql -U <utilisateur> -d postgres -c 'CREATE DATABASE sporthub_test'`. En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
+Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker compose up -d` la crée automatiquement, avec `DB_NAME`, via le script `docker/postgres/init/01-create-test-db.sh` (monté dans `/docker-entrypoint-initdb.d`, idempotent, il réutilise l'utilisateur du conteneur). En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
+
+Les scripts d'initialisation de l'image Postgres ne s'exécutent **qu'au premier démarrage d'un volume vide**. Sur un volume existant, deux options :
+
+- création ponctuelle : `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE sporthub_test"'` (ou `docker compose exec postgres bash /docker-entrypoint-initdb.d/01-create-test-db.sh`, idempotent) ;
+- recréation du volume : `docker compose down -v` puis `docker compose up -d` (**efface les données** de la base de développement).
 
 ## Variables d'environnement
 
