@@ -6,7 +6,6 @@ import {
   PROBLEM_CODES,
 } from './error-status.table.js';
 
-/** Classes de documentation Swagger uniquement : le filtre produit l'objet à la main. */
 export class ValidationErrorItemDto {
   @ApiProperty({
     example: 'address.city',

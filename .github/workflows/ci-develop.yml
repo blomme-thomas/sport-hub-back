@@ -1,6 +1,5 @@
 name: ci-develop
 
-# Validation complète quand une PR est fusionnée dans develop : tests, e2e, build.
 on:
   push:
     branches:
@@ -14,7 +13,6 @@ permissions:
   contents: read
 
 env:
-  # Valeur factice : prisma generate lit DATABASE_URL (prisma.config.ts) sans se connecter.
   DATABASE_URL: postgresql://sporthub:sporthub@localhost:5432/sporthub_test
 
 jobs:
@@ -57,7 +55,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
-      # Pas de migration tant qu'il n'y a aucun modèle.
       - name: Migrations
         run: |
           if [ -d prisma/migrations ]; then

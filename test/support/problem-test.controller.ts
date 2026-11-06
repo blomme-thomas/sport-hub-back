@@ -9,7 +9,6 @@ import {
 } from 'class-validator';
 import { DomainError } from '../../src/shared/domain/domain-error.js';
 
-/** Business Error volontairement absente de DOMAIN_ERROR_STATUS (donc 422 par défaut). */
 export class UnmappedTestError extends DomainError {
   readonly code = 'TEST_UNMAPPED_ERROR';
 
@@ -38,7 +37,6 @@ export class TestPayloadDto {
   address!: TestAddressDto;
 }
 
-/** Controller de test uniquement : fournit un déclencheur par type d'erreur. */
 @Controller('test-problems')
 export class ProblemTestController {
   @Get('domain-error')

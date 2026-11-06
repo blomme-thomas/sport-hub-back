@@ -31,7 +31,6 @@ describe('OpenAPI (e2e)', () => {
     };
     expect(schema).toBeDefined();
 
-    // L'enum nommé (enumName) peut être extrait en schéma séparé : on le suit.
     const codes =
       schema.properties['code']?.enum ??
       (

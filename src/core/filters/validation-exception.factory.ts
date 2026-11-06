@@ -2,7 +2,6 @@ import type { ValidationError } from 'class-validator';
 import type { ValidationErrorItem } from './problem-details.js';
 import { RequestValidationException } from './request-validation.exception.js';
 
-/** Nombre maximal d'erreurs de validation renvoyées dans `errors[]`. */
 export const MAX_VALIDATION_ERRORS = 100;
 
 function toUpperSnake(key: string): string {
@@ -40,8 +39,6 @@ function flatten(
     }
     const children = error.children ?? [];
     if (children.length > 0) {
-      // `value` fait foi quand il est présent ; sinon, repli : les enfants d'un
-      // tableau ont pour propriété un indice numérique.
       const childrenAreIndexes =
         error.value !== undefined
           ? Array.isArray(error.value)

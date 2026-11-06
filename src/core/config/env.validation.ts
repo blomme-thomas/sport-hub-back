@@ -3,7 +3,6 @@ import { z } from 'zod';
 
 export const APP_ENVIRONMENTS = ['development', 'test', 'production'] as const;
 
-// Du moins au plus sévère : activer un niveau active aussi tous ceux qui le suivent.
 export const LOG_LEVEL_VALUES = [
   'verbose',
   'debug',
