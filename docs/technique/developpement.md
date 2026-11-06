@@ -24,11 +24,11 @@ npm run start:dev
 ```
 
 - API sur `http://localhost:3000`, préfixe global `/api` (valeurs par défaut, configurables).
-- Route technique de santé : `GET /api/health` renvoie `{ "status": "ok" }`. Elle ne touche pas la base.
+- Route technique de santé : `GET /api/health` interroge la base (`SELECT 1`). Base joignable : 200 `{ "status": "ok", "checks": { "database": "up" } }`. Base injoignable : 503 Problem Details, `code` `SERVICE_UNAVAILABLE`, `checks.database` = `down` (voir [Erreurs de l'API](erreurs-api.md)).
 - Swagger : `/swagger` (hors préfixe `/api`).
 - Header `X-Correlation-Id` : présent sur toutes les réponses ; envoyer le sien (`/^[A-Za-z0-9._:-]{1,128}$/`) pour le retrouver dans les logs, sinon un UUID est généré.
 - Erreurs : toutes au format `application/problem+json` (RFC 9457), voir [Erreurs de l'API](erreurs-api.md).
-- Prisma ne se connecte qu'à la première requête : l'application démarre même sans base.
+- La base est obligatoire au démarrage : `PrismaService.onModuleInit` fait `$connect` puis `SELECT 1` (timeout de connexion 5 s). Si elle ne répond pas, l'application s'arrête avec `Base de données injoignable (<hôte>:<port>/<base>)`, suivi du code d'erreur (ex. `ECONNREFUSED`) quand il est sûr. Ni utilisateur, ni mot de passe, ni URL de connexion dans le message. Voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md).
 - Une configuration invalide (variable manquante ou incorrecte) fait échouer le démarrage avec le détail des erreurs.
 
 ## Base de données locale
@@ -49,7 +49,7 @@ npm run start:dev
 | `deps:check` | Garde-fou d'architecture (dependency-cruiser) |
 | `prisma:validate` / `prisma:generate` / `prisma:migrate` / `prisma:studio` | Commandes Prisma (validate / generate / migrate dev / studio) |
 
-Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`.
+Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker-compose.yml` ne la crée pas (il ne crée que `DB_NAME`) ; en local, la créer à la main, par exemple : `docker exec <conteneur postgres> psql -U <utilisateur> -d postgres -c 'CREATE DATABASE sporthub_test'`. En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
 
 ## Variables d'environnement
 

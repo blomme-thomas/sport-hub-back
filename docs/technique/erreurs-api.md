@@ -14,6 +14,7 @@ Toute erreur est renvoyée au format RFC 9457 Problem Details, avec le `Content-
 | `code` | code stable (contrat public) |
 | `correlationId` | identifiant de corrélation (aussi dans le header `X-Correlation-Id`) |
 | `errors` | présent uniquement pour `VALIDATION_FAILED` : liste de `{ field, code, message }` |
+| `checks` | présent uniquement pour `SERVICE_UNAVAILABLE` : état par dépendance, ex. `{ "database": "down" }` (valeurs `up` ou `down`) |
 
 Le schéma OpenAPI (`ProblemDetailsDto`) est généré dans Swagger ; il n'est pas recopié ici.
 
@@ -79,6 +80,21 @@ Erreur interne (500), jamais de détail interne :
 }
 ```
 
+Dépendance indisponible (503), ici la base lors de `GET /api/health` :
+
+```json
+{
+  "type": "urn:sport-hub:problem:service-unavailable",
+  "title": "Service Unavailable",
+  "status": 503,
+  "detail": "Une dépendance du service est indisponible.",
+  "instance": "/api/health",
+  "code": "SERVICE_UNAVAILABLE",
+  "correlationId": "...",
+  "checks": { "database": "down" }
+}
+```
+
 JSON invalide (400) :
 
 ```json
@@ -119,7 +135,8 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 | `NOT_FOUND` | 404 | route ou ressource absente (`HttpException` 404) |
 | `PAYLOAD_TOO_LARGE` | 413 | corps trop volumineux |
 | `CLIENT_ERROR` | statut 4xx d'origine (401, 403, 405, 409, 415, 429...) | autre 4xx d'`HttpException` ; `detail` = message de l'exception |
-| `INTERNAL_ERROR` | 500, ou statut 5xx d'origine d'une `HttpException` (ex. 502, 503) | erreur technique ; `detail` fixe, message masqué |
+| `SERVICE_UNAVAILABLE` | 503 | `DependencyUnavailableException` uniquement (`src/core/filters/dependency-unavailable.exception.ts`) ; `detail` fixe, extension `checks` |
+| `INTERNAL_ERROR` | 500, ou statut 5xx d'origine d'une autre `HttpException` (ex. 502, ou un 503 levé autrement comme `ServiceUnavailableException` de Nest) | erreur technique ; `detail` fixe, message masqué |
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 

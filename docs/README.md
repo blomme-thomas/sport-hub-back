@@ -12,6 +12,7 @@
 - Décisions (`technique/decisions/`) :
   - [0001 : table centralisée code vers statut HTTP](technique/decisions/0001-table-centralisee-code-statut.md)
   - [0002 : correlation id par middleware et AsyncLocalStorage](technique/decisions/0002-correlation-id-middleware-als.md)
+  - [0003 : connexion à la base au démarrage et dans le health check](technique/decisions/0003-connexion-base-au-demarrage.md)
 
 ## Fonctionnel
 - [Fonctionnalités](fonctionnel/fonctionnalites.md)
