@@ -47,6 +47,7 @@ describe('OpenAPI (e2e)', () => {
         'PAYLOAD_TOO_LARGE',
         'CLIENT_ERROR',
         'INTERNAL_ERROR',
+        'SERVICE_UNAVAILABLE',
       ]),
     );
   });
@@ -67,6 +68,16 @@ describe('OpenAPI (e2e)', () => {
 
   it('documente_un_500_problem_json_sur_api_health', () => {
     const response = document.paths['/api/health']?.get?.responses?.['500'] as {
+      content?: Record<string, { schema?: { $ref?: string } }>;
+    };
+    expect(response).toBeDefined();
+    expect(
+      response.content?.['application/problem+json']?.schema?.$ref,
+    ).toContain('ProblemDetailsDto');
+  });
+
+  it('documente_un_503_problem_json_sur_api_health', () => {
+    const response = document.paths['/api/health']?.get?.responses?.['503'] as {
       content?: Record<string, { schema?: { $ref?: string } }>;
     };
     expect(response).toBeDefined();

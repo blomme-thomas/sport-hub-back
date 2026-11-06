@@ -7,6 +7,7 @@ export const GENERIC_PROBLEM_CODES = {
   PAYLOAD_TOO_LARGE: 413,
   CLIENT_ERROR: 400 /* autre 4xx */,
   INTERNAL_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
 } as const;
 
 /**

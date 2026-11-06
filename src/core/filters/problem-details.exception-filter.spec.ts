@@ -12,6 +12,7 @@ import type { HttpAdapterHost } from '@nestjs/core';
 import { ValidationError } from 'class-validator';
 import { DomainError } from '../../shared/domain/domain-error.js';
 import { runWithCorrelationId } from '../middlewares/correlation-id.storage.js';
+import { DependencyUnavailableException } from './dependency-unavailable.exception.js';
 import { PROBLEM_JSON_CONTENT_TYPE } from './problem-details.js';
 import { ProblemDetailsExceptionFilter } from './problem-details.exception-filter.js';
 import { RequestValidationException } from './request-validation.exception.js';
@@ -328,6 +329,73 @@ describe('ProblemDetailsExceptionFilter', () => {
       expect(body.errors).toHaveLength(100);
       expect(body.detail).toContain('130 erreur(s)');
       expect(body.detail).toContain('La liste est tronquée à 100 erreurs.');
+    });
+  });
+
+  describe('DependencyUnavailableException', () => {
+    it('répond 503 SERVICE_UNAVAILABLE avec les checks et un detail fixe', () => {
+      const { filter, host, adapter } = setup({ url: '/api/health' });
+
+      runWithCorrelationId('corr-503', () =>
+        filter.catch(
+          new DependencyUnavailableException({ database: 'down' }),
+          host,
+        ),
+      );
+
+      const { body, status } = replied(adapter);
+      expect(status).toBe(503);
+      expect(body).toMatchObject({
+        type: 'urn:sport-hub:problem:service-unavailable',
+        title: 'Service Unavailable',
+        status: 503,
+        code: 'SERVICE_UNAVAILABLE',
+        instance: '/api/health',
+        correlationId: 'corr-503',
+        checks: { database: 'down' },
+      });
+      expect(typeof body.detail).toBe('string');
+      expect(body.detail).not.toBe('Une erreur interne est survenue.');
+      expect(body).not.toHaveProperty('errors');
+      expect(adapter.setHeader).toHaveBeenCalledWith(
+        expect.anything(),
+        'Content-Type',
+        PROBLEM_JSON_CONTENT_TYPE,
+      );
+      expect(adapter.setHeader).toHaveBeenCalledWith(
+        expect.anything(),
+        'X-Correlation-Id',
+        'corr-503',
+      );
+    });
+
+    it('logue en error (statut >= 500)', () => {
+      const { filter, host } = setup();
+
+      filter.catch(
+        new DependencyUnavailableException({ database: 'down' }),
+        host,
+      );
+
+      expect(error).toHaveBeenCalled();
+    });
+
+    it('n ajoute pas checks aux autres erreurs 5xx', () => {
+      const { filter, host, adapter } = setup();
+
+      filter.catch(new HttpException('maintenance', 503), host);
+
+      const { body } = replied(adapter);
+      expect(body.code).toBe('INTERNAL_ERROR');
+      expect(body).not.toHaveProperty('checks');
+    });
+
+    it('n ajoute pas checks à une erreur inconnue', () => {
+      const { filter, host, adapter } = setup();
+
+      filter.catch(new Error('x'), host);
+
+      expect(replied(adapter).body).not.toHaveProperty('checks');
     });
   });
 

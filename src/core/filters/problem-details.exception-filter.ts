@@ -19,7 +19,9 @@ import {
   DOMAIN_ERROR_STATUS,
   GENERIC_PROBLEM_CODES,
 } from './error-status.table.js';
+import { DependencyUnavailableException } from './dependency-unavailable.exception.js';
 import {
+  type DependencyStatus,
   PROBLEM_JSON_CONTENT_TYPE,
   type ProblemDetails,
   type ValidationErrorItem,
@@ -27,6 +29,8 @@ import {
 import { RequestValidationException } from './request-validation.exception.js';
 
 const INTERNAL_ERROR_DETAIL = 'Une erreur interne est survenue.';
+const SERVICE_UNAVAILABLE_DETAIL =
+  'Une dépendance du service est indisponible.';
 const MALFORMED_BODY_DETAIL = 'Le corps de la requête est invalide.';
 const TOO_LARGE_DETAIL = 'Le corps de la requête est trop volumineux.';
 
@@ -35,6 +39,7 @@ interface Resolved {
   code: string;
   detail: string;
   errors?: ValidationErrorItem[];
+  checks?: Readonly<Record<string, DependencyStatus>>;
 }
 
 interface BodyParserError {
@@ -157,6 +162,7 @@ export class ProblemDetailsExceptionFilter implements ExceptionFilter {
       code: resolved.code,
       correlationId,
       ...(resolved.errors ? { errors: resolved.errors } : {}),
+      ...(resolved.checks ? { checks: resolved.checks } : {}),
     };
 
     httpAdapter.setHeader(res, 'X-Correlation-Id', correlationId);
@@ -191,6 +197,14 @@ export class ProblemDetailsExceptionFilter implements ExceptionFilter {
         status: mapped ?? DEFAULT_DOMAIN_ERROR_STATUS,
         code: exception.code,
         detail: exception.message,
+      };
+    }
+
+    if (exception instanceof DependencyUnavailableException) {
+      return {
+        ...generic('SERVICE_UNAVAILABLE'),
+        detail: SERVICE_UNAVAILABLE_DETAIL,
+        checks: exception.checks,
       };
     }
 
