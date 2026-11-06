@@ -1,11 +1,11 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma initialisé sans modèle, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture). Aucun module métier ni aucune fonctionnalité livrés à ce jour. Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture). Aucun module métier ni aucune fonctionnalité livrés à ce jour. Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
 - [Workflow Git](technique/workflow-git.md)
-- [Données](technique/donnees.md)
+- [Données](technique/donnees.md) (modèle `Activity`, migrations)
 - [Développement](technique/developpement.md)
 - [Erreurs de l'API](technique/erreurs-api.md) (RFC 9457, codes, correlation id)
 - Contextes (`technique/contextes/<nom>.md`) : à compléter, aucun contexte livré.

@@ -41,7 +41,7 @@ applyTo: 'src/modules/*/infrastructure/persistence/**,src/modules/*/domain/ports
 - Persistance : Prisma + PostgreSQL (`prisma/schema.prisma`). Le modèle Prisma généré est distinct des entities de domaine : conversion dans `infrastructure/persistence/prisma/<name>.mapper.ts` (squelette `instructions/templates/mapper.template.ts`) ; pas de décorateur Prisma sur les entities de domaine.
 - Port : `domain/ports/outbound/<name>.repository.port.ts` (interface `I<Name>Repository` + token `Symbol`, squelette `instructions/templates/outbound-port.template.ts`) ; adapter : `infrastructure/persistence/prisma/<name>.repository.adapter.ts` (squelette `instructions/templates/repository-adapter.template.ts`), injectant un `PrismaService` partagé depuis `src/core/prisma`.
 - Systèmes externes (Garmin Connect, Claude/Anthropic) : adapters dédiés dans `infrastructure/adapters/`, pas dans `infrastructure/persistence/` — voir `08` et `11` §Spécificités du domaine (squelette générique : `instructions/templates/external-port.template.ts`).
-- Pas de migration constatée à ce jour : ne pas supposer de schéma existant ni utiliser `prisma db push` en production — `prisma migrate dev`/`deploy` dès la première migration (`11` §Commandes).
+- Migrations versionnées dans `prisma/migrations` (première : table `activities`) : ne jamais les éditer, une évolution = une nouvelle migration via `prisma migrate dev` ; pas de `prisma db push` ; `prisma migrate deploy` en CI, e2e et production (`11` §Commandes). Le modèle `Activity` n'a pas encore de repository ni d'entity de domaine.
 - Cache Redis : optionnel, à introduire dans `src/core/cache` seulement sur besoin réel (ex. limiter les appels à l'API Garmin).
 
 ## Migrations de schéma
