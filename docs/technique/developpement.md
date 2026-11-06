@@ -33,7 +33,7 @@ npm run start:dev
 
 ## Base de données locale
 
-`docker-compose.yml` définit un service `postgres` (image `postgres:16`, volume `postgres_data`). Utilisateur, mot de passe, nom de base et port hôte viennent des variables `DB_*` du `.env` (le démarrage échoue si l'une manque). Aucune migration à ce jour (voir [Données](donnees.md)).
+`docker-compose.yml` définit un service `postgres` (image `postgres:16`, volume `postgres_data`). Utilisateur, mot de passe, nom de base et port hôte viennent des variables `DB_*` du `.env` (le démarrage échoue si l'une manque). Appliquer les migrations sur la base de développement : `npm run prisma:migrate:deploy` (voir [Données](donnees.md)).
 
 ## Scripts npm
 
@@ -47,9 +47,12 @@ npm run start:dev
 | `test` / `test:watch` / `test:cov` / `test:debug` | Tests unitaires Vitest (`**/*.spec.ts`) : une passe / watch / couverture / debug |
 | `test:e2e` | Tests e2e Vitest (`vitest.config.e2e.ts`, `**/*.e2e-spec.ts`, dans `test/`) |
 | `deps:check` | Garde-fou d'architecture (dependency-cruiser) |
-| `prisma:validate` / `prisma:generate` / `prisma:migrate` / `prisma:studio` | Commandes Prisma (validate / generate / migrate dev / studio) |
+| `prisma:validate` / `prisma:generate` / `prisma:studio` | Commandes Prisma (validate / generate / studio) |
+| `prisma:migrate` | `prisma migrate dev` : crée et applique une migration à partir du schéma |
+| `prisma:migrate:deploy` | `prisma migrate deploy` : applique les migrations existantes (CI, déploiement) |
+| `prisma:migrate:reset` | `prisma migrate reset` : recrée la base et rejoue les migrations (**efface les données**) |
 
-Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker compose up -d` la crée automatiquement, avec `DB_NAME`, via le script `docker/postgres/init/01-create-test-db.sh` (monté dans `/docker-entrypoint-initdb.d`, idempotent, il réutilise l'utilisateur du conteneur). En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
+Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Avant les tests, un `globalSetup` Vitest applique les migrations sur cette base (`prisma migrate deploy`) : inutile de les lancer à la main en local. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker compose up -d` la crée automatiquement, avec `DB_NAME`, via le script `docker/postgres/init/01-create-test-db.sh` (monté dans `/docker-entrypoint-initdb.d`, idempotent, il réutilise l'utilisateur du conteneur). En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
 
 Les scripts d'initialisation de l'image Postgres ne s'exécutent **qu'au premier démarrage d'un volume vide**. Sur un volume existant, deux options :
 
@@ -85,6 +88,6 @@ Base de données (toutes obligatoires, sans défaut) :
 ## CI (GitHub Actions, `.github/workflows/`)
 
 - `ci-branch` : à chaque push sur `feature/**` et `fix/**` : `npm ci`, `prisma generate`, format, lint, `deps:check`, `npm audit` (échoue sur high et critical).
-- `ci-develop` : à chaque push sur `develop` (PR fusionnée) : tests unitaires, tests e2e (service PostgreSQL 16, migrations appliquées seulement si `prisma/migrations` existe), build.
+- `ci-develop` : à chaque push sur `develop` (PR fusionnée) : tests unitaires, tests e2e (service PostgreSQL 16, étape « Migrations » `npm run prisma:migrate:deploy` avant les e2e), build.
 - `ci-release` : sur les branches `release/**` et les PR vers `main` issues d'une release : garde-fou de version (voir [Workflow Git](workflow-git.md)).
 - `ci-main` : à chaque push sur `main` issu d'un merge de `release/**` : création automatique du tag `vx.y.z` et de la release GitHub (voir [Workflow Git](workflow-git.md)).

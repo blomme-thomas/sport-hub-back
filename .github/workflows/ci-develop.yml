@@ -56,12 +56,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - name: Migrations
-        run: |
-          if [ -d prisma/migrations ]; then
-            npx prisma migrate deploy
-          else
-            echo "Aucune migration à appliquer."
-          fi
+        run: npm run prisma:migrate:deploy
       - name: Tests e2e
         run: npm run test:e2e
 

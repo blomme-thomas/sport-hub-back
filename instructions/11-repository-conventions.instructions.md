@@ -4,7 +4,7 @@ applyTo: '**'
 ---
 # Conventions du dépôt (sport-hub-back)
 
-> **Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (schéma vide), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Il n'y a pas encore de module dans `src/modules/` : l'arborescence par module ci-dessous est une **convention cible** à appliquer dès le premier module. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
+> **Squelette initialisé, aucun module métier.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (modèle `Activity` et première migration, sans module), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Il n'y a pas encore de module dans `src/modules/` : l'arborescence par module ci-dessous est une **convention cible** à appliquer dès le premier module. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
 
 ## Stack
 
@@ -196,7 +196,7 @@ Aucune (cf. décision actée) : l'API est exposée uniquement en local, pas de g
 
 - Démarrage : `docker compose up -d postgres` (base locale ; identifiants lus dans `.env`), `npm run start:dev`, `npm run build`.
 - Qualité : `npm run format:check` (`npm run format` pour corriger), `npm run lint`, `npm run deps:check`, `npm run test`, `npm run test:e2e`, `npm audit --audit-level=high`.
-- Prisma : `npm run prisma:generate` (client, à relancer après chaque modification du schéma et après un `npm install` sur un dépôt neuf), `npm run prisma:validate`, `npm run prisma:migrate` (`prisma migrate dev`), `npm run prisma:studio` ; `npx prisma migrate deploy` en production.
+- Prisma : `npm run prisma:generate` (client, à relancer après chaque modification du schéma et après un `npm install` sur un dépôt neuf), `npm run prisma:validate`, `npm run prisma:migrate` (`prisma migrate dev`), `npm run prisma:migrate:deploy` (`prisma migrate deploy` : CI, e2e, production), `npm run prisma:migrate:reset` (efface les données), `npm run prisma:studio`.
 - `prisma generate` lit `DATABASE_URL` (via `prisma.config.ts`) même sans se connecter : elle doit être définie dans l'environnement, valeur factice acceptée (c'est ce que fait la CI).
 
-Le schéma Prisma est vide à ce jour (aucun modèle, aucune migration) : ne pas supposer de schéma existant ni utiliser `db push` en production — `prisma migrate` dès la première migration.
+Le schéma Prisma ne contient que le modèle `Activity` (table `activities`, voir `docs/technique/donnees.md`) et une migration versionnée dans `prisma/migrations` : ne pas supposer d'autre table, ne jamais éditer une migration existante (une évolution = une nouvelle migration via `prisma migrate dev`), ne pas utiliser `db push`. Les e2e appliquent les migrations eux-mêmes (`globalSetup`, base `sporthub_test`) ; la CI les applique avant `test:e2e`.
