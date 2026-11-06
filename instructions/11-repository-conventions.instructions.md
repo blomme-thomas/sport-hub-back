@@ -172,6 +172,16 @@ Aucune (cf. décision actée) : l'API est exposée uniquement en local, pas de g
 - `.env.template` (versionné, sans secret) doit rester synchronisé avec les schémas ; `.env` est ignoré par Git. Une nouvelle variable = schéma + `.env.template` + (si utile) `vitest.config.e2e.ts`.
 - Un nouveau module technique ou métier qui a besoin de configuration ajoute son namespace et le déclare dans `AppConfigModule`. Les clés secrètes (Anthropic, Garmin) sont obligatoires seulement quand le code les utilise, jamais avant (la CI n'a aucun secret).
 
+## Commentaires et TSDoc
+
+- **Aucun commentaire d'explication** : ni `//`, ni `/* */`, ni `#` en YAML/shell (hors shebang), ni code commenté, ni bannière de section, ni référence à un ticket ou à une story. Un pourquoi non évident va dans la TSDoc du symbole ou dans un ADR. Les directives d'outils (`oxlint-disable`, `@ts-expect-error`) ne sont pas des commentaires d'explication et restent permises, sans prose.
+- **TSDoc `/** */` en français, uniquement sur les contrats publics** : ports (inbound, outbound, externes), `execute()` des Use Cases, méthodes métier des Aggregates/Entities qui portent un invariant, fonctions et classes exportées de `core/` et `shared/` qui portent un contrat (ex. `safeErrorCode`, `DomainError`, `DatabaseUnavailableError`, `DependencyUnavailableException`).
+- **Pas de TSDoc** sur les méthodes privées, getters, constructeurs, contrôleurs, DTO (Swagger les décrit déjà), ni dans les tests.
+- **Format** : première ligne = ce que le symbole fait ou garantit (verbe), puis éventuellement le pourquoi ou l'invariant ; `@throws` pour les erreurs métier ; `@param`/`@returns` seulement si le nom et le type ne suffisent pas. Ne répète jamais la signature.
+- **Périmètre** : `src/` et `test/` (hors `src/core/prisma/generated/`), `docker-compose.yml`, `.github/workflows/*.yml`, `docker/postgres/init/*.sh` : aucun commentaire. Exemptés : `.env.template` (il documente les variables), `instructions/templates/`, et les `description` des décorateurs Swagger (`@ApiProperty` etc.), qui ne sont pas des commentaires.
+- **Squelettes** : les commentaires de `instructions/templates/*.ts` sont pédagogiques et **ne se recopient pas** dans le code copié, sauf la TSDoc d'un contrat public.
+- **Code généré** (`src/core/prisma/generated/`) : jamais touché.
+
 ## Garde-fou d'architecture
 
 `npm run deps:check` (`dependency-cruiser`, règles dans `.dependency-cruiser.cjs`, exécuté par `ci-branch`) vérifie : pas de cycle ; le Domain ne dépend ni des autres couches ni de NestJS, de client ou d'ORM ; l'Application ne dépend ni de l'Infrastructure, ni de la Presentation, ni de client ou d'ORM (`@nestjs/common` autorisé) ; la Presentation n'appelle pas l'Infrastructure ; `src/core` et `src/shared` ne dépendent pas de `src/modules` ; pas d'import de `devDependencies` en production. L'isolation entre modules est un simple avertissement tant que le contrat entre modules n'est pas défini. Si une règle bloque un cas légitime, la discuter plutôt que la contourner.
