@@ -37,11 +37,13 @@ applyTo: 'src/modules/*/presentation/**,src/modules/*/infrastructure/adapters/**
 - Authentification : **aucune** — usage strictement local, décision actée en `11`. Pas de guard global, pas d'utilisateur courant à extraire.
 - Erreurs : Business Errors du Domain traduites par un filtre global dédié (`core/filters`) en réponse RFC 9457 Problem Details (`code` stable, `errors[]`, `correlationId`) ; le statut HTTP vient de la table centralisée (voir `11` §Erreurs HTTP) ; erreurs techniques (appel Garmin/Claude en échec) traduites en 5xx sans détail interne.
 - Ne jamais renvoyer un modèle Prisma ni une Entity de domaine ; toujours un DTO de réponse.
+- Adapter externe : la traduction du modèle externe vers le domaine est portée par un mapper dédié, `infrastructure/mappers/<name>.external-mapper.ts` (toujours présent, jamais dans le dossier `adapters/` ni inline dans l'Adapter).
 - Le contrôleur ne contient aucune méthode de conversion (ni `private static toResponse`, ni fonction de formatage) : tout passe par le mapper de présentation du module (`<Name>HttpMapper`, voir `11` §Conventions de nommage).
 - Systèmes externes propres à ce dépôt : Garmin Connect (sync, lecture seule côté domaine) et Claude/Anthropic (génération de séances) — encapsulés dans `infrastructure/adapters/`, en Anti-Corruption Layer pour Garmin (voir `11` §Spécificités du domaine) ; URL, clés API et secrets via la configuration typée (variables d'environnement déclarées et validées par zod dans `src/core/config`, voir `11` §Configuration), jamais dans le code.
 
 ## Anti-patterns
 - Controller qui appelle un Repository ou applique des règles métier.
 - Conversions (DTO applicatif → réponse, formatage de dates, valeurs par défaut) écrites directement dans le contrôleur au lieu d'un mapper de présentation.
+- Traduction d'un modèle externe (payload Garmin, réponse Claude) écrite inline dans l'Adapter au lieu d'un mapper dans `infrastructure/mappers/`.
 - Même classe pour Domain Model, Transport DTO et Persistence Model.
 - Types ou codes d'erreur du fournisseur externe propagés jusqu'au Domain.
