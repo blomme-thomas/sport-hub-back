@@ -183,6 +183,26 @@ describe('GarminConnectAdapter', () => {
       expect(activity.startedAt.toISOString()).toBe('2026-12-31T23:59:59.000Z');
     });
 
+    it('accepte un élément qui ne porte que les champs obligatoires de SummarizedActivityDTO', async () => {
+      activitiesHandler = (_req, res) =>
+        reply(res, 200, [
+          {
+            activityId: 42,
+            activityType: { typeKey: 'hiking' },
+            startTimeGMT: '2026-05-02 08:00:00',
+            duration: 1200,
+          },
+        ]);
+
+      const [activity] = await adapter().fetchActivitiesSince(null);
+
+      expect(activity.garminActivityId.toString()).toBe('42');
+      expect(activity.type).toBe('hiking');
+      expect(activity.startedAt.toISOString()).toBe('2026-05-02T08:00:00.000Z');
+      expect(activity.durationSeconds).toBe(1200);
+      expect(activity.distanceMeters).toBeNull();
+    });
+
     it('mappe une distance absente à null', async () => {
       const { distance: _distance, ...withoutDistance } = garminItem(1);
       activitiesHandler = (_req, res) => reply(res, 200, [withoutDistance]);
@@ -228,7 +248,15 @@ describe('GarminConnectAdapter', () => {
         new Date('2026-01-10T12:00:00.000Z'),
       );
 
-      expect(query(activityHits[0]).get('startDate')).toMatch(/^2026-01-10/);
+      expect(query(activityHits[0]).get('startDate')).toBe('2026-01-09');
+    });
+
+    it('recule la date de début d un jour pour absorber le décalage entre heure locale et UTC', async () => {
+      await adapter().fetchActivitiesSince(
+        new Date('2026-03-01T00:30:00.000+02:00'),
+      );
+
+      expect(query(activityHits[0]).get('startDate')).toBe('2026-02-27');
     });
 
     it("remonte environ 365 jours en arrière quand aucune borne n'est fournie", async () => {
@@ -244,7 +272,12 @@ describe('GarminConnectAdapter', () => {
       await adapter().fetchActivitiesSince(null);
 
       expect(query(activityHits[0]).get('start')).toBe('0');
-      expect(Number(query(activityHits[0]).get('limit'))).toBeGreaterThan(0);
+    });
+
+    it('demande des pages de 99 activités, valeur documentée par la spécification', async () => {
+      await adapter().fetchActivitiesSince(null);
+
+      expect(query(activityHits[0]).get('limit')).toBe('99');
     });
   });
 
@@ -310,6 +343,12 @@ describe('GarminConnectAdapter', () => {
       ['avec une durée négative', { duration: -5 }],
       ['avec une durée textuelle', { duration: 'longue' }],
       ['avec une distance négative', { distance: -1 }],
+      ['avec un identifiant en chaîne', { activityId: '2' }],
+      ['avec un identifiant au-delà de 2^53', { activityId: 2 ** 53 }],
+      [
+        'avec une date à fraction de seconde',
+        { startTimeGMT: '2026-05-01 06:30:00.0' },
+      ],
     ])(
       'saute une activité %s sans faire échouer la synchronisation',
       async (_label, overrides) => {
@@ -350,6 +389,23 @@ describe('GarminConnectAdapter', () => {
 
       const output = logged.join('\n');
       expect(output).toContain('987654');
+      expect(output).not.toContain('Nom privé du séjour');
+    });
+
+    it("journalise sans le payload un élément dont l'identifiant est mal typé", async () => {
+      activitiesHandler = (_req, res) =>
+        reply(res, 200, [
+          garminItem(1, {
+            activityId: 'Nom privé du séjour',
+            duration: 'abc',
+          }),
+        ]);
+
+      const activities = await adapter().fetchActivitiesSince(null);
+
+      const output = logged.join('\n');
+      expect(activities).toHaveLength(0);
+      expect(output).toContain('inconnu');
       expect(output).not.toContain('Nom privé du séjour');
     });
   });

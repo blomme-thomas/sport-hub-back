@@ -3,10 +3,10 @@ import { Activity } from '../../domain/entities/activity.entity.js';
 import { InvalidActivityError } from '../../domain/errors/invalid-activity.error.js';
 import { GarminActivityId } from '../../domain/value-objects/garmin-activity-id.vo.js';
 
-const GMT_TIMESTAMP = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/;
+const GMT_TIMESTAMP = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 
 const garminActivitySchema = z.object({
-  activityId: z.union([z.number().int().nonnegative(), z.string().min(1)]),
+  activityId: z.number().int().safe().nonnegative(),
   activityType: z.object({ typeKey: z.string().min(1) }),
   startTimeGMT: z.string().regex(GMT_TIMESTAMP),
   duration: z.number().min(0),
@@ -49,7 +49,7 @@ export class GarminConnectExternalMapper {
   private static identify(item: unknown): string {
     if (typeof item === 'object' && item !== null && 'activityId' in item) {
       const id = (item as { activityId: unknown }).activityId;
-      if (typeof id === 'number' || typeof id === 'string') {
+      if (typeof id === 'number' && Number.isSafeInteger(id)) {
         return String(id);
       }
     }

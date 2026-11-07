@@ -183,7 +183,7 @@ describe('Synchronisation Garmin (e2e)', () => {
     expect(stored.rawPayload).toMatchObject({ activityName: 'Renommée' });
   });
 
-  it('seconde_execution_reprend_sept_jours_avant_la_derniere_activite', async () => {
+  it('seconde_execution_reprend_la_fenetre_de_sept_jours_moins_un_jour', async () => {
     activitiesHandler = (_req, res) => reply(res, 200, [garminItem(1)]);
     await run().expect(200);
     activityRequests = [];
@@ -194,7 +194,7 @@ describe('Synchronisation Garmin (e2e)', () => {
       activityRequests[0].url ?? '',
       'http://localhost',
     ).searchParams.get('startDate');
-    expect(startDate).toMatch(/^2026-04-24/);
+    expect(startDate).toBe('2026-04-23');
   });
 
   it('activite_invalide_est_sautee_sans_faire_echouer_la_synchronisation', async () => {
