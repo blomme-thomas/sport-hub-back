@@ -85,8 +85,7 @@ describe('Synchronisation Garmin (e2e)', () => {
 
   beforeEach(async () => {
     activityRequests = [];
-    tokenHandler = (_req, res) =>
-      reply(res, 200, FAKE_JWT);
+    tokenHandler = (_req, res) => reply(res, 200, FAKE_JWT);
     activitiesHandler = (_req, res) => reply(res, 200, []);
 
     const moduleFixture = await Test.createTestingModule({

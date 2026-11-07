@@ -211,7 +211,9 @@ describe('GarminConnectAdapter', () => {
       await adapter().fetchActivitiesSince(null);
 
       expect(activityHits[0].method).toBe('GET');
-      expect(activityHits[0].headers.authorization).toBe(`Bearer ${fakeJwt(1)}`);
+      expect(activityHits[0].headers.authorization).toBe(
+        `Bearer ${fakeJwt(1)}`,
+      );
     });
 
     it("n'envoie la clé Garmin ni dans l'URL ni dans les en-têtes d'activités", async () => {
@@ -421,7 +423,9 @@ describe('GarminConnectAdapter', () => {
         expect(activities).toHaveLength(1);
         expect(tokenHits).toHaveLength(2);
         expect(activityHits).toHaveLength(2);
-        expect(activityHits[1].headers.authorization).toBe(`Bearer ${fakeJwt(2)}`);
+        expect(activityHits[1].headers.authorization).toBe(
+          `Bearer ${fakeJwt(2)}`,
+        );
       },
     );
 
