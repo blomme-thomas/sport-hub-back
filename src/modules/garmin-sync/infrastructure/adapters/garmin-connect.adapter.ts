@@ -15,7 +15,7 @@ import { GarminConnectExternalMapper } from '../mappers/garmin-connect.external-
 
 const TARGET = 'garmin-personal-api';
 const ACTIVITIES_PATH = '/activitylist-service/activities/search/activities';
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 99;
 const MAX_PAGES = 50;
 const DEFAULT_HISTORY_DAYS = 365;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -31,9 +31,9 @@ export class GarminConnectAdapter implements IGarminConnectClient {
   ) {}
 
   async fetchActivitiesSince(since: Date | null): Promise<Activity[]> {
-    const startDate = this.formatDate(
-      since ?? new Date(Date.now() - DEFAULT_HISTORY_DAYS * DAY_MS),
-    );
+    const startDate = since
+      ? this.formatDate(new Date(since.getTime() - DAY_MS))
+      : this.formatDate(new Date(Date.now() - DEFAULT_HISTORY_DAYS * DAY_MS));
     const activities: Activity[] = [];
 
     for (let page = 0; page < MAX_PAGES; page += 1) {

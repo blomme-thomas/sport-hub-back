@@ -19,6 +19,7 @@ Statut après la story #24, sources dans la spécification officielle (`garmin/s
 | Sujet | Statut |
 |---|---|
 | Quotas et limites de débit | non vérifié : la spécification ne décrit ni quota ni code 429 |
+| Taille de page des activités | vérifié : `limit` de `GET /activitylist-service/activities/search/activities` vaut 99 par défaut (valeur envoyée par l'adapter). Maximum de `limit` non vérifié : aucun plafond n'est documenté |
 | Profondeur de l'historique disponible | non vérifié pour les activités : aucune borne documentée sur `GET /activitylist-service/activities/search/activities`. Les endpoints de santé ont des fenêtres maximales (31 jours, 28 jours, 1 an selon l'endpoint) |
 | Scopes du jeton par endpoint | non précisé par la spécification (aucun `securitySchemes`) |
 | Endpoints d'activités | vérifié : `GET /activity-service/activity/{activityId}`, `GET /activity-service/activity/{activityId}/workouts`, `GET /activitylist-service/activities/search/activities`, `GET /download-service/files/activity/{activityId}` |

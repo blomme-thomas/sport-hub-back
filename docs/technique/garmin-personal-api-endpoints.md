@@ -378,17 +378,19 @@ Hypothèses de la synchronisation (`docs/technique/contextes/garmin-sync.md`, se
 | Sujet | Hypothèse de #8 | Spécification | Statut |
 |---|---|---|---|
 | Endpoint | `GET /activitylist-service/activities/search/activities` | Opération E03, même chemin | Confirmé |
-| Taille de page | `PAGE_SIZE` = 100 | `limit` : défaut **99**, maximum non précisé | **Écart** |
-| Arrêt de pagination | arrêt quand une page contient moins de `PAGE_SIZE` éléments | Si Garmin plafonne `limit` en dessous de 100, une page pleine paraît incomplète et la pagination s'arrête trop tôt | **Risque**, à vérifier |
-| `startDate` | date seule `AAAA-MM-JJ`, lue en UTC | Date sur l'**heure locale** de l'activité (`startDate` et `endDate` inclusifs) | **Écart** |
+| Taille de page | `PAGE_SIZE` = 100 (#8) | `limit` : défaut **99**, maximum non précisé | **Corrigé** en #25 : `PAGE_SIZE` = 99 |
+| Arrêt de pagination | arrêt quand une page contient moins de `PAGE_SIZE` éléments | Si Garmin plafonne `limit` en dessous de 99, une page pleine paraît incomplète et la pagination s'arrête trop tôt | **Risque**, à vérifier (non modifié en #25) |
+| `startDate` | date seule `AAAA-MM-JJ`, lue en UTC | Date sur l'**heure locale** de l'activité (`startDate` et `endDate` inclusifs) | **Corrigé** en #25 : date UTC de `since` moins un jour, marge pour l'heure locale |
 | `endDate` | non utilisé | Existe, inclusif | Information |
 | Tri | non précisé | `sortBy` défaut `startLocal`, `sortOrder` défaut `desc` | À expliciter dans l'appel |
-| Activités enfants | non précisé | `excludeChildren` défaut **`true`** : les activités enfants (jambes d'un multisport) sont exclues si le paramètre n'est pas envoyé | **Écart** à décider |
+| Activités enfants | non précisé | `excludeChildren` défaut **`true`** : les activités enfants (jambes d'un multisport) sont exclues si le paramètre n'est pas envoyé | **Écart** à décider (hors #25) |
 | Filtre favori | non précisé | `favorite` défaut -1 (aucun filtre) | Aucun écart |
-| `startTimeGMT` | `AAAA-MM-JJ HH:MM:SS`, lu comme UTC | `yyyy-MM-dd HH:mm:ss` sans suffixe, GMT (`SummarizedActivityDTO`) | Confirmé |
+| `startTimeGMT` | `AAAA-MM-JJ HH:MM:SS`, lu comme UTC | `yyyy-MM-dd HH:mm:ss` sans suffixe, GMT (`SummarizedActivityDTO`), pattern sans fraction | **Corrigé** en #25 : pattern sans fraction ; un élément avec fraction est ignoré (`warn`) |
 | `activityType.typeKey` | champ `typeKey` de `activityType` | `activityType` de type `ActivityTypeDTO` avec `typeKey` | Confirmé |
 | `duration` et `distance` | secondes et mètres | `duration` en secondes, `distance` en mètres (`SummarizedActivityDTO`) | Confirmé |
-| `activityId` | « nombre ou texte » | Entier int64 | Confirmé, le texte n'est pas prévu par la spécification |
+| `activityId` | « nombre ou texte » | Entier int64 | **Corrigé** en #25 : nombre entier sûr uniquement, une chaîne est ignorée |
+| Optionnalité des champs lus | `activityId`, `activityType`, `startTimeGMT`, `duration` supposés présents | Aucun champ `required` dans `SummarizedActivityDTO` | **Justifié** : ces champs sont exigés par le Domain (`Activity`) ; `distance` reste optionnel |
+| `activityName` | non lu | Nom de l'activité, non mappé | Information : conservé dans `sourcePayload` |
 | Format de réponse | JSON | `application/json`, tableau de `SummarizedActivityDTO` | Confirmé pour la liste. Le téléchargement (E04) renvoie une archive non décrite |
 | Pagination maximale | 50 pages (`MAX_PAGES`) | Non documenté | Non vérifié |
 | Historique initial | 365 jours | Aucune borne documentée pour E03 | Non vérifié |
@@ -402,7 +404,7 @@ Hypothèses de la synchronisation (`docs/technique/contextes/garmin-sync.md`, se
 - **Quotas et limites de débit** : la spécification ne décrit ni quota, ni code 429, ni en-tête de limitation. Non vérifié.
 - **Scopes du jeton** : aucun `securitySchemes` ni scope dans la spécification. Pour les 26 opérations, le scope reste « non précisé par la spécification ». Les scopes du jeton réel sont décrits dans [API Garmin Personal](garmin-personal-api.md) (réponse réelle, issue #7), sans lien vérifié avec les opérations.
 - **Profondeur de l'historique des activités** : aucune borne documentée pour E03 (ni pour E01). Les bornes indiquées concernent les endpoints de santé (E10 : 31 jours, E13 : 28 jours, E15 : 1 an, etc.).
-- **Taille maximale de `limit`** : non précisée (défaut 99).
+- **Taille maximale de `limit`** : non précisée. Le défaut de 99 est vérifié et envoyé explicitement par l'adapter.
 - **Endpoint d'échange de la clé** (`personalapitoken-service`) : absent de la spécification. Ses statuts 401 ou 403 et son format restent sourcés de la réponse réelle (issue #7), pas du Swagger.
 - **Format des fichiers** : le téléchargement (E04) renvoie une archive « format original », contenu non décrit. Le FIT n'est pas confirmé par la spécification.
 - **Fuseau de `startDate`** : la spécification indique l'heure locale de l'activité, sans préciser le fuseau de référence si l'activité n'en a pas.
