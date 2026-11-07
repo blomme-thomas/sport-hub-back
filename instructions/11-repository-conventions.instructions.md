@@ -6,7 +6,7 @@ applyTo: '**'
 
 > **Lecture ciblée** (repère une section avec `Grep "^## "` puis `Read` avec offset/limit) : *Stack*, *Arborescence par module*, *Nommage*, *Ports et tokens* et *Templates de code* pour écrire du code ; *Tests* pour les tests ; *Commandes cibles* pour lint/build/audit ; *Configuration* pour les variables d'environnement ; *Commentaires et TSDoc* pour la documentation du code ; *Spécificités du domaine* (Garmin, IA) **uniquement si la story touche Garmin ou la génération par IA**.
 
-> **Un module métier : `garmin-sync`.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (modèle `Activity` et première migration), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Le module `src/modules/garmin-sync/` (authentification Garmin, synchronisation manuelle des activités et consultation paginée `GET /api/activities`, quatre couches) suit l'arborescence par module ci-dessous. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
+> **Deux modules métier : `garmin-sync` et `training-stats`.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (modèle `Activity` et première migration), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Le module `src/modules/garmin-sync/` (authentification Garmin, synchronisation manuelle des activités et consultation paginée `GET /api/activities`, quatre couches) et le module `src/modules/training-stats/` (statistiques de volume via `GET /api/stats`, lecture de la table `activities` sans import de `garmin-sync`) suivent l'arborescence par module ci-dessous. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
 
 ## Stack
 
@@ -46,6 +46,7 @@ src/modules/<module>/
     scheduler/<name>.scheduler.ts              # Inbound Adapter planifié (@nestjs/schedule)
   presentation/
     http/controllers/<name>.controller.ts
+    http/mappers/<name>.http-mapper.ts         # Application DTO <-> Transport DTO (toujours présent, voir 08)
     http/dtos/<name>.request.dto.ts
     http/dtos/<name>.response.dto.ts           # Transport DTOs (class-validator + class-transformer)
   <module>.module.ts                           # composition root : { provide: TOKEN, useClass: Adapter }
@@ -101,6 +102,7 @@ Le glossaire (`00`) décrit des concepts, pas des fichiers obligatoires (`00` §
 | Mapper (persistance) | `<name>.mapper.ts` | `<Name>Mapper` (méthodes statiques `toDomain`/`toPersistence`) |
 | Mapper (Adapter externe / ACL) | `<name>.external-mapper.ts` | `<Name>ExternalMapper` — seulement si l'extraire hors de l'Adapter apporte de la lisibilité (sinon inline, voir §Spécificités du domaine) |
 | Controller | `<name>.controller.ts` | `<Name>Controller` |
+| Mapper (présentation HTTP) | `<name>.http-mapper.ts` | `<Name>HttpMapper` (méthodes statiques `toResponse` / `toQuery`) — toujours présent, même pour un endpoint simple |
 | Transport DTO | `<name>.request.dto.ts` / `<name>.response.dto.ts` | `<Name>RequestDto` / `<Name>ResponseDto` |
 
 ## Ports et tokens
@@ -140,6 +142,7 @@ Pour éviter d'alourdir les fichiers `instructions/*.md` avec de longs blocs de 
 | Repository Adapter (Prisma) | `instructions/templates/repository-adapter.template.ts` |
 | Mapper | `instructions/templates/mapper.template.ts` |
 | Controller | `instructions/templates/controller.template.ts` |
+| Mapper (présentation HTTP) | `instructions/templates/http-mapper.template.ts` |
 | Transport DTO | `instructions/templates/transport-dto.template.ts` |
 
 ## Spécificités du domaine

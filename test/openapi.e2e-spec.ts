@@ -159,4 +159,52 @@ describe('OpenAPI (e2e)', () => {
       'type',
     ]);
   });
+
+  it('publie_les_codes_STATS_RANGE_INVALID_et_STATS_RANGE_TOO_LARGE', () => {
+    const schema = document.components?.schemas?.['ProblemDetailsDto'] as {
+      properties: Record<string, { enum?: string[] }>;
+    };
+    const codes =
+      schema.properties['code']?.enum ??
+      (
+        document.components?.schemas?.['ProblemCode'] as
+          { enum: string[] } | undefined
+      )?.enum;
+    expect(codes).toEqual(
+      expect.arrayContaining(['STATS_RANGE_INVALID', 'STATS_RANGE_TOO_LARGE']),
+    );
+  });
+
+  it('documente_la_route_GET_api_stats_avec_granularity_from_to_type_et_400', () => {
+    const operation = document.paths['/api/stats']?.get;
+    expect(operation).toBeDefined();
+    expect(operation?.responses?.['200']).toBeDefined();
+
+    const names = (operation?.parameters ?? []).map(
+      (parameter) => (parameter as { name: string }).name,
+    );
+    expect(names).toEqual(
+      expect.arrayContaining(['granularity', 'from', 'to', 'type']),
+    );
+
+    const response = operation?.responses?.['400'] as {
+      content?: Record<string, { schema?: { $ref?: string } }>;
+    };
+    expect(response).toBeDefined();
+    expect(
+      response.content?.['application/problem+json']?.schema?.$ref,
+    ).toContain('ProblemDetailsDto');
+  });
+
+  it('publie_le_schema_TrainingStatsResponseDto_avec_les_periodes', () => {
+    const schema = document.components?.schemas?.[
+      'TrainingStatsResponseDto'
+    ] as {
+      properties: Record<string, unknown>;
+    };
+    expect(schema).toBeDefined();
+    expect(Object.keys(schema.properties)).toEqual(
+      expect.arrayContaining(['granularity', 'from', 'to', 'type', 'periods']),
+    );
+  });
 });

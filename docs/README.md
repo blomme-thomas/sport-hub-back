@@ -1,6 +1,6 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal synchronisation manuelle des activités (story #8) et consultation paginée de la liste (story #10). Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8) et consultation paginée de la liste (story #10), et le module `training-stats` : statistiques de volume par semaine ou par mois (story #11). Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
@@ -12,11 +12,13 @@
 - [Catalogue des endpoints Garmin Personal](technique/garmin-personal-api-endpoints.md) (26 opérations de la spécification officielle, utilité pour les stories #11 et #12)
 - Contextes (`technique/contextes/<nom>.md`) :
   - [garmin-sync](technique/contextes/garmin-sync.md) (synchronisation des activités, ports, route, erreurs, hypothèses Garmin)
+  - [training-stats](technique/contextes/training-stats.md) (statistiques de volume, calcul à la demande, route `GET /api/stats`, règles de période)
 - Décisions (`technique/decisions/`) :
   - [0001 : table centralisée code vers statut HTTP](technique/decisions/0001-table-centralisee-code-statut.md)
   - [0002 : correlation id par middleware et AsyncLocalStorage](technique/decisions/0002-correlation-id-middleware-als.md)
   - [0003 : connexion à la base au démarrage et dans le health check](technique/decisions/0003-connexion-base-au-demarrage.md)
   - [0004 : erreurs techniques Garmin modélisées en DomainError](technique/decisions/0004-erreurs-techniques-garmin-en-domain-error.md)
+  - [0005 : statistiques calculées à la volée depuis la table activities](technique/decisions/0005-statistiques-calculees-a-la-volee.md)
 
 ## Fonctionnel
 - [Fonctionnalités](fonctionnel/fonctionnalites.md)
@@ -24,3 +26,4 @@
 - Parcours (`fonctionnel/parcours/<nom>.md`) :
   - [Synchroniser les activités Garmin](fonctionnel/parcours/synchroniser-activites-garmin.md)
   - [Consulter les activités synchronisées](fonctionnel/parcours/consulter-activites.md)
+  - [Consulter les statistiques d'entraînement](fonctionnel/parcours/consulter-statistiques.md)

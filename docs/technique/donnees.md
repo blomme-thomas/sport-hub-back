@@ -1,6 +1,6 @@
 # Données
 
-Prisma 7 + PostgreSQL. Un seul modèle à ce jour : `Activity`, écrit et relu par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas).
+Prisma 7 + PostgreSQL. Un seul modèle à ce jour : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
 
 - `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèle `Activity`.
 - `prisma.config.ts` : chemin du schéma, dossier de migrations `prisma/migrations`, URL de connexion lue dans `DATABASE_URL`.
@@ -51,6 +51,16 @@ Couvert par `test/activity-repository.e2e-spec.ts` (upsert sans doublon, mise à
 - `rawPayload` n'est jamais lu par cette requête.
 
 Couvert par `test/activities.e2e-spec.ts`.
+
+## Lecture pour les statistiques
+
+`GET /api/stats` lit la table `activities` via le read model `PrismaTrainingActivityReadModel` (`src/modules/training-stats/infrastructure/persistence/prisma/training-activity.read-model.ts`), port `ITrainingActivityReadModel`. Aucun modèle Prisma, aucune migration et aucune table de statistiques : les volumes sont calculés à la demande (voir [ADR 0005](decisions/0005-statistiques-calculees-a-la-volee.md)).
+
+- Requête : `findMany` avec `select` explicite (`type`, `startedAt`, `durationSeconds`, `distanceMeters`), filtre `startedAt >= from AND startedAt < toExclusive` (fenêtre couvrant la période précédant la première période de la plage), et filtre `type` exact si présent ; tri `startedAt asc`.
+- `rawPayload` n'est jamais lu par cette requête.
+- Les index `started_at` et `(type, started_at)` existent (voir plus haut) ; leur usage effectif par le planner n'est pas vérifié.
+
+Couvert par `test/training-stats.e2e-spec.ts`.
 
 ## Migrations
 

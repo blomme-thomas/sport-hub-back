@@ -1,6 +1,6 @@
 # Glossaire
 
-Langage commun du domaine. Les termes DDD/hexagonaux (Aggregate, Port, Adapter, etc.) sont définis dans `instructions/00-glossary-and-artifacts.instructions.md`. Les termes ci-dessous sont ceux du code livré ; le vocabulaire d'entraînement (statistiques, séances) reste à compléter.
+Langage commun du domaine. Les termes DDD/hexagonaux (Aggregate, Port, Adapter, etc.) sont définis dans `instructions/00-glossary-and-artifacts.instructions.md`. Les termes ci-dessous sont ceux du code livré ; le vocabulaire de la génération de séances reste à compléter.
 
 | Terme | Définition | Dans le code |
 |---|---|---|
@@ -18,3 +18,9 @@ Langage commun du domaine. Les termes DDD/hexagonaux (Aggregate, Port, Adapter, 
 | Jeton d'accès Garmin | Jeton valable 24 heures, renouvelé automatiquement 60 secondes avant son expiration. Jamais journalisé ni renvoyé. | `GarminPersonalApiTokenProvider` |
 | Accès Garmin refusé | Erreur `GARMIN_ACCESS_DENIED` (502) : clé absente ou refusée, ou jeton refusé. | `GarminAccessDeniedError` |
 | Garmin indisponible | Erreur `GARMIN_UNAVAILABLE` (503) : panne, délai dépassé ou réponse inattendue de Garmin. | `GarminUnavailableError` |
+| Statistiques d'entraînement | Volume de séances agrégé par période (nombre de séances, durée totale, distance totale), pour l'ensemble des activités ou pour un type, avec la période précédente et la variation. Calculées à la demande depuis les activités synchronisées, rien n'est stocké. | `GET /api/stats`, `GetTrainingStatsUseCase`, `TrainingStatsCalculator` (`training-stats`) |
+| Période | Intervalle de temps de calcul, toujours complet : soit une semaine ISO (du lundi 00:00:00.000 UTC au dimanche 23:59:59.999 UTC), soit un mois calendaire UTC. Une activité appartient à une seule période, celle qui contient sa date de début. | Value Object `StatsPeriod` (granularité `week` ou `month`) |
+| Plage de périodes | Ensemble des périodes complètes qui intersectent les dates `from` et `to` demandées. Limitée à 104 périodes. | Value Object `StatsRange` ; erreur `STATS_RANGE_TOO_LARGE` |
+| Période précédente | Période de même granularité immédiatement antérieure à la période courante (la semaine précédente, ou le mois précédent, y compris au changement d'année). Sert de référence à la variation. | `StatsPeriod.previous()`, champ `previous` de la réponse |
+| Volume | Ensemble de trois mesures d'une période : `count` (nombre de séances), `durationSeconds` (somme des durées), `distanceMeters` (somme des distances). Une séance sans distance compte pour zéro mètre, mais reste comptée en nombre et en durée. | Value Object `ActivityVolume` |
+| Variation | Écart entre la période courante et la période précédente, pour chaque mesure du volume : `absolute` (courant moins précédent) et `percent` (écart relatif arrondi à une décimale, `null` si la période précédente vaut zéro). | Value Object `VolumeVariation` |
