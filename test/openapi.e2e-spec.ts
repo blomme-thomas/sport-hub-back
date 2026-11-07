@@ -51,6 +51,36 @@ describe('OpenAPI (e2e)', () => {
     );
   });
 
+  it('publie_les_codes_GARMIN_ACCESS_DENIED_et_GARMIN_UNAVAILABLE', () => {
+    const schema = document.components?.schemas?.['ProblemDetailsDto'] as {
+      properties: Record<string, { enum?: string[] }>;
+    };
+    const codes =
+      schema.properties['code']?.enum ??
+      (
+        document.components?.schemas?.['ProblemCode'] as
+          { enum: string[] } | undefined
+      )?.enum;
+    expect(codes).toEqual(
+      expect.arrayContaining(['GARMIN_ACCESS_DENIED', 'GARMIN_UNAVAILABLE']),
+    );
+  });
+
+  it('documente_la_route_POST_api_garmin_sync_run_avec_200_502_et_503', () => {
+    const operation = document.paths['/api/garmin-sync/run']?.post;
+    expect(operation).toBeDefined();
+    expect(operation?.responses?.['200']).toBeDefined();
+    for (const status of ['502', '503']) {
+      const response = operation?.responses?.[status] as {
+        content?: Record<string, { schema?: { $ref?: string } }>;
+      };
+      expect(response).toBeDefined();
+      expect(
+        response.content?.['application/problem+json']?.schema?.$ref,
+      ).toContain('ProblemDetailsDto');
+    }
+  });
+
   it('decrit_CLIENT_ERROR_comme_4xx_d_origine_et_non_400', () => {
     const schema = document.components?.schemas?.['ProblemDetailsDto'] as {
       properties: Record<string, { description?: string }>;
