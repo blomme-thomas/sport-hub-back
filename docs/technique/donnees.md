@@ -1,8 +1,8 @@
 # Données
 
-Prisma 7 + PostgreSQL. Trois modèles : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »), `Slot` (table `slots`), propre au module `creneaux` (voir « Modèle Slot » plus bas), et `Goal` (table `goals`), propre au module `objectifs` (voir « Modèle Goal » plus bas). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
+Prisma 7 + PostgreSQL. Quatre modèles : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »), `Slot` (table `slots`), propre au module `creneaux` (voir « Modèle Slot » plus bas), `Goal` (table `goals`), propre au module `objectifs` (voir « Modèle Goal » plus bas), et `Discipline` (table `disciplines`), propre au module `disciplines` et alimenté par `garmin-sync` (voir « Modèle Discipline » plus bas). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
 
-- `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèles `Activity`, `Slot` et `Goal`.
+- `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèles `Activity`, `Slot`, `Goal` et `Discipline`.
 - `prisma.config.ts` : chemin du schéma, dossier de migrations `prisma/migrations`, URL de connexion lue dans `DATABASE_URL`.
 - Client généré dans `src/core/prisma/generated`, ignoré par Git : le régénérer avec `npm run prisma:generate` (nécessaire avant lint, tests et build ; la CI le fait).
 - Connexion via l'adaptateur `@prisma/adapter-pg` dans `PrismaService` (`src/core/prisma`), qui vérifie la base au démarrage (voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md)).
@@ -89,6 +89,44 @@ Accès depuis objectifs : port `IGoalRepository` (`src/modules/objectifs/domain/
 
 Couvert par `test/goal-repository.e2e-spec.ts` (voir le contexte pour le détail).
 
+## Modèle `Discipline` (table `disciplines`)
+
+Référentiel des types d'activité Garmin, avec le libellé donné par l'utilisateur (module `disciplines`, voir [Contexte disciplines](contextes/disciplines.md)).
+
+| Champ Prisma | Colonne | Type PostgreSQL | Notes |
+|---|---|---|---|
+| `id` | `id` | `UUID` | clé primaire ; `uuid()` généré par Prisma |
+| `typeKey` | `type_key` | `TEXT` | unique (`disciplines_type_key_key`) ; clé de type Garmin, sans espace en bordure |
+| `label` | `label` | `TEXT` | libellé affiché ; égal à la clé à la création, jamais écrasé par la synchronisation |
+| `firstSeenAt` | `first_seen_at` | `TIMESTAMPTZ(3)` | instant de la première synchronisation ayant reçu ce type (pas la date de l'activité) |
+| `lastSeenAt` | `last_seen_at` | `TIMESTAMPTZ(3)` | instant de la dernière synchronisation ayant reçu ce type ; ne recule jamais |
+| `createdAt` | `created_at` | `TIMESTAMPTZ(3)` | défaut `now()` |
+| `updatedAt` | `updated_at` | `TIMESTAMPTZ(3)` | maintenu par Prisma (`@updatedAt`), sans défaut SQL |
+
+- Pas de contrainte SQL autre que la clé primaire et l'unicité de `type_key` : les bornes (1 à 100 caractères pour la clé, 1 à 60 pour un libellé saisi) sont contrôlées par le Domain.
+
+### Backfill à la migration
+
+La migration `20261107235900_add_disciplines` crée la table, puis insère une discipline par type déjà présent dans `activities` :
+
+- clé : `DISTINCT` sur `activities.type` après retrait des espaces en bordure (`regexp_replace` avec `^\s+|\s+$`), clés vides exclues ;
+- `label` = la clé ; `id` = `gen_random_uuid()` ;
+- `firstSeenAt` = `lastSeenAt` = `CURRENT_TIMESTAMP`, c'est-à-dire l'instant d'exécution de la migration, et non la date des activités. Choix assumé, voir [ADR 0010](decisions/0010-referentiel-disciplines-acl-dates-de-synchronisation.md) ;
+- aucune contrainte de longueur de 100 caractères n'est appliquée au backfill, contrairement au Domain : un type de plus de 100 caractères déjà présent rendrait la lecture de la liste en erreur (voir [Contexte disciplines](contextes/disciplines.md#limites-connues)). Non vérifié sur des données réelles ;
+- l'alignement sur `String.prototype.trim()` n'est pas garanti : le backfill utilise `\s` de PostgreSQL.
+
+Le backfill ne s'exécute qu'une fois, à l'application de la migration. Les types apparus ensuite sont enregistrés par la synchronisation (voir [garmin-sync](contextes/garmin-sync.md#flux-de-synchronisation)).
+
+Accès depuis disciplines : port `IDisciplineRepository` (`src/modules/disciplines/domain/ports/outbound/discipline.repository.port.ts`), implémenté par `PrismaDisciplineRepositoryAdapter` (`infrastructure/persistence/prisma/`), mapping par `DisciplineMapper`.
+
+- `findAll()` : tri `label asc`, puis `typeKey asc`.
+- `findByTypeKey(key)` : `findUnique` sur `typeKey`, `null` si absent.
+- `findByTypeKeys(keys)` : `findMany` avec `typeKey in (...)` ; liste vide sans requête.
+- `saveAppearances(disciplines)` : une `$transaction` regroupant un `createMany` (`skipDuplicates`) pour les nouvelles et un `updateMany` par discipline connue (`lastSeenAt` seulement, si la nouvelle date est postérieure) ; liste vide sans requête. Le `label` n'est jamais écrit.
+- `saveLabel(discipline)` : `updateMany` sur `typeKey`, qui écrit `label` (et `updatedAt`).
+
+Couvert par `test/discipline-repository.e2e-spec.ts`.
+
 ## Accès depuis garmin-sync
 
 Port `IActivityRepository` (`src/modules/garmin-sync/domain/ports/outbound/activity.repository.port.ts`), implémenté par `PrismaActivityRepositoryAdapter` (`infrastructure/persistence/prisma/`). Le mapping entre l'entité `Activity` et le modèle Prisma est fait par `ActivityMapper`.
@@ -122,7 +160,7 @@ Couvert par `test/training-stats.e2e-spec.ts`.
 
 ## Migrations
 
-- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main), une migration `20261107221922_create_goals` (création de `goals`, avec les contraintes `goals_target_time_check` et `goals_event_fields_check` ajoutées à la main) et `migration_lock.toml`.
+- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main), une migration `20261107221922_create_goals` (création de `goals`, avec les contraintes `goals_target_time_check` et `goals_event_fields_check` ajoutées à la main), une migration `20261107235900_add_disciplines` (création de `disciplines` et backfill depuis `activities`, voir « Backfill à la migration ») et `migration_lock.toml`.
 - Les fichiers `migration.sql` sont générés par `prisma migrate dev` et ne sont jamais édités à la main ; un changement de schéma = une nouvelle migration.
 - Création / évolution en local : `npm run prisma:migrate` (`migrate dev`).
 - Application sans génération (CI, tests, déploiement) : `npm run prisma:migrate:deploy` (`migrate deploy`).

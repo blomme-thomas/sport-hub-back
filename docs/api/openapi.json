@@ -180,6 +180,54 @@
         ],
         "type": "object"
       },
+      "DisciplineListResponseDto": {
+        "properties": {
+          "items": {
+            "description": "Disciplines triées par libellé croissant, puis par clé de type croissante",
+            "items": {
+              "$ref": "#/components/schemas/DisciplineResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "DisciplineResponseDto": {
+        "properties": {
+          "firstSeenAt": {
+            "description": "Instant de la première synchronisation qui a vu la discipline",
+            "example": "2026-05-01T06:30:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "label": {
+            "description": "Libellé affiché : la clé de type tant que la discipline n’a pas été renommée",
+            "example": "Course à pied",
+            "type": "string"
+          },
+          "lastSeenAt": {
+            "description": "Instant de la dernière synchronisation qui a vu la discipline",
+            "example": "2026-11-07T10:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "typeKey": {
+            "description": "Clé de type telle que fournie par Garmin, stable et unique",
+            "example": "running",
+            "type": "string"
+          }
+        },
+        "required": [
+          "typeKey",
+          "label",
+          "firstSeenAt",
+          "lastSeenAt"
+        ],
+        "type": "object"
+      },
       "GenerateWorkoutRequestDto": {
         "properties": {
           "durationMinutes": {
@@ -509,7 +557,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -533,7 +581,10 @@
           "SLOT_INVALID",
           "GOAL_INVALID",
           "GOAL_TARGET_TIME_INVALID",
-          "GOAL_NOT_FOUND"
+          "GOAL_NOT_FOUND",
+          "DISCIPLINE_INVALID",
+          "DISCIPLINE_LABEL_INVALID",
+          "DISCIPLINE_NOT_FOUND"
         ],
         "type": "string"
       },
@@ -559,7 +610,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -862,6 +913,21 @@
         ],
         "type": "object"
       },
+      "UpdateDisciplineRequestDto": {
+        "properties": {
+          "label": {
+            "description": "Nouveau libellé, espaces en bordure retirés",
+            "example": "Course à pied",
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
       "UpdateGoalRequestDto": {
         "properties": {
           "eventFormat": {
@@ -1152,6 +1218,101 @@
         "summary": "Liste paginée des activités synchronisées, de la plus récente à la plus ancienne",
         "tags": [
           "garmin-sync"
+        ]
+      }
+    },
+    "/api/disciplines": {
+      "get": {
+        "operationId": "disciplinesList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisciplineListResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Liste les disciplines connues par libellé croissant, puis par clé de type",
+        "tags": [
+          "disciplines"
+        ]
+      }
+    },
+    "/api/disciplines/{typeKey}": {
+      "patch": {
+        "operationId": "disciplinesUpdate",
+        "parameters": [
+          {
+            "description": "Clé de type de la discipline",
+            "in": "path",
+            "name": "typeKey",
+            "required": true,
+            "schema": {
+              "example": "running",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDisciplineRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisciplineResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Renomme une discipline ; sa clé de type et ses dates d’apparition sont inchangées",
+        "tags": [
+          "disciplines"
         ]
       }
     },

@@ -10,6 +10,10 @@ import {
   GARMIN_CONNECT_CLIENT,
   type IGarminConnectClient,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
+import {
+  DISCIPLINE_REGISTRY,
+  type IDisciplineRegistry,
+} from '../../domain/ports/outbound/discipline-registry.port.js';
 import { GarminActivityId } from '../../domain/value-objects/garmin-activity-id.vo.js';
 import { SyncGarminActivitiesUseCase } from './sync-garmin-activities.use-case.js';
 
@@ -69,19 +73,35 @@ class FakeGarminClient implements IGarminConnectClient {
   }
 }
 
+class FakeDisciplineRegistry implements IDisciplineRegistry {
+  calls: string[][] = [];
+  failure?: Error;
+
+  recordAppearances(typeKeys: string[]): Promise<void> {
+    this.calls.push(typeKeys);
+    if (this.failure) {
+      return Promise.reject(this.failure);
+    }
+    return Promise.resolve();
+  }
+}
+
 describe('SyncGarminActivitiesUseCase', () => {
   let useCase: SyncGarminActivitiesUseCase;
   let repository: InMemoryActivityRepository;
   let garmin: FakeGarminClient;
+  let registry: FakeDisciplineRegistry;
 
   beforeEach(async () => {
     repository = new InMemoryActivityRepository();
     garmin = new FakeGarminClient();
+    registry = new FakeDisciplineRegistry();
     const moduleRef = await Test.createTestingModule({
       providers: [
         SyncGarminActivitiesUseCase,
         { provide: ACTIVITY_REPOSITORY, useValue: repository },
         { provide: GARMIN_CONNECT_CLIENT, useValue: garmin },
+        { provide: DISCIPLINE_REGISTRY, useValue: registry },
       ],
     }).compile();
     useCase = moduleRef.get(SyncGarminActivitiesUseCase);
@@ -202,6 +222,55 @@ describe('SyncGarminActivitiesUseCase', () => {
 
       expect(result).toEqual({ created: 1, updated: 0, ignored: 0 });
       expect(repository.store.size).toBe(1);
+    });
+  });
+
+  describe('enregistrement des disciplines', () => {
+    it('transmet au registre les types distincts de toutes les activités reçues', async () => {
+      garmin.remote = [
+        activity('1', { type: 'running' }),
+        activity('2', { type: 'running' }),
+        activity('3', { type: 'cycling' }),
+      ];
+
+      await useCase.execute();
+
+      expect(registry.calls).toHaveLength(1);
+      expect([...(registry.calls[0] ?? [])].sort()).toEqual([
+        'cycling',
+        'running',
+      ]);
+    });
+
+    it('transmet au registre le type d’une activité ignorée', async () => {
+      repository.store.set('1', activity('1', { type: 'swimming' }));
+      garmin.remote = [activity('1', { type: 'swimming' })];
+
+      const result = await useCase.execute();
+
+      expect(result).toEqual({ created: 0, updated: 0, ignored: 1 });
+      expect(registry.calls).toEqual([['swimming']]);
+    });
+
+    it('transmet au registre les types même quand aucune activité n’est à enregistrer', async () => {
+      repository.store.set('1', activity('1', { type: 'swimming' }));
+      garmin.remote = [activity('1', { type: 'swimming' })];
+
+      await useCase.execute();
+
+      expect(repository.saveCalls.flat()).toEqual([]);
+      expect(registry.calls.flat()).toEqual(['swimming']);
+    });
+
+    it('propage l’échec du registre sans enregistrer d’activité', async () => {
+      registry.failure = new Error('référentiel indisponible');
+      garmin.remote = [activity('1'), activity('2')];
+
+      await expect(useCase.execute()).rejects.toThrow(
+        'référentiel indisponible',
+      );
+      expect(repository.saveCalls).toEqual([]);
+      expect(repository.store.size).toBe(0);
     });
   });
 

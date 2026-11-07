@@ -140,7 +140,7 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 
-Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation) ; `SLOT_END_NOT_AFTER_START`, `SLOT_PERIOD_INVALID`, `SLOT_PERIOD_TOO_LARGE` et `SLOT_INVALID` (400) et `SLOT_NOT_FOUND` (404), voir [Codes du module creneaux](#codes-du-module-creneaux) ; `GOAL_INVALID`, `GOAL_TARGET_TIME_INVALID` (400) et `GOAL_NOT_FOUND` (404), voir [Codes du module objectifs](#codes-du-module-objectifs).
+Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation) ; `SLOT_END_NOT_AFTER_START`, `SLOT_PERIOD_INVALID`, `SLOT_PERIOD_TOO_LARGE` et `SLOT_INVALID` (400) et `SLOT_NOT_FOUND` (404), voir [Codes du module creneaux](#codes-du-module-creneaux) ; `GOAL_INVALID`, `GOAL_TARGET_TIME_INVALID` (400) et `GOAL_NOT_FOUND` (404), voir [Codes du module objectifs](#codes-du-module-objectifs) ; `DISCIPLINE_INVALID` et `DISCIPLINE_LABEL_INVALID` (400) et `DISCIPLINE_NOT_FOUND` (404), voir [Codes du module disciplines](#codes-du-module-disciplines).
 
 ## Échec d'un service externe (`ExternalServiceError`)
 
@@ -213,6 +213,21 @@ Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) l
 - `GOAL_INVALID` porte une raison en clair dans `detail` : `le titre ne peut pas être vide`, `le titre dépasse 200 caractères`, `le type doit être evenement, volume ou regularite`, `la date cible est invalide`, `le format et le temps cible ne sont permis que pour un événement`, `le format doit être sprint, olympique, half, full ou autre`, `l'identifiant de l'objectif n'est pas un UUID`. Le transport couvre déjà la plupart de ces cas : seuls le titre vide et les règles de cohérence par type sont attendus en pratique.
 - Routes concernées : `POST /api/goals` (400), `GET /api/goals` (400), `GET /api/goals/:id` (400, 404), `PATCH /api/goals/:id` (400, 404), `DELETE /api/goals/:id` (400, 404), documentées avec `@ApiProblemResponses`.
 - Les erreurs de forme restent `VALIDATION_FAILED` (400) avec `errors[]` : titre absent ou non texte, titre de plus de 200 caractères, `type` et `eventFormat` hors valeurs (`IS_IN`), `targetDate` mal formée ou inexistante (`IS_CALENDAR_DATE`), `targetTimeSeconds` négatif, nul, non entier ou au-delà de 2147483647 (`IS_TARGET_TIME_SECONDS`), `upcoming` non booléen (`IS_BOOLEAN`), `id` non UUID (`IS_UUID`), champ inconnu (`PROPERTY_NOT_ALLOWED`). Un `id` non UUID renvoie donc `VALIDATION_FAILED`, et non `GOAL_INVALID`.
+
+## Codes du module disciplines
+
+| Code | Statut | `title` | `detail` renvoyé | Cas |
+|---|---|---|---|---|
+| `DISCIPLINE_INVALID` | 400 | Bad Request | « Discipline invalide : <raison>. » | clé de type vide après retrait des espaces (`PATCH /api/disciplines/:typeKey`, par exemple une clé composée d'espaces) ; clé de plus de 100 caractères après retrait des espaces, lue depuis le stockage |
+| `DISCIPLINE_LABEL_INVALID` | 400 | Bad Request | « Libellé de discipline invalide : <raison>. » | libellé vide ou de plus de 60 caractères après retrait des espaces (`PATCH /api/disciplines/:typeKey`) ; filet du Domain, non atteignable par la route : la validation du transport répond avant (`VALIDATION_FAILED`) |
+| `DISCIPLINE_NOT_FOUND` | 404 | Not Found | « La discipline demandée est introuvable. » | clé de type inconnue (`PATCH /api/disciplines/:typeKey`) |
+
+- `type` : `urn:sport-hub:problem:discipline-invalid`, `urn:sport-hub:problem:discipline-label-invalid` et `urn:sport-hub:problem:discipline-not-found`.
+- `DISCIPLINE_INVALID` porte une raison en clair dans `detail` : `la clé de type est vide` ou `la clé de type dépasse 100 caractères`. `DISCIPLINE_LABEL_INVALID` porte `le libellé ne peut pas être vide` ou `le libellé dépasse 60 caractères`.
+- Routes concernées : `PATCH /api/disciplines/:typeKey` (400, 404), documentée avec `@ApiProblemResponses(400, 404)`. `GET /api/disciplines` ne renvoie pas de code métier.
+- Les erreurs de forme restent `VALIDATION_FAILED` (400) avec `errors[]` : `label` absent, non texte, vide après retrait des espaces ou de plus de 60 caractères, champ inconnu (`PROPERTY_NOT_ALLOWED`). Un paramètre `typeKey` de plus de 100 caractères brut (avant retrait des espaces) est aussi `VALIDATION_FAILED`.
+- Le paramètre `typeKey` n'est pas rogné par le transport : une clé faite d'espaces passe la validation de forme et donne donc `DISCIPLINE_INVALID`, alors qu'une clé avec espaces en bordure (`%20running%20`) est recherchée sous sa forme rognée.
+- Un enregistrement de synchronisation ne renvoie aucun de ces codes : les clés invalides y sont ignorées (voir [Contexte disciplines](contextes/disciplines.md#modèle-et-règles)).
 
 ## Business Errors : règle du statut
 
