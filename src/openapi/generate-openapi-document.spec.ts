@@ -53,6 +53,7 @@ describe('generateOpenApiDocument', () => {
         'garmin-sync',
         'training-stats',
         'workout-generation',
+        'creneaux',
       ]),
     );
   });
@@ -65,6 +66,7 @@ describe('generateOpenApiDocument', () => {
         '/api/stats',
         '/api/garmin-sync/run',
         '/api/workouts/generate',
+        '/api/slots',
       ]),
     );
   });
