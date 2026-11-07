@@ -1,6 +1,6 @@
 # API Garmin Personal : authentification
 
-Cette page décrit comment `sport-hub-back` s'authentifie auprès de l'API Garmin Personal. Les faits de l'authentification viennent de l'issue #7 et de `instructions/11`. Le format de la réponse du jeton a été vérifié avec une vraie réponse Garmin. Tout le reste est marqué **non vérifié** : le spike web n'a pas pu être mené.
+Cette page décrit comment `sport-hub-back` s'authentifie auprès de l'API Garmin Personal. Les faits de l'authentification viennent de l'issue #7 et de `instructions/11`. Le format de la réponse du jeton a été vérifié avec une vraie réponse Garmin. Les endpoints d'activités, le format des réponses d'activités et les statuts 401 et 403 des endpoints de données sont confirmés par la spécification officielle (`garmin/swagger.json`, voir le [catalogue des endpoints](garmin-personal-api-endpoints.md)). Le point d'échange du jeton n'est pas dans cette spécification. Tout ce qui n'a pas de source est marqué **non vérifié**.
 
 ## Authentification
 
@@ -14,12 +14,13 @@ Cette page décrit comment `sport-hub-back` s'authentifie auprès de l'API Garmi
 
 ## Points non vérifiés
 
-À confirmer manuellement dans la documentation Garmin avant la story #8.
+Statut après la story #24, sources dans la spécification officielle (`garmin/swagger.json`, opérations citées par leur chemin). Le détail par endpoint est dans le [catalogue](garmin-personal-api-endpoints.md).
 
 | Sujet | Statut |
 |---|---|
-| Quotas et limites de débit | non vérifié, à confirmer manuellement dans la doc Garmin avant la story #8 |
-| Profondeur de l'historique disponible | non vérifié, à confirmer manuellement dans la doc Garmin avant la story #8 |
-| Endpoints d'activités | non vérifié, à confirmer manuellement dans la doc Garmin avant la story #8 |
-| Format des réponses d'activités | non vérifié, à confirmer manuellement dans la doc Garmin avant la story #8 |
-| Statuts de refus de la clé (401 ou 403) | non vérifié, à confirmer manuellement dans la doc Garmin avant la story #8 |
+| Quotas et limites de débit | non vérifié : la spécification ne décrit ni quota ni code 429 |
+| Profondeur de l'historique disponible | non vérifié pour les activités : aucune borne documentée sur `GET /activitylist-service/activities/search/activities`. Les endpoints de santé ont des fenêtres maximales (31 jours, 28 jours, 1 an selon l'endpoint) |
+| Scopes du jeton par endpoint | non précisé par la spécification (aucun `securitySchemes`) |
+| Endpoints d'activités | vérifié : `GET /activity-service/activity/{activityId}`, `GET /activity-service/activity/{activityId}/workouts`, `GET /activitylist-service/activities/search/activities`, `GET /download-service/files/activity/{activityId}` |
+| Format des réponses d'activités | vérifié en JSON pour la liste (`SummarizedActivityDTO`) et le détail (`ActivitySummaryDTO`). Le téléchargement renvoie une archive `application/x-zip-compressed` dont le contenu n'est pas décrit : le format FIT n'est pas confirmé |
+| Statuts de refus (401 ou 403) | vérifié pour les endpoints de données (descriptions de `GET /activitylist-service/activities/search/activities`). Non vérifié pour le point d'échange du jeton, absent de la spécification |

@@ -9,6 +9,7 @@
 - [Développement](technique/developpement.md)
 - [Erreurs de l'API](technique/erreurs-api.md) (RFC 9457, codes, correlation id)
 - [API Garmin Personal](technique/garmin-personal-api.md) (authentification, points non vérifiés)
+- [Catalogue des endpoints Garmin Personal](technique/garmin-personal-api-endpoints.md) (26 opérations de la spécification officielle, utilité pour les stories #11 et #12)
 - Contextes (`technique/contextes/<nom>.md`) :
   - [garmin-sync](technique/contextes/garmin-sync.md) (synchronisation des activités, ports, route, erreurs, hypothèses Garmin)
 - Décisions (`technique/decisions/`) :
