@@ -28,6 +28,7 @@ npm run start:dev
 - Synchronisation Garmin manuelle : `POST /api/garmin-sync/run` (sans corps), réponse `{ created, updated, ignored }`. Elle nécessite `GARMIN_PERSONAL_API_KEY` dans `.env` ; sans clé valide : 502 `GARMIN_ACCESS_DENIED` ; Garmin indisponible : 503 `GARMIN_UNAVAILABLE` (voir [Contexte garmin-sync](contextes/garmin-sync.md)). Une synchronisation planifiée s'exécute aussi toutes les 3 heures par défaut (`GARMIN_SYNC_CRON_ENABLED`, `GARMIN_SYNC_CRON_EXPRESSION`) ; en local, mettre `GARMIN_SYNC_CRON_ENABLED=false` pour ne pas la lancer.
 - Génération de séance : `POST /api/workouts/generate` (corps facultatif, `{}` valide), réponse 200 avec la séance, non persistée. Elle nécessite `ANTHROPIC_API_KEY` dans `.env` ; sans clé, la route répond 503 `WORKOUT_GENERATION_UNAVAILABLE` sans appel réseau, et l'application démarre quand même. Clé refusée : 502 `WORKOUT_GENERATION_ACCESS_DENIED` ; sortie du modèle inexploitable : 502 `WORKOUT_GENERATION_INVALID_OUTPUT` (voir [Contexte workout-generation](contextes/workout-generation.md)).
 - Swagger : `/swagger` (hors préfixe `/api`).
+- Contrat OpenAPI versionné : `npm run openapi:generate` régénère `docs/api/openapi.json` sans base de données (voir [Contrat OpenAPI](openapi.md)).
 - Header `X-Correlation-Id` : présent sur toutes les réponses ; envoyer le sien (`/^[A-Za-z0-9._:-]{1,128}$/`) pour le retrouver dans les logs, sinon un UUID est généré.
 - Erreurs : toutes au format `application/problem+json` (RFC 9457), voir [Erreurs de l'API](erreurs-api.md).
 - La base est obligatoire au démarrage : `PrismaService.onModuleInit` fait `$connect` puis `SELECT 1` (timeout de connexion 5 s). Si elle ne répond pas, l'application s'arrête avec `Base de données injoignable (<hôte>:<port>/<base>)`, suivi du code d'erreur (ex. `ECONNREFUSED`) quand il est sûr. Ni utilisateur, ni mot de passe, ni URL de connexion dans le message. Voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md).
@@ -49,6 +50,7 @@ npm run start:dev
 | `test` / `test:watch` / `test:cov` / `test:debug` | Tests unitaires Vitest (`**/*.spec.ts`) : une passe / watch / couverture / debug |
 | `test:e2e` | Tests e2e Vitest (`vitest.config.e2e.ts`, `**/*.e2e-spec.ts`, dans `test/`) |
 | `deps:check` | Garde-fou d'architecture (dependency-cruiser) |
+| `openapi:generate` | Compile puis écrit `docs/api/openapi.json` (contrat OpenAPI, sans base) ; à relancer et committer à chaque changement de route, DTO ou tag ([Contrat OpenAPI](openapi.md)) |
 | `prisma:validate` / `prisma:generate` / `prisma:studio` | Commandes Prisma (validate / generate / studio) |
 | `prisma:migrate` | `prisma migrate dev` : crée et applique une migration à partir du schéma |
 | `prisma:migrate:deploy` | `prisma migrate deploy` : applique les migrations existantes (CI, déploiement) |
@@ -112,7 +114,7 @@ La clé est un secret : la renseigner uniquement dans `.env`. Elle n'est jamais 
 
 ## CI (GitHub Actions, `.github/workflows/`)
 
-- `ci-branch` : à chaque push sur `feature/**` et `fix/**` : `npm ci`, `prisma generate`, format, lint, `deps:check`, `npm audit` (échoue sur high et critical).
+- `ci-branch` : à chaque push sur `feature/**` et `fix/**` : `npm ci`, `prisma generate`, format, lint, `deps:check`, contrat OpenAPI à jour (régénération de `docs/api/openapi.json` ; échec si le fichier commité est périmé, voir [Contrat OpenAPI](openapi.md#garde-fou-ci)), `npm audit` (échoue sur high et critical).
 - `ci-develop` : à chaque push sur `develop` (PR fusionnée) : tests unitaires, tests e2e (service PostgreSQL 16, étape « Migrations » `npm run prisma:migrate:deploy` avant les e2e), build.
 - `ci-release` : sur les branches `release/**` et les PR vers `main` issues d'une release : garde-fou de version (voir [Workflow Git](workflow-git.md)).
 - `ci-main` : à chaque push sur `main` issu d'un merge de `release/**` : création automatique du tag `vx.y.z` et de la release GitHub (voir [Workflow Git](workflow-git.md)).

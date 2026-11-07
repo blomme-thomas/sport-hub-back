@@ -1,12 +1,13 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8), synchronisation planifiée (story #9) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12). Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8), synchronisation planifiée (story #9) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12), et le contrat OpenAPI versionné dans `docs/api/openapi.json`, généré sans base et vérifié en CI (story #22). Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
 - [Workflow Git](technique/workflow-git.md)
 - [Données](technique/donnees.md) (modèle `Activity`, migrations)
 - [Développement](technique/developpement.md)
+- [Contrat OpenAPI](technique/openapi.md) (`docs/api/openapi.json`, génération, garde-fou CI, import dans Apidog)
 - [Erreurs de l'API](technique/erreurs-api.md) (RFC 9457, codes, correlation id)
 - [API Garmin Personal](technique/garmin-personal-api.md) (authentification, points non vérifiés)
 - [Catalogue des endpoints Garmin Personal](technique/garmin-personal-api-endpoints.md) (26 opérations de la spécification officielle, utilité pour les stories #11 et #12)
@@ -22,6 +23,7 @@
   - [0005 : statistiques calculées à la volée depuis la table activities](technique/decisions/0005-statistiques-calculees-a-la-volee.md)
   - [0006 : génération de séances sans persistance, statistiques lues par ACL, erreurs IA en DomainError](technique/decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)
   - [0007 : planification de la synchronisation Garmin par CronJob et SchedulerRegistry](technique/decisions/0007-planification-cronjob-via-scheduler-registry.md)
+  - [0008 : contrat OpenAPI généré en mode preview, sans base](technique/decisions/0008-contrat-openapi-genere-en-mode-preview.md)
 
 ## Fonctionnel
 - [Fonctionnalités](fonctionnel/fonctionnalites.md)

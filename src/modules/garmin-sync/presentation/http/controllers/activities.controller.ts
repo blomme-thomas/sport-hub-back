@@ -6,7 +6,7 @@ import { ActivityListResponseDto } from '../dtos/activity-list.response.dto.js';
 import { ListActivitiesRequestDto } from '../dtos/list-activities.request.dto.js';
 import { ActivitiesHttpMapper } from '../mappers/activities.http-mapper.js';
 
-@ApiTags('activities')
+@ApiTags('garmin-sync')
 @Controller('activities')
 export class ActivitiesController {
   constructor(private readonly listActivities: ListActivitiesUseCase) {}

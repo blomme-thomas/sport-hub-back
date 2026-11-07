@@ -195,6 +195,14 @@ Aucune (cf. décision actée) : l'API est exposée uniquement en local, pas de g
 
 `npm run deps:check` (`dependency-cruiser`, règles dans `.dependency-cruiser.cjs`, exécuté par `ci-branch`) vérifie : pas de cycle ; le Domain ne dépend ni des autres couches ni de NestJS, de client ou d'ORM ; l'Application ne dépend ni de l'Infrastructure, ni de la Presentation, ni de client ou d'ORM (`@nestjs/common` autorisé) ; la Presentation n'appelle pas l'Infrastructure ; `src/core` et `src/shared` ne dépendent pas de `src/modules` ; pas d'import de `devDependencies` en production. L'isolation entre modules est un simple avertissement tant que le contrat entre modules n'est pas défini. Si une règle bloque un cas légitime, la discuter plutôt que la contourner.
 
+## Contrat OpenAPI
+
+- Le contrat de l'API est versionné dans `docs/api/openapi.json`, **généré** par `npm run openapi:generate` (`nest build` puis `dist/openapi/generate-openapi.js`) depuis les décorateurs (`createOpenApiDocument`, `src/swagger.setup.ts`), sans base de données (mode `preview`). Ne jamais l'éditer à la main.
+- Code dans `src/openapi/` : `generate-openapi.ts` (point d'entrée), `generate-openapi-document.ts` (construction preview), `openapi-env.ts` (variables figées : une variable requise au démarrage s'ajoute aussi là), `openapi-serializer.ts` (sortie déterministe), `operation-id.ts` (`operationIdFactory` : `healthCheck`, `workoutsGenerate`…).
+- Contrat de génération : `servers` sans `/api` (les chemins portent le préfixe) ; `operationId` stables (ne pas renommer un contrôleur ou une méthode sans raison) ; un tag par module (`garmin-sync`, `health`, `training-stats`, `workout-generation`) via `@ApiTags`, sans route changée.
+- **Règle** : toute story qui ajoute ou modifie une route, un DTO ou un tag régénère et commite `docs/api/openapi.json`. Le job `ci-branch` (étape « Contrat OpenAPI à jour ») échoue si le fichier commité est périmé.
+- Détail, import Apidog et ADR : `docs/technique/openapi.md`, `docs/technique/decisions/0008-contrat-openapi-genere-en-mode-preview.md`.
+
 ## Tests
 
 - Vitest, fichiers `*.spec.ts` **colocalisés** à côté du fichier source (config : `vitest.config.ts`), pas d'arborescence miroir séparée. Les globals Vitest (`describe`, `it`, `expect`) sont activés.
@@ -205,6 +213,7 @@ Aucune (cf. décision actée) : l'API est exposée uniquement en local, pas de g
 
 - Démarrage : `docker compose up -d postgres` (base locale ; identifiants lus dans `.env`), `npm run start:dev`, `npm run build`.
 - Qualité : `npm run format:check` (`npm run format` pour corriger), `npm run lint`, `npm run deps:check`, `npm run test`, `npm run test:e2e`, `npm audit --audit-level=high`.
+- Contrat OpenAPI : `npm run openapi:generate` (régénère `docs/api/openapi.json`, à committer ; sans base).
 - Prisma : `npm run prisma:generate` (client, à relancer après chaque modification du schéma et après un `npm install` sur un dépôt neuf), `npm run prisma:validate`, `npm run prisma:migrate` (`prisma migrate dev`), `npm run prisma:migrate:deploy` (`prisma migrate deploy` : CI, e2e, production), `npm run prisma:migrate:reset` (efface les données), `npm run prisma:studio`.
 - `prisma generate` lit `DATABASE_URL` (via `prisma.config.ts`) même sans se connecter : elle doit être définie dans l'environnement, valeur factice acceptée (c'est ce que fait la CI).
 

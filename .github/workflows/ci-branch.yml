@@ -40,5 +40,13 @@ jobs:
       - name: Architecture
         run: npm run deps:check
 
+      - name: Contrat OpenAPI à jour
+        run: |
+          npm run openapi:generate
+          if [ -n "$(git status --porcelain -- docs/api/openapi.json)" ]; then
+            echo "::error::docs/api/openapi.json est périmé : lancer 'npm run openapi:generate' et committer le fichier"
+            exit 1
+          fi
+
       - name: Audit des dépendances
         run: npm audit --audit-level=high
