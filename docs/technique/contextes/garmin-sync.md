@@ -78,7 +78,7 @@ Détail des codes et du format des erreurs : [Erreurs de l'API](../erreurs-api.m
 
 1. `findLatestStartedAt()` lit la date de début la plus récente de la table `activities`.
 2. `SyncWindow.resumingFrom(latest)` calcule le début de la fenêtre : la dernière activité connue moins **7 jours** (fenêtre de recouvrement, pour rattraper les modifications récentes côté Garmin). Sans activité connue, la borne est nulle.
-3. `fetchActivitiesSince(since)` interroge Garmin (format et endpoint non vérifiés, voir la section « Hypothèses non vérifiées » plus bas). Si `since` est nul, l'historique démarre 365 jours avant maintenant.
+3. `fetchActivitiesSince(since)` interroge Garmin (voir « Vérifié par la spécification » et « Reste une hypothèse » plus bas). Le paramètre `startDate` envoyé est la date UTC de `since` moins un jour. Si `since` est nul, l'historique démarre 365 jours avant maintenant.
 4. Les activités reçues sont dédoublonnées par identifiant Garmin dans l'exécution (la dernière occurrence l'emporte).
 5. `findByGarminActivityIds` lit les activités déjà en base pour ces identifiants.
 6. Classement de chaque activité :
@@ -98,8 +98,8 @@ Les compteurs : `created + updated` activités sont écrites, `ignored` activit�
 
 - `GarminActivityId` : non vide après `trim()`.
 - `Activity` : type non vide, date de début valide, durée finie et positive ou nulle, distance nulle ou finie et positive ou nulle. Une violation lève `InvalidActivityError` (`ACTIVITY_INVALID`).
-- Fenêtre : `since` = dernière activité connue − 7 jours (`SyncWindow`).
-- Historique initial : 365 jours quand aucune activité n'est connue (hypothèse du plan, voir ci-dessous).
+- Fenêtre : `since` = dernière activité connue − 7 jours (`SyncWindow`). Côté Garmin, `startDate` est envoyé à la date UTC de `since` moins un jour (voir ci-dessous).
+- Historique initial : 365 jours quand aucune activité n'est connue (non vérifié, voir ci-dessous).
 
 ## Traitement des erreurs (adapter)
 
@@ -124,19 +124,33 @@ Messages renvoyés (`detail`, fixes, sans donnée interne) :
 
 La clé et le jeton n'apparaissent ni dans les réponses, ni dans les erreurs, ni dans les logs.
 
-## Hypothèses non vérifiées sur l'API Garmin
+## Vérifié par la spécification
 
-Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes et schéma zod `garminActivitySchema`). Le catalogue [API Garmin Personal, endpoints](../garmin-personal-api-endpoints.md) (story #24, source `garmin/swagger.json`) dit pour chacun s'il est confirmé, en écart ou non vérifié (section « Écarts entre la spécification et les hypothèses de #8 »).
+Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes) et `garmin-connect.external-mapper.ts` (schéma zod `garminActivitySchema`). Source : `docs/technique/garmin/swagger.json`, opération E03 (`GET /activitylist-service/activities/search/activities`) et schémas `SummarizedActivityDTO` et `ActivityTypeDTO`. Le catalogue [API Garmin Personal, endpoints](../garmin-personal-api-endpoints.md) détaille les écarts.
 
-- **Endpoint** : `GET {GARMIN_PERSONAL_API_BASE_URL}/activitylist-service/activities/search/activities` (constante `ACTIVITIES_PATH`). Confirmé par la spécification (E03).
-- **Paramètres** : `start` (offset, défaut 0) et `limit` (défaut 99 dans la spécification, maximum non précisé). `startDate` est une date `AAAA-MM-JJ` sur l'**heure locale** de l'activité (et non UTC), inclusive ; `endDate` existe mais n'est pas utilisé. Comme `startDate` est une date et non un instant, la fenêtre réelle couvre entre 7 et 8 jours selon l'heure.
-- **Pagination** : pages de 100 éléments (`PAGE_SIZE`), arrêt quand une page en contient moins. **Écart** : la spécification donne 99 comme défaut de `limit` sans maximum documenté ; si Garmin plafonne à 99, l'arrêt sur page incomplète interrompt la pagination à tort. Plafond de 50 pages (`MAX_PAGES`, soit 5 000 activités) ; au-delà, un `warn` est journalisé et les activités suivantes ne sont pas récupérées. Non documenté par la spécification.
-- **Tri et enfants** : la spécification fixe `sortBy` à `startLocal` et `sortOrder` à `desc` par défaut, et `excludeChildren` à `true` : sans ce paramètre, les activités enfants (jambes d'un multisport) sont exclues.
-- **Format d'un élément** : `activityId` (entier int64, confirmé), `activityType.typeKey` (confirmé), `startTimeGMT` au format `AAAA-MM-JJ HH:MM:SS` lu comme UTC (confirmé : `SummarizedActivityDTO`), `duration` (secondes, confirmé), `distance` (mètres, confirmé). Le reste de l'objet est conservé tel quel comme `sourcePayload`.
-- **Historique initial** : 365 jours quand aucune activité n'est connue (`DEFAULT_HISTORY_DAYS`), hypothèse du plan. La spécification ne donne aucune profondeur pour cet endpoint : non vérifié.
-- **Statuts de refus** : 401 et 403 sont traités comme un refus de la clé ou du jeton. La spécification les décrit pour les endpoints de données (401 : authentification absente ou invalide ; 403 : accès non autorisé).
+- **Endpoint** : `GET {GARMIN_PERSONAL_API_BASE_URL}/activitylist-service/activities/search/activities` (constante `ACTIVITIES_PATH`).
+- **Taille de page** : `limit` est envoyé à 99 (`PAGE_SIZE`), valeur par défaut documentée par la spécification. Aucun maximum n'est documenté.
+- **Date de début** : `startDate` est une date `AAAA-MM-JJ`, inclusive, basée sur l'**heure locale** de l'activité (et non UTC). L'adapter envoie la date UTC de `since` moins un jour, pour absorber l'écart entre heure locale et UTC. La fenêtre réellement interrogée commence donc entre 7 et 9 jours environ avant la dernière activité connue, selon le fuseau. Les activités déjà connues sont absorbées par l'upsert (pas de doublon).
+- **`activityId`** : entier int64. Accepté seulement s'il est un entier positif ou nul, dans la plage sûre de JavaScript (au plus 2^53 − 1) ; une chaîne ou un entier plus grand est ignoré (voir « Éléments invalides »).
+- **`startTimeGMT`** : `AAAA-MM-JJ HH:MM:SS`, sans suffixe, en GMT, lu comme UTC. Le pattern de la spécification ne comporte pas de fraction de seconde : un élément qui en porte une est ignoré avec un `warn`.
+- **`duration`** : nombre réel en secondes. **`distance`** : nombre réel en mètres, optionnel (absent ou `null` donne `null`).
+- **`activityType.typeKey`** : chaîne, lue depuis `ActivityTypeDTO`.
+- **Champs non lus** : `activityName`, `startTimeLocal` et les autres champs restent dans `sourcePayload`. `activityName` n'est pas mappé sur le Domain.
+- **Optionnalité** : la spécification ne déclare aucun champ `required` dans `SummarizedActivityDTO`. L'adapter exige `activityId`, `activityType.typeKey`, `startTimeGMT` et `duration`, parce que le Domain (`Activity`) en a besoin ; un élément qui les omet est ignoré. Écart justifié par l'exigence du Domain, non par la spécification.
+- **Format de réponse** : tableau JSON de `SummarizedActivityDTO` (enveloppe non tableau traitée comme indisponibilité).
 
-Format : JSON confirmé pour la liste. Le téléchargement de fichier (E04) renvoie une archive dont le contenu n'est pas décrit : le format FIT n'est pas confirmé. Quotas non décrits. Voir la liste des points non vérifiés dans [API Garmin Personal](../garmin-personal-api.md).
+## Reste une hypothèse
+
+- **Plafond de `limit`** : la spécification ne documente aucun maximum. Si Garmin renvoie moins de 99 éléments par page, l'arrêt sur page incomplète (`items.length < PAGE_SIZE`) interrompt la pagination à tort. Vérification réelle nécessaire.
+- **Plafond de pagination** : 50 pages (`MAX_PAGES`, soit 4 950 activités avec des pages de 99). Au-delà, un `warn` est journalisé et les activités suivantes ne sont pas récupérées. Non documenté par la spécification.
+- **Fraction de seconde dans `startTimeGMT`** : la spécification ne l'autorise pas ; si Garmin en renvoie une, l'élément est ignoré. À vérifier sur de vraies réponses.
+- **Ids au-delà de 2^53** : rejetés par la validation (`safe()`), signalés par un `warn`. Si Garmin émet de tels ids, il faudra les lire sans passer par un nombre JavaScript dans le mapper.
+- **Fuseau de `startDate`** : la spécification indique l'heure locale de l'activité, sans préciser le fuseau de référence si l'activité n'en a pas.
+- **Historique initial** : 365 jours quand aucune activité n'est connue (`DEFAULT_HISTORY_DAYS`). La spécification ne donne aucune profondeur pour E03 : non vérifié.
+- **Tri et enfants** : la spécification fixe `sortBy` à `startLocal`, `sortOrder` à `desc` et `excludeChildren` à `true` par défaut. Sans `excludeChildren=false`, les activités enfants (jambes d'un multisport) sont exclues. L'adapter n'envoie pas ces paramètres : écart à décider, hors périmètre de #25.
+- **Statuts de refus** : 401 et 403 sont traités comme un refus de la clé ou du jeton. La spécification les décrit pour les endpoints de données ; le point d'échange du jeton n'est pas dans la spécification.
+- **Format** : JSON confirmé pour la liste. Le téléchargement de fichier (E04) renvoie une archive dont le contenu n'est pas décrit : le format FIT n'est pas confirmé. Quotas non décrits. Voir la liste des points non vérifiés dans [API Garmin Personal](../garmin-personal-api.md).
+- **Comportement réel** : aucun appel réel à l'API Garmin n'a été fait ; les tests utilisent un serveur simulé.
 
 ## Limites connues
 
@@ -150,5 +164,5 @@ Format : JSON confirmé pour la liste. Le téléchargement de fichier (E04) renv
 
 - Unitaires (colocalisés) : `Activity`, `GarminActivityId`, `SyncWindow`, `SyncGarminActivitiesUseCase` (fakes des ports), `GarminConnectAdapter` (serveur HTTP local `node:http`), `GarminPersonalApiTokenProvider`, `ActivityMapper`, `GarminSyncController`.
 - Unitaires (colocalisés) complémentaires : `ListActivitiesUseCase` (fake du read model), `ActivitiesController` (use case substitué).
-- e2e (`test/`) : `activity-repository.e2e-spec.ts` (upsert sans doublon, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping) ; `garmin-sync.e2e-spec.ts` (Garmin simulé : première exécution, rejeu, payload modifié, fenêtre de 7 jours, activité invalide sautée, 502 et 503, absence de clé dans le corps) ; `activities.e2e-spec.ts` (liste vide, tri et pagination, filtres seuls et combinés, bornes incluses, pas de fuite de `rawPayload`, 400 `VALIDATION_FAILED` par champ).
+- e2e (`test/`) : `activity-repository.e2e-spec.ts` (upsert sans doublon, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping) ; `garmin-sync.e2e-spec.ts` (Garmin simulé : première exécution, rejeu, payload modifié, fenêtre de 7 jours décalée d'un jour (`startDate`), activité invalide sautée, 502 et 503, absence de clé dans le corps) ; `activities.e2e-spec.ts` (liste vide, tri et pagination, filtres seuls et combinés, bornes incluses, pas de fuite de `rawPayload`, 400 `VALIDATION_FAILED` par champ).
 - `openapi.e2e-spec.ts` vérifie que les deux codes figurent dans l'enum `ProblemCode`, que la route de synchronisation documente 200, 502 et 503, et que `GET /api/activities` documente ses paramètres et son 400.

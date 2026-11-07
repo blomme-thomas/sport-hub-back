@@ -37,4 +37,4 @@ Statut vérifié sur le code et les noms des tests ; les tests n'ont pas été e
 | La route renvoie le résumé | e2e `premiere_execution_cree_les_activites_et_renvoie_le_resume` |
 | Clé invalide ou panne : erreur propre, sans détail | e2e `cle_refusee_repond_502_GARMIN_ACCESS_DENIED`, `panne_garmin_repond_503_GARMIN_UNAVAILABLE` |
 
-Le format des activités Garmin n'est pas vérifié (voir la section « Hypothèses non vérifiées » de [Contexte garmin-sync](../../technique/contextes/garmin-sync.md)) : le parcours est validé contre un Garmin simulé uniquement.
+Le format des activités Garmin n'est pas vérifié (voir la section « Reste une hypothèse » de [Contexte garmin-sync](../../technique/contextes/garmin-sync.md)) : le parcours est validé contre un Garmin simulé uniquement.
