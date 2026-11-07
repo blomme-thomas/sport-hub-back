@@ -6,7 +6,7 @@ import { GetTrainingStatsRequestDto } from '../dtos/get-training-stats.request.d
 import { TrainingStatsResponseDto } from '../dtos/training-stats.response.dto.js';
 import { TrainingStatsHttpMapper } from '../mappers/training-stats.http-mapper.js';
 
-@ApiTags('stats')
+@ApiTags('training-stats')
 @Controller('stats')
 export class TrainingStatsController {
   constructor(private readonly getTrainingStats: GetTrainingStatsUseCase) {}

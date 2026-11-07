@@ -6,7 +6,7 @@ import { GenerateWorkoutRequestDto } from '../dtos/generate-workout.request.dto.
 import { GeneratedWorkoutResponseDto } from '../dtos/generated-workout.response.dto.js';
 import { WorkoutHttpMapper } from '../mappers/workout.http-mapper.js';
 
-@ApiTags('workouts')
+@ApiTags('workout-generation')
 @Controller('workouts')
 export class WorkoutsController {
   constructor(private readonly generateWorkout: GenerateWorkoutUseCase) {}
