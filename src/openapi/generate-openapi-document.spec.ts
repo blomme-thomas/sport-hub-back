@@ -54,6 +54,7 @@ describe('generateOpenApiDocument', () => {
         'training-stats',
         'workout-generation',
         'creneaux',
+        'objectifs',
       ]),
     );
   });

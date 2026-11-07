@@ -38,3 +38,17 @@ model Slot {
   @@index([recurrence, date])
   @@map("slots")
 }
+
+model Goal {
+  id                String    @id @default(uuid()) @db.Uuid
+  title             String
+  type              String
+  targetDate        DateTime? @map("target_date") @db.Date
+  eventFormat       String?   @map("event_format")
+  targetTimeSeconds Int?      @map("target_time_seconds")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([targetDate])
+  @@map("goals")
+}
