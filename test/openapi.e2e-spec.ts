@@ -114,4 +114,49 @@ describe('OpenAPI (e2e)', () => {
       response.content?.['application/problem+json']?.schema?.$ref,
     ).toContain('ProblemDetailsDto');
   });
+
+  it('documente_la_route_GET_api_activities_avec_pagination_et_filtres', () => {
+    const operation = document.paths['/api/activities']?.get;
+    expect(operation).toBeDefined();
+    expect(operation?.responses?.['200']).toBeDefined();
+
+    const names = (operation?.parameters ?? []).map(
+      (parameter) => (parameter as { name: string }).name,
+    );
+    expect(names).toEqual(
+      expect.arrayContaining(['page', 'pageSize', 'from', 'to', 'type']),
+    );
+
+    const response = operation?.responses?.['400'] as {
+      content?: Record<string, { schema?: { $ref?: string } }>;
+    };
+    expect(response).toBeDefined();
+    expect(
+      response.content?.['application/problem+json']?.schema?.$ref,
+    ).toContain('ProblemDetailsDto');
+  });
+
+  it('publie_le_schema_ActivityListResponseDto_sans_charge_brute', () => {
+    const schema = document.components?.schemas?.[
+      'ActivityListResponseDto'
+    ] as {
+      properties: Record<string, unknown>;
+    };
+    expect(schema).toBeDefined();
+    expect(Object.keys(schema.properties)).toEqual(
+      expect.arrayContaining(['items', 'page', 'pageSize', 'total']),
+    );
+
+    const summary = document.components?.schemas?.[
+      'ActivitySummaryResponseDto'
+    ] as { properties: Record<string, unknown> };
+    expect(Object.keys(summary.properties).sort()).toEqual([
+      'distanceMeters',
+      'durationSeconds',
+      'garminActivityId',
+      'id',
+      'startedAt',
+      'type',
+    ]);
+  });
 });
