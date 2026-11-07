@@ -25,7 +25,7 @@ npm run start:dev
 
 - API sur `http://localhost:3000`, préfixe global `/api` (valeurs par défaut, configurables).
 - Route technique de santé : `GET /api/health` interroge la base (`SELECT 1`). Base joignable : 200 `{ "status": "ok", "checks": { "database": "up" } }`. Base injoignable : 503 Problem Details, `code` `SERVICE_UNAVAILABLE`, `checks.database` = `down` (voir [Erreurs de l'API](erreurs-api.md)).
-- Synchronisation Garmin manuelle : `POST /api/garmin-sync/run` (sans corps), réponse `{ created, updated, ignored }`. Elle nécessite `GARMIN_PERSONAL_API_KEY` dans `.env` ; sans clé valide : 502 `GARMIN_ACCESS_DENIED` ; Garmin indisponible : 503 `GARMIN_UNAVAILABLE` (voir [Contexte garmin-sync](contextes/garmin-sync.md)).
+- Synchronisation Garmin manuelle : `POST /api/garmin-sync/run` (sans corps), réponse `{ created, updated, ignored }`. Elle nécessite `GARMIN_PERSONAL_API_KEY` dans `.env` ; sans clé valide : 502 `GARMIN_ACCESS_DENIED` ; Garmin indisponible : 503 `GARMIN_UNAVAILABLE` (voir [Contexte garmin-sync](contextes/garmin-sync.md)). Une synchronisation planifiée s'exécute aussi toutes les 3 heures par défaut (`GARMIN_SYNC_CRON_ENABLED`, `GARMIN_SYNC_CRON_EXPRESSION`) ; en local, mettre `GARMIN_SYNC_CRON_ENABLED=false` pour ne pas la lancer.
 - Génération de séance : `POST /api/workouts/generate` (corps facultatif, `{}` valide), réponse 200 avec la séance, non persistée. Elle nécessite `ANTHROPIC_API_KEY` dans `.env` ; sans clé, la route répond 503 `WORKOUT_GENERATION_UNAVAILABLE` sans appel réseau, et l'application démarre quand même. Clé refusée : 502 `WORKOUT_GENERATION_ACCESS_DENIED` ; sortie du modèle inexploitable : 502 `WORKOUT_GENERATION_INVALID_OUTPUT` (voir [Contexte workout-generation](contextes/workout-generation.md)).
 - Swagger : `/swagger` (hors préfixe `/api`).
 - Header `X-Correlation-Id` : présent sur toutes les réponses ; envoyer le sien (`/^[A-Za-z0-9._:-]{1,128}$/`) pour le retrouver dans les logs, sinon un UUID est généré.
@@ -91,8 +91,10 @@ API Garmin Personal (toutes optionnelles) :
 |---|---|---|
 | `GARMIN_PERSONAL_API_KEY` | absente | chaîne ; vide = absente. Sans clé, l'API démarre normalement et `GarminPersonalApiTokenProvider` lève `GarminAuthenticationError` (`KEY_MISSING`) à la première demande de jeton |
 | `GARMIN_PERSONAL_API_BASE_URL` | `https://personal.connectapi.garmin.com` | URL |
+| `GARMIN_SYNC_CRON_ENABLED` | `true` | `true` ou `false` exactement ; autre valeur : démarrage refusé. `false` : aucune synchronisation planifiée |
+| `GARMIN_SYNC_CRON_EXPRESSION` | `0 */3 * * *` (toutes les 3 heures) | expression cron acceptée par la bibliothèque `cron` (5 champs, ou 6 avec les secondes) ; invalide : démarrage refusé, valeur non affichée. Fuseau : celui du processus |
 
-Voir [API Garmin Personal](garmin-personal-api.md). La clé est un secret : la renseigner uniquement dans `.env`.
+Voir [API Garmin Personal](garmin-personal-api.md) et [Synchronisation planifiée](contextes/garmin-sync.md#synchronisation-planifiée). La clé est un secret : la renseigner uniquement dans `.env`.
 
 API Anthropic (génération de séances, toutes optionnelles) :
 

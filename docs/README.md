@@ -1,6 +1,6 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12). Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8), synchronisation planifiée (story #9) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12). Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
@@ -21,6 +21,7 @@
   - [0004 : erreurs techniques Garmin modélisées en DomainError](technique/decisions/0004-erreurs-techniques-garmin-en-domain-error.md)
   - [0005 : statistiques calculées à la volée depuis la table activities](technique/decisions/0005-statistiques-calculees-a-la-volee.md)
   - [0006 : génération de séances sans persistance, statistiques lues par ACL, erreurs IA en DomainError](technique/decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)
+  - [0007 : planification de la synchronisation Garmin par CronJob et SchedulerRegistry](technique/decisions/0007-planification-cronjob-via-scheduler-registry.md)
 
 ## Fonctionnel
 - [Fonctionnalités](fonctionnel/fonctionnalites.md)
