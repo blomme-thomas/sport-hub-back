@@ -140,7 +140,7 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 
-Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : à ce jour, `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync).
+Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats).
 
 ## Échec d'un service externe (`ExternalServiceError`)
 
@@ -159,6 +159,18 @@ Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) l
 - Routes concernées : `POST /api/garmin-sync/run`, documentée avec `@ApiProblemResponses(502, 503)`.
 - Ces `detail` sont fixes ; la `cause` technique n'est jamais transmise (voir [ADR 0004](decisions/0004-erreurs-techniques-garmin-en-domain-error.md)).
 - `ACTIVITY_INVALID` (`InvalidActivityError`) n'est pas mappé dans `DOMAIN_ERROR_STATUS` : s'il atteignait le filtre, il donnerait un 422 avec un `warn`. À ce jour, l'adapter Garmin le capte et saute l'activité concernée, il n'atteint donc pas le filtre.
+
+## Codes du module training-stats
+
+| Code | Statut | `title` | `detail` renvoyé | Cas |
+|---|---|---|---|---|
+| `STATS_RANGE_TOO_LARGE` | 400 | Bad Request | « La plage demandée dépasse 104 périodes. Réduisez la plage de dates. » | plage de plus de 104 périodes (`GET /api/stats`) |
+| `STATS_RANGE_INVALID` | 400 | Bad Request | « La date de fin doit être postérieure ou égale à la date de début. » | plage inversée ; filet du Domain, déjà couvert par la validation du transport (`to` antérieur à `from`, `VALIDATION_FAILED`) |
+
+- `type` : `urn:sport-hub:problem:stats-range-too-large` et `urn:sport-hub:problem:stats-range-invalid`.
+- Route concernée : `GET /api/stats`, documentée avec `@ApiProblemResponses(400)`.
+- Un `to` antérieur à `from` renvoie `VALIDATION_FAILED` (400) avec `errors[].field` = `to` et `code` = `IS_NOT_BEFORE_FROM`, pas `STATS_RANGE_INVALID`.
+- Ces codes ont un `detail` renvoyé tel quel (message de la `DomainError`) ; le statut 400 n'étant pas 5xx, il n'est pas concerné par la règle de masquage des 5xx.
 
 ## Business Errors : règle du statut
 

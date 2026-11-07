@@ -5,6 +5,7 @@
 import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
 // import { ValidateExampleUseCase } from '../../../application/use-cases/validate-example.use-case';
 // import { CreateExampleRequestDto, ExampleResponseDto } from '../dtos/example.dto';
+// import { ExampleHttpMapper } from '../mappers/example.http-mapper';
 
 /**
  * Inbound Adapter : traduit la requête HTTP en appel de Use Case, puis le résultat en Transport DTO.
@@ -18,7 +19,7 @@ export class ExamplesController {
   @HttpCode(200)
   async validate(@Param('id') id: string /*, @Body() dto: CreateExampleRequestDto */): Promise<unknown /* ExampleResponseDto */> {
     // const applicationDto = await this.validateExample.execute(id);
-    // return ExampleResponseDto.fromApplicationDto(applicationDto);
+    // return ExampleHttpMapper.toResponse(applicationDto);
     // Les Business Errors remontées du Use Case sont traduites par les filtres globaux (voir 08) — pas de try/catch ici.
     throw new Error('Not implemented — squelette à compléter');
   }
