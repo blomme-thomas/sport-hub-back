@@ -1,6 +1,6 @@
 # Données
 
-Prisma 7 + PostgreSQL. Un seul modèle à ce jour : `Activity` (aucun module, entité de domaine ni repository ne l'utilise encore).
+Prisma 7 + PostgreSQL. Un seul modèle à ce jour : `Activity`, écrit et relu par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas).
 
 - `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèle `Activity`.
 - `prisma.config.ts` : chemin du schéma, dossier de migrations `prisma/migrations`, URL de connexion lue dans `DATABASE_URL`.
@@ -27,9 +27,20 @@ Activité Garmin synchronisée.
 
 Index : unique sur `garmin_activity_id`, `started_at`, et `(type, started_at)`.
 
-Choix : `garminActivityId` en texte (identifiants Garmin plus grands qu'un int32) ; `type` en texte pour éviter une migration à chaque nouveau sport. Ces champs peuvent encore évoluer (spike de synchronisation Garmin, issue #7) par migration additive.
+Choix : `garminActivityId` en texte (identifiants Garmin plus grands qu'un int32) ; `type` en texte pour éviter une migration à chaque nouveau sport. Ces champs peuvent encore évoluer par migration additive ; le format des activités Garmin n'est pas vérifié (voir [Contexte garmin-sync](contextes/garmin-sync.md)).
 
 Couvert par `test/activity-persistence.e2e-spec.ts` (création, relecture, doublon `P2002`, distance nulle), qui utilise directement `PrismaService`.
+
+## Accès depuis garmin-sync
+
+Port `IActivityRepository` (`src/modules/garmin-sync/domain/ports/outbound/activity.repository.port.ts`), implémenté par `PrismaActivityRepositoryAdapter` (`infrastructure/persistence/prisma/`). Le mapping entre l'entité `Activity` et le modèle Prisma est fait par `ActivityMapper`.
+
+- `findLatestStartedAt()` : `startedAt` le plus récent, `null` si la table est vide.
+- `findByGarminActivityIds(ids)` : activités connues parmi les identifiants fournis ; liste vide sans requête si aucun identifiant.
+- `save(activities)` : un upsert par activité, sur `garminActivityId`, exécuté dans une seule `$transaction` Prisma : le lot est écrit en entier ou pas du tout. Le `create` et le `update` reçoivent les mêmes données ; `id` et `createdAt` ne sont donc pas modifiés à la mise à jour, et `updatedAt` est mis à jour par Prisma. Liste vide sans requête.
+- `rawPayload` reçoit `sourcePayload`, l'objet Garmin tel que reçu. Le Domain le traite comme `unknown`.
+
+Couvert par `test/activity-repository.e2e-spec.ts` (upsert sans doublon, mise à jour sans changement d'`id`, lot mixte, lot rejeté en entier, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping, distance nulle).
 
 ## Migrations
 

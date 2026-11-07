@@ -25,6 +25,7 @@ npm run start:dev
 
 - API sur `http://localhost:3000`, préfixe global `/api` (valeurs par défaut, configurables).
 - Route technique de santé : `GET /api/health` interroge la base (`SELECT 1`). Base joignable : 200 `{ "status": "ok", "checks": { "database": "up" } }`. Base injoignable : 503 Problem Details, `code` `SERVICE_UNAVAILABLE`, `checks.database` = `down` (voir [Erreurs de l'API](erreurs-api.md)).
+- Synchronisation Garmin manuelle : `POST /api/garmin-sync/run` (sans corps), réponse `{ created, updated, ignored }`. Elle nécessite `GARMIN_PERSONAL_API_KEY` dans `.env` ; sans clé valide : 502 `GARMIN_ACCESS_DENIED` ; Garmin indisponible : 503 `GARMIN_UNAVAILABLE` (voir [Contexte garmin-sync](contextes/garmin-sync.md)).
 - Swagger : `/swagger` (hors préfixe `/api`).
 - Header `X-Correlation-Id` : présent sur toutes les réponses ; envoyer le sien (`/^[A-Za-z0-9._:-]{1,128}$/`) pour le retrouver dans les logs, sinon un UUID est généré.
 - Erreurs : toutes au format `application/problem+json` (RFC 9457), voir [Erreurs de l'API](erreurs-api.md).
@@ -52,7 +53,7 @@ npm run start:dev
 | `prisma:migrate:deploy` | `prisma migrate deploy` : applique les migrations existantes (CI, déploiement) |
 | `prisma:migrate:reset` | `prisma migrate reset` : recrée la base et rejoue les migrations (**efface les données**) |
 
-Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Avant les tests, un `globalSetup` Vitest applique les migrations sur cette base (`prisma migrate deploy`) : inutile de les lancer à la main en local. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker compose up -d` la crée automatiquement, avec `DB_NAME`, via le script `docker/postgres/init/01-create-test-db.sh` (monté dans `/docker-entrypoint-initdb.d`, idempotent, il réutilise l'utilisateur du conteneur). En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
+Les tests e2e fixent eux-mêmes leur environnement (base `sporthub_test` sur `localhost:5432`, utilisateur `sporthub`) et ne dépendent pas du `.env`. Avant les tests, un `globalSetup` Vitest applique les migrations sur cette base (`prisma migrate deploy`) : inutile de les lancer à la main en local. Les fichiers e2e s'exécutent en série (`fileParallelism: false` dans `vitest.config.e2e.ts`) car ils partagent cette base. Comme l'application se connecte à la base à l'initialisation, **une base `sporthub_test` joignable est un prérequis local** des e2e. `docker compose up -d` la crée automatiquement, avec `DB_NAME`, via le script `docker/postgres/init/01-create-test-db.sh` (monté dans `/docker-entrypoint-initdb.d`, idempotent, il réutilise l'utilisateur du conteneur). En CI, le service PostgreSQL la crée (`POSTGRES_DB: sporthub_test`).
 
 Les scripts d'initialisation de l'image Postgres ne s'exécutent **qu'au premier démarrage d'un volume vide**. Sur un volume existant, deux options :
 
