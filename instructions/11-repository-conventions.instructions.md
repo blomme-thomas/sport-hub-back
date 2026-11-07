@@ -6,7 +6,7 @@ applyTo: '**'
 
 > **Lecture ciblée** (repère une section avec `Grep "^## "` puis `Read` avec offset/limit) : *Stack*, *Arborescence par module*, *Nommage*, *Ports et tokens* et *Templates de code* pour écrire du code ; *Tests* pour les tests ; *Commandes cibles* pour lint/build/audit ; *Configuration* pour les variables d'environnement ; *Commentaires et TSDoc* pour la documentation du code ; *Spécificités du domaine* (Garmin, IA) **uniquement si la story touche Garmin ou la génération par IA**.
 
-> **Un module métier : `garmin-sync`.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (modèle `Activity` et première migration), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Le module `src/modules/garmin-sync/` (authentification Garmin et synchronisation manuelle des activités, quatre couches) suit l'arborescence par module ci-dessous. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
+> **Un module métier : `garmin-sync`.** Le dépôt contient le socle technique : NestJS, configuration validée, Prisma (modèle `Activity` et première migration), route `/api/health`, format d'erreur uniforme RFC 9457 (filtre global, correlation id, `DomainError`), tests, CI et garde-fou d'architecture. Le module `src/modules/garmin-sync/` (authentification Garmin, synchronisation manuelle des activités et consultation paginée `GET /api/activities`, quatre couches) suit l'arborescence par module ci-dessous. Dès que le code réel diverge d'un point précis, **mettre à jour ce fichier** pour refléter l'existant (cf. `10` §Contradictions) plutôt que de laisser `11` mentir.
 
 ## Stack
 
@@ -65,7 +65,7 @@ Transversal (hors modules) :
 
 Un module Nest n'importe pas le Domain d'un autre module sans passer par un contrat explicite ; le transverse va dans `src/core` ou `src/shared` (cf. `04`).
 
-**Read Models / Projections** (ex. agrégations de stats d'entraînement, lecture divergente de l'écriture) : requête Prisma de lecture directe dans `infrastructure/persistence/prisma/<name>.read-model.ts`, exposée par un Use Case de lecture dédié dans `application/use-cases/` (ex. `get-training-stats.use-case.ts`). **Pas** de dossier `application/queries/` séparé tant que CQRS n'est pas explicitement justifié (`05`) — le Use Case suffit à nommer l'intention de lecture.
+**Read Models / Projections** (ex. agrégations de stats d'entraînement, lecture divergente de l'écriture) : requête Prisma de lecture directe dans `infrastructure/persistence/prisma/<name>.read-model.ts`, derrière un Outbound Port de lecture `domain/ports/outbound/<name>.read-model.port.ts` (interface `I<Name>ReadModel` + token `Symbol`, comme `06` §Projections), exposée par un Use Case de lecture dédié dans `application/use-cases/` (ex. `get-training-stats.use-case.ts`) qui injecte le port, jamais l'adapter. Cas concret : `IActivityListReadModel` (`ACTIVITY_LIST_READ_MODEL`, `domain/ports/outbound/activity-list.read-model.port.ts`), implémenté par `PrismaActivityListReadModel` (`infrastructure/persistence/prisma/activity-list.read-model.ts`), consommé par `ListActivitiesUseCase` via `@Inject(ACTIVITY_LIST_READ_MODEL)`. **Pas** de dossier `application/queries/` séparé tant que CQRS n'est pas explicitement justifié (`05`) — le Use Case suffit à nommer l'intention de lecture.
 
 ## Chaque concept DDD n'est pas forcément un fichier
 

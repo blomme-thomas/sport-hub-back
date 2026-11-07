@@ -42,6 +42,16 @@ Port `IActivityRepository` (`src/modules/garmin-sync/domain/ports/outbound/activ
 
 Couvert par `test/activity-repository.e2e-spec.ts` (upsert sans doublon, mise à jour sans changement d'`id`, lot mixte, lot rejeté en entier, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping, distance nulle).
 
+## Lecture des activités (read model)
+
+`GET /api/activities` lit la table `activities` via le read model `PrismaActivityListReadModel` (`infrastructure/persistence/prisma/activity-list.read-model.ts`), port `IActivityListReadModel`. Aucune migration : les index `started_at` et `(type, started_at)` servent le tri et les filtres.
+
+- Requête : `findMany` avec `select` explicite (`id`, `garminActivityId`, `type`, `startedAt`, `durationSeconds`, `distanceMeters`) et `count` avec le même `where`, dans une `$transaction`, pour un total cohérent avec la page.
+- Tri `startedAt desc, id desc` ; `skip`/`take` pour la pagination.
+- `rawPayload` n'est jamais lu par cette requête.
+
+Couvert par `test/activities.e2e-spec.ts`.
+
 ## Migrations
 
 - Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`) et `migration_lock.toml`.

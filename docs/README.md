@@ -1,6 +1,6 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal et synchronisation manuelle des activités (story #8). Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal synchronisation manuelle des activités (story #8) et consultation paginée de la liste (story #10). Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
@@ -22,3 +22,4 @@
 - [Glossaire](fonctionnel/glossaire.md)
 - Parcours (`fonctionnel/parcours/<nom>.md`) :
   - [Synchroniser les activités Garmin](fonctionnel/parcours/synchroniser-activites-garmin.md)
+  - [Consulter les activités synchronisées](fonctionnel/parcours/consulter-activites.md)
