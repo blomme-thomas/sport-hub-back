@@ -31,6 +31,11 @@ const API_TAGS: readonly { name: string; description: string }[] = [
     name: 'workout-generation',
     description: "Génération de séances d'entraînement par IA",
   },
+  {
+    name: 'creneaux',
+    description:
+      'Créneaux de disponibilité libres ou occupés, ponctuels ou récurrents',
+  },
 ];
 
 /**
