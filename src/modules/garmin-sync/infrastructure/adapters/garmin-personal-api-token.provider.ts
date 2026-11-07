@@ -13,14 +13,24 @@ const TOKEN_PATH =
   '/personalapitoken-service/personal-api/personal-api-key/token';
 const EXPIRY_MARGIN_MS = 60_000;
 
-const tokenResponseSchema = z.object({
-  access_token: z.string().min(1),
-  expires_in: z.number().min(0),
-});
+const tokenSchema = z.string().regex(/^[\w-]+\.[\w-]+\.[\w-]*$/);
+const claimsSchema = z.object({ exp: z.number().positive() });
 
 interface CachedToken {
   value: string;
   expiresAt: number;
+}
+
+function expiryOf(token: string): number | undefined {
+  try {
+    const payload = Buffer.from(token.split('.')[1], 'base64url').toString(
+      'utf8',
+    );
+    const claims = claimsSchema.safeParse(JSON.parse(payload));
+    return claims.success ? claims.data.exp * 1000 : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 @Injectable()
@@ -83,15 +93,13 @@ export class GarminPersonalApiTokenProvider {
       throw error;
     }
 
-    const parsed = tokenResponseSchema.safeParse(data);
-    if (!parsed.success) {
+    const parsed = tokenSchema.safeParse(data);
+    const expiresAt = parsed.success ? expiryOf(parsed.data) : undefined;
+    if (!parsed.success || expiresAt === undefined) {
       throw new GarminAuthenticationError('UNEXPECTED_RESPONSE');
     }
 
-    this.cached = {
-      value: parsed.data.access_token,
-      expiresAt: Date.now() + parsed.data.expires_in * 1000,
-    };
-    return parsed.data.access_token;
+    this.cached = { value: parsed.data, expiresAt };
+    return parsed.data;
   }
 }
