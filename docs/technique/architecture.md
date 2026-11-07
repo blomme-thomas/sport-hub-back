@@ -18,7 +18,7 @@ Seul le socle technique est livré, dans `src/` :
 - `src/core/http` : client HTTP sortant commun (`HttpClientModule` exporte `HttpClientService`), non global ; seul consommateur à ce jour : `GarminSyncModule`. Détail ci-dessous.
 - `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
 
-Un seul module existe dans `src/modules/` : `garmin-sync`, réduit à ce jour à la couche Infrastructure. `GarminSyncModule` importe `HttpClientModule` et exporte `GarminPersonalApiTokenProvider` (`infrastructure/adapters/`), qui obtient et met en cache le jeton d'accès de l'API Garmin Personal ; erreurs `GarminAuthenticationError`. Détail : [API Garmin Personal](garmin-personal-api.md). Ni Domain, ni Application, ni Presentation, ni synchronisation d'activités n'existent encore.
+Un seul module existe dans `src/modules/` : `garmin-sync`, dans les quatre couches (`domain`, `application`, `infrastructure`, `presentation`). Il authentifie l'API Garmin Personal (`GarminPersonalApiTokenProvider`, détail : [API Garmin Personal](garmin-personal-api.md)) et synchronise les activités dans la base via `POST /api/garmin-sync/run` (détail : [Contexte garmin-sync](contextes/garmin-sync.md)). `GarminSyncModule` importe `HttpClientModule` et enregistre les tokens `GARMIN_CONNECT_CLIENT` (adapter `GarminConnectAdapter`) et `ACTIVITY_REPOSITORY` (`PrismaActivityRepositoryAdapter`). La planification (#9) et la consultation (#10) ne sont pas livrées.
 
 ## Client HTTP sortant (`src/core/http`)
 
@@ -60,10 +60,10 @@ dependency-cruiser (`.dependency-cruiser.cjs`) vérifie ces règles sur `src/`, 
 
 Avertissement seulement : `modules-isolated` (un module n'importe pas l'intérieur d'un autre), le contrat entre modules n'étant pas encore défini. Le client Prisma généré est exclu de l'analyse.
 
-Ces règles s'exercent à ce jour sur le seul module `garmin-sync` (Infrastructure uniquement).
+Ces règles s'exercent à ce jour sur le seul module `garmin-sync`, dans ses quatre couches.
 
 ## Bounded contexts
-`garmin-sync` : en cours (authentification seulement). Fiche `contextes/garmin-sync.md` : à compléter.
+`garmin-sync` : livré (synchronisation manuelle des activités et authentification Garmin). Fiche : [Contexte garmin-sync](contextes/garmin-sync.md).
 
 ## Flux entre contextes
-À compléter.
+Aucun à ce jour : `garmin-sync` est le seul Bounded Context. Le flux interne (Presentation, use case, ports, adapters Garmin et Prisma) est décrit dans la fiche du contexte.

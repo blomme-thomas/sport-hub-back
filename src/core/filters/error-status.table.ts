@@ -13,7 +13,10 @@ export const GENERIC_PROBLEM_CODES = {
  * Associe le code d'une Business Error à son statut HTTP.
  * Les clés sont des chaînes littérales car `src/core` n'importe jamais `src/modules` (deps:check).
  */
-export const DOMAIN_ERROR_STATUS: Readonly<Record<string, number>> = {};
+export const DOMAIN_ERROR_STATUS: Readonly<Record<string, number>> = {
+  GARMIN_ACCESS_DENIED: 502,
+  GARMIN_UNAVAILABLE: 503,
+};
 
 export const DEFAULT_DOMAIN_ERROR_STATUS = 422;
 

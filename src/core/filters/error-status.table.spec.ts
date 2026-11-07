@@ -39,6 +39,20 @@ describe('error-status.table', () => {
     }
   });
 
+  it('associe GARMIN_ACCESS_DENIED au statut 502', () => {
+    expect(DOMAIN_ERROR_STATUS['GARMIN_ACCESS_DENIED']).toBe(502);
+  });
+
+  it('associe GARMIN_UNAVAILABLE au statut 503', () => {
+    expect(DOMAIN_ERROR_STATUS['GARMIN_UNAVAILABLE']).toBe(503);
+  });
+
+  it('expose les codes Garmin dans PROBLEM_CODES', () => {
+    expect(PROBLEM_CODES).toEqual(
+      expect.arrayContaining(['GARMIN_ACCESS_DENIED', 'GARMIN_UNAVAILABLE']),
+    );
+  });
+
   it('PROBLEM_CODES ne contient aucun doublon', () => {
     expect(new Set(PROBLEM_CODES).size).toBe(PROBLEM_CODES.length);
   });

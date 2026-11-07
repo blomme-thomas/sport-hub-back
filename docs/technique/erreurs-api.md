@@ -38,7 +38,7 @@ Validation (400) :
 }
 ```
 
-Business Error (`DomainError`), ici `WORKOUT_NOT_FOUND` supposé mappé à 404 (exemple illustratif : `DOMAIN_ERROR_STATUS` est vide à ce jour) :
+Business Error (`DomainError`), ici `WORKOUT_NOT_FOUND` supposé mappé à 404 (exemple illustratif : ce code n'existe pas dans le dépôt ; les codes réels sont listés plus bas) :
 
 ```json
 {
@@ -140,13 +140,25 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 
-Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`), à ce jour aucun.
+Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : à ce jour, `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync).
 
 ## Échec d'un service externe (`ExternalServiceError`)
 
-Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) lève `ExternalServiceError` quand un système externe échoue après les réessais. Ce n'est ni une `DomainError` ni une `HttpException` : le filtre la traite comme une exception inconnue et renvoie un 500 `INTERNAL_ERROR` avec le `detail` fixe `Une erreur interne est survenue.` (jamais le message, la cible ni le statut amont). L'erreur est loguée en `error` avec sa stack, et n'a pas de `cause`. Aucun code dédié n'existe à ce jour ; un Use Case peut la capturer pour la traduire en Business Error.
+Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) lève `ExternalServiceError` quand un système externe échoue après les réessais. Ce n'est ni une `DomainError` ni une `HttpException` : le filtre la traite comme une exception inconnue et renvoie un 500 `INTERNAL_ERROR` avec le `detail` fixe `Une erreur interne est survenue.` (jamais le message, la cible ni le statut amont). L'erreur est loguée en `error` avec sa stack, et n'a pas de `cause`. Le module `garmin-sync` la traduit dans son adapter en `GARMIN_UNAVAILABLE` (503) ou `GARMIN_ACCESS_DENIED` (502) ; ailleurs, un Use Case peut la capturer pour la traduire en Business Error.
 
-`GarminAuthenticationError` (module `garmin-sync`, causes `KEY_MISSING`, `KEY_REJECTED`, `UNEXPECTED_RESPONSE`, voir [API Garmin Personal](garmin-personal-api.md)) est une erreur technique qui n'est ni une `DomainError` ni une `HttpException` : aucun Use Case ne l'appelle encore, mais si elle atteint le filtre, elle devient aussi un 500 `INTERNAL_ERROR`.
+`GarminAuthenticationError` (module `garmin-sync`, causes `KEY_MISSING`, `KEY_REJECTED`, `UNEXPECTED_RESPONSE`, voir [API Garmin Personal](garmin-personal-api.md)) est une erreur technique qui n'est ni une `DomainError` ni une `HttpException`. L'adapter Garmin la traduit : `KEY_MISSING` et `KEY_REJECTED` deviennent `GARMIN_ACCESS_DENIED`, `UNEXPECTED_RESPONSE` devient `GARMIN_UNAVAILABLE`. Si elle atteignait le filtre, elle deviendrait un 500 `INTERNAL_ERROR`.
+
+## Codes du module garmin-sync
+
+| Code | Statut | `title` | `detail` renvoyé | Cas |
+|---|---|---|---|---|
+| `GARMIN_ACCESS_DENIED` | 502 | Bad Gateway | « L'accès à Garmin a été refusé : vérifiez la clé de l'API Garmin Personal. » | clé absente ou refusée, jeton refusé après renouvellement |
+| `GARMIN_UNAVAILABLE` | 503 | Service Unavailable | « Garmin est momentanément indisponible. Réessayez plus tard. » | Garmin en panne, délai dépassé, réponse inattendue |
+
+- `type` : `urn:sport-hub:problem:garmin-access-denied` et `urn:sport-hub:problem:garmin-unavailable`.
+- Routes concernées : `POST /api/garmin-sync/run`, documentée avec `@ApiProblemResponses(502, 503)`.
+- Ces `detail` sont fixes ; la `cause` technique n'est jamais transmise (voir [ADR 0004](decisions/0004-erreurs-techniques-garmin-en-domain-error.md)).
+- `ACTIVITY_INVALID` (`InvalidActivityError`) n'est pas mappé dans `DOMAIN_ERROR_STATUS` : s'il atteignait le filtre, il donnerait un 422 avec un `warn`. À ce jour, l'adapter Garmin le capte et saute l'activité concernée, il n'atteint donc pas le filtre.
 
 ## Business Errors : règle du statut
 

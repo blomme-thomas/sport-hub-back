@@ -36,8 +36,19 @@ function reply(res: ServerResponse, status: number, body: unknown): void {
   res.end(typeof body === 'string' ? body : JSON.stringify(body));
 }
 
-function token(value: string, expiresIn = 3600) {
-  return { access_token: value, expires_in: expiresIn };
+function encode(part: unknown): string {
+  return Buffer.from(JSON.stringify(part)).toString('base64url');
+}
+
+function jwt(claims: object): string {
+  return `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode(claims)}.signature`;
+}
+
+function token(id: string, lifetimeSeconds = 3600): string {
+  return jwt({
+    jti: id,
+    exp: Math.floor(Date.now() / 1000) + lifetimeSeconds,
+  });
 }
 
 async function rejection(promise: Promise<unknown>): Promise<unknown> {
@@ -116,10 +127,18 @@ describe('GarminPersonalApiTokenProvider', () => {
   });
 
   describe('obtention du jeton', () => {
-    it("renvoie l'access_token fourni par Garmin", async () => {
-      handler = (_req, res) => reply(res, 200, token('jeton-abc'));
+    it('renvoie le JWT fourni par Garmin tel quel', async () => {
+      const issued = token('jeton-abc');
+      handler = (_req, res) => reply(res, 200, issued);
 
-      await expect(provider().getAccessToken()).resolves.toBe('jeton-abc');
+      await expect(provider().getAccessToken()).resolves.toBe(issued);
+    });
+
+    it('accepte un JWT de 24 heures comme celui de Garmin', async () => {
+      const issued = token('jeton-24h', 86_400);
+      handler = (_req, res) => reply(res, 200, issued);
+
+      await expect(provider().getAccessToken()).resolves.toBe(issued);
     });
 
     it('appelle le chemin du service de jeton en POST', async () => {
@@ -192,6 +211,22 @@ describe('GarminPersonalApiTokenProvider', () => {
       expect(hits).toHaveLength(2);
     });
 
+    it("déduit l'expiration du claim exp du jeton", async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+      handler = (_req, res) => reply(res, 200, token('exp', 86_400));
+      const p = provider();
+      await p.getAccessToken();
+
+      vi.setSystemTime(new Date('2026-01-01T23:58:00Z'));
+      await p.getAccessToken();
+      expect(hits).toHaveLength(1);
+
+      vi.setSystemTime(new Date('2026-01-01T23:59:30Z'));
+      await p.getAccessToken();
+      expect(hits).toHaveLength(2);
+    });
+
     it('redemande un jeton après invalidate()', async () => {
       const p = provider();
       const first = await p.getAccessToken();
@@ -213,8 +248,8 @@ describe('GarminPersonalApiTokenProvider', () => {
 
   describe('appels simultanés', () => {
     it('mutualise un seul appel HTTP pour des demandes concurrentes', async () => {
-      handler = (_req, res) =>
-        setTimeout(() => reply(res, 200, token('partage')), 50);
+      const shared = token('partage');
+      handler = (_req, res) => setTimeout(() => reply(res, 200, shared), 50);
       const p = provider();
 
       const tokens = await Promise.all([
@@ -223,7 +258,7 @@ describe('GarminPersonalApiTokenProvider', () => {
         p.getAccessToken(),
       ]);
 
-      expect(tokens).toEqual(['partage', 'partage', 'partage']);
+      expect(tokens).toEqual([shared, shared, shared]);
       expect(hits).toHaveLength(1);
     });
 
@@ -244,6 +279,7 @@ describe('GarminPersonalApiTokenProvider', () => {
     });
 
     it("retente l'obtention après un échec", async () => {
+      const recovered = token('retabli');
       let count = 0;
       handler = (_req, res) => {
         count += 1;
@@ -251,12 +287,12 @@ describe('GarminPersonalApiTokenProvider', () => {
           reply(res, 401, {});
           return;
         }
-        reply(res, 200, token('rétabli'));
+        reply(res, 200, recovered);
       };
       const p = provider();
       await authFailure(p.getAccessToken());
 
-      await expect(p.getAccessToken()).resolves.toBe('rétabli');
+      await expect(p.getAccessToken()).resolves.toBe(recovered);
       expect(hits).toHaveLength(2);
     });
   });
@@ -304,14 +340,18 @@ describe('GarminPersonalApiTokenProvider', () => {
     it.each([
       ['un corps non JSON', 'pas du json'],
       ['un corps vide', ''],
-      ['un objet sans access_token', { expires_in: 3600 }],
-      ['un access_token vide', { access_token: '', expires_in: 3600 }],
-      ['un access_token non textuel', { access_token: 42, expires_in: 3600 }],
-      ['un objet sans expires_in', { access_token: 'abc' }],
-      ['un expires_in non numérique', { access_token: 'abc', expires_in: 'x' }],
-      ['un expires_in négatif', { access_token: 'abc', expires_in: -5 }],
+      ['un objet JSON', { access_token: 'abc', expires_in: 3600 }],
       ['un tableau', ['abc']],
       ['null', 'null'],
+      ['un nombre', '42'],
+      ['un jeton à deux segments', 'aaa.bbb'],
+      [
+        "un jeton dont le payload n'est pas du JSON",
+        `${encode({ alg: 'RS256' })}.${Buffer.from('pas du json').toString('base64url')}.signature`,
+      ],
+      ['un jeton sans claim exp', jwt({ jti: 'sans-exp' })],
+      ['un jeton avec un exp textuel', jwt({ exp: 'demain' })],
+      ['un jeton avec un exp négatif', jwt({ exp: -5 })],
     ])('lève UNEXPECTED_RESPONSE sur %s', async (_label, body) => {
       handler = (_req, res) => reply(res, 200, body);
 
@@ -394,7 +434,8 @@ describe('GarminPersonalApiTokenProvider', () => {
     });
 
     it('ne journalise ni la clé ni le jeton obtenu', async () => {
-      handler = (_req, res) => reply(res, 200, token('jeton-confidentiel'));
+      const secret = token('jeton-confidentiel');
+      handler = (_req, res) => reply(res, 200, secret);
       const p = provider();
       await p.getAccessToken();
 
@@ -404,7 +445,7 @@ describe('GarminPersonalApiTokenProvider', () => {
 
       const output = logged.join('\n');
       expect(output).not.toContain(API_KEY);
-      expect(output).not.toContain('jeton-confidentiel');
+      expect(output).not.toContain(secret);
     });
   });
 });
