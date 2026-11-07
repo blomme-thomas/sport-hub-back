@@ -3,6 +3,7 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponses } from '../../../../../core/filters/api-problem-responses.decorator.js';
 import { SyncGarminActivitiesUseCase } from '../../../application/use-cases/sync-garmin-activities.use-case.js';
 import { SyncGarminActivitiesResponseDto } from '../dtos/sync-garmin-activities.response.dto.js';
+import { GarminSyncHttpMapper } from '../mappers/garmin-sync.http-mapper.js';
 
 @ApiTags('garmin-sync')
 @Controller('garmin-sync')
@@ -21,6 +22,6 @@ export class GarminSyncController {
   })
   async run(): Promise<SyncGarminActivitiesResponseDto> {
     const result = await this.syncActivities.execute();
-    return Object.assign(new SyncGarminActivitiesResponseDto(), result);
+    return GarminSyncHttpMapper.toResponse(result);
   }
 }

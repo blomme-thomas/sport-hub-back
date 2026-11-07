@@ -1,19 +1,17 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { z } from 'zod';
 import {
   garminConfig,
   type GarminConfig,
 } from '../../../../core/config/index.js';
 import { ExternalServiceError } from '../../../../core/http/external-service.error.js';
 import { HttpClientService } from '../../../../core/http/http-client.service.js';
-import { Activity } from '../../domain/entities/activity.entity.js';
+import type { Activity } from '../../domain/entities/activity.entity.js';
 import { GarminAccessDeniedError } from '../../domain/errors/garmin-access-denied.error.js';
 import { GarminUnavailableError } from '../../domain/errors/garmin-unavailable.error.js';
-import { InvalidActivityError } from '../../domain/errors/invalid-activity.error.js';
 import type { IGarminConnectClient } from '../../domain/ports/outbound/garmin-connect-client.port.js';
-import { GarminActivityId } from '../../domain/value-objects/garmin-activity-id.vo.js';
 import { GarminAuthenticationError } from './garmin-authentication.error.js';
 import { GarminPersonalApiTokenProvider } from './garmin-personal-api-token.provider.js';
+import { GarminConnectExternalMapper } from '../mappers/garmin-connect.external-mapper.js';
 
 const TARGET = 'garmin-personal-api';
 const ACTIVITIES_PATH = '/activitylist-service/activities/search/activities';
@@ -21,15 +19,6 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 50;
 const DEFAULT_HISTORY_DAYS = 365;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const GMT_TIMESTAMP = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/;
-
-const garminActivitySchema = z.object({
-  activityId: z.union([z.number().int().nonnegative(), z.string().min(1)]),
-  activityType: z.object({ typeKey: z.string().min(1) }),
-  startTimeGMT: z.string().regex(GMT_TIMESTAMP),
-  duration: z.number().min(0),
-  distance: z.number().min(0).nullish(),
-});
 
 @Injectable()
 export class GarminConnectAdapter implements IGarminConnectClient {
@@ -50,10 +39,7 @@ export class GarminConnectAdapter implements IGarminConnectClient {
     for (let page = 0; page < MAX_PAGES; page += 1) {
       const items = await this.fetchPage(startDate, page * PAGE_SIZE);
       for (const item of items) {
-        const activity = this.translate(item);
-        if (activity) {
-          activities.push(activity);
-        }
+        this.collect(item, activities);
       }
       if (items.length < PAGE_SIZE) {
         break;
@@ -122,43 +108,23 @@ export class GarminConnectAdapter implements IGarminConnectClient {
     }
   }
 
-  private translate(item: unknown): Activity | null {
-    const parsed = garminActivitySchema.safeParse(item);
-    if (!parsed.success) {
-      this.logger.warn(
-        `Activité Garmin ignorée (format inattendu, id ${this.identify(item)})`,
-      );
-      return null;
-    }
-    const data = parsed.data;
-    try {
-      return Activity.create({
-        garminActivityId: GarminActivityId.create(String(data.activityId)),
-        type: data.activityType.typeKey,
-        startedAt: new Date(`${data.startTimeGMT.replace(' ', 'T')}Z`),
-        durationSeconds: data.duration,
-        distanceMeters: data.distance ?? null,
-        sourcePayload: item,
-      });
-    } catch (error) {
-      if (error instanceof InvalidActivityError) {
+  private collect(item: unknown, activities: Activity[]): void {
+    const translation = GarminConnectExternalMapper.toDomain(item);
+    switch (translation.status) {
+      case 'ok':
+        activities.push(translation.activity);
+        return;
+      case 'format':
         this.logger.warn(
-          `Activité Garmin ignorée (valeurs invalides, id ${String(data.activityId)})`,
+          `Activité Garmin ignorée (format inattendu, id ${translation.id})`,
         );
-        return null;
-      }
-      throw error;
+        return;
+      case 'invalid':
+        this.logger.warn(
+          `Activité Garmin ignorée (valeurs invalides, id ${translation.id})`,
+        );
+        return;
     }
-  }
-
-  private identify(item: unknown): string {
-    if (typeof item === 'object' && item !== null && 'activityId' in item) {
-      const id = (item as { activityId: unknown }).activityId;
-      if (typeof id === 'number' || typeof id === 'string') {
-        return String(id);
-      }
-    }
-    return 'inconnu';
   }
 
   private formatDate(date: Date): string {

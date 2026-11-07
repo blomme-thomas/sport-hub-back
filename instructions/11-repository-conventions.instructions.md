@@ -43,6 +43,7 @@ src/modules/<module>/
     persistence/prisma/<name>.repository.adapter.ts  # implements I<Name>Repository, injecte PrismaService
     persistence/prisma/<name>.mapper.ts               # Domain Entity <-> modèle Prisma
     adapters/<name>.adapter.ts                 # ex: garmin-connect.adapter.ts, claude-workout-generator.adapter.ts
+    mappers/<name>.external-mapper.ts          # Traduction modèle externe <-> domaine, toujours présent pour un Adapter externe (voir 08)
     scheduler/<name>.scheduler.ts              # Inbound Adapter planifié (@nestjs/schedule)
   presentation/
     http/controllers/<name>.controller.ts
@@ -100,7 +101,7 @@ Le glossaire (`00`) décrit des concepts, pas des fichiers obligatoires (`00` §
 | Outbound Port (autre) | `<name>.port.ts` | `I<Name>` + token `Symbol` associé |
 | Repository Adapter | `<name>.repository.adapter.ts` | `Prisma<Name>RepositoryAdapter` |
 | Mapper (persistance) | `<name>.mapper.ts` | `<Name>Mapper` (méthodes statiques `toDomain`/`toPersistence`) |
-| Mapper (Adapter externe / ACL) | `<name>.external-mapper.ts` | `<Name>ExternalMapper` — seulement si l'extraire hors de l'Adapter apporte de la lisibilité (sinon inline, voir §Spécificités du domaine) |
+| Mapper (Adapter externe / ACL) | `infrastructure/mappers/<name>.external-mapper.ts` | `<Name>ExternalMapper` (méthodes statiques) — toujours présent pour un Adapter externe, jamais de traduction inline dans l'Adapter |
 | Controller | `<name>.controller.ts` | `<Name>Controller` |
 | Mapper (présentation HTTP) | `<name>.http-mapper.ts` | `<Name>HttpMapper` (méthodes statiques `toResponse` / `toQuery`) — toujours présent, même pour un endpoint simple |
 | Transport DTO | `<name>.request.dto.ts` / `<name>.response.dto.ts` | `<Name>RequestDto` / `<Name>ResponseDto` |
@@ -143,6 +144,7 @@ Pour éviter d'alourdir les fichiers `instructions/*.md` avec de longs blocs de 
 | Mapper | `instructions/templates/mapper.template.ts` |
 | Controller | `instructions/templates/controller.template.ts` |
 | Mapper (présentation HTTP) | `instructions/templates/http-mapper.template.ts` |
+| Mapper (Adapter externe / ACL) | `instructions/templates/external-mapper.template.ts` |
 | Transport DTO | `instructions/templates/transport-dto.template.ts` |
 
 ## Spécificités du domaine
@@ -154,13 +156,13 @@ Pour éviter d'alourdir les fichiers `instructions/*.md` avec de longs blocs de 
   - La clé expire : prévoir de la renouveler à la main avant l'échéance (Garmin envoie un e-mail environ une semaine avant). Variable d'environnement `GARMIN_PERSONAL_API_KEY`, déclarée dans la configuration (section `garmin`, optionnelle : sans clé l'API démarre et `GarminPersonalApiTokenProvider` lève `GarminAuthenticationError` `KEY_MISSING` à la première demande de jeton, voir §Configuration).
   - À vérifier à l'implémentation sur la documentation Garmin (pages `developer.garmin.com/gc-developer-program/personal/`) : quotas, profondeur d'historique, format exact des activités (JSON ou FIT). Non vérifié à la livraison de la story #8 : endpoint, pagination et format des activités sont des hypothèses isolées dans `garmin-connect.adapter.ts` (voir `docs/technique/contextes/garmin-sync.md`).
 - Outbound Port `domain/ports/outbound/garmin-connect-client.port.ts` (`IGarminConnectClient`) — contrat exprimé en langage du domaine (`fetchActivitiesSince(since: Date | null): Promise<Activity[]>`, sans `athleteId` : mono-utilisateur), pas en termes de l'API Garmin.
-- Adapter `infrastructure/adapters/garmin-connect.adapter.ts` : encapsule la librairie/les appels HTTP Garmin Connect et fait office d'**Anti-Corruption Layer** — traduit le modèle externe vers le modèle du domaine ; le Domain ne voit jamais le payload Garmin brut. Traduction gardée **inline** dans l'Adapter tant qu'elle est simple ; si elle grossit (plusieurs formats, règles de mapping non triviales), l'extraire dans `infrastructure/adapters/garmin-connect.external-mapper.ts` (voir §Nommage).
+- Adapter `infrastructure/adapters/garmin-connect.adapter.ts` : encapsule la librairie/les appels HTTP Garmin Connect et fait office d'**Anti-Corruption Layer** — traduit le modèle externe vers le modèle du domaine ; le Domain ne voit jamais le payload Garmin brut. La traduction est dans un mapper dédié `infrastructure/mappers/garmin-connect.external-mapper.ts` (voir §Nommage), jamais inline dans l'Adapter.
 - Déclenchement : `infrastructure/scheduler/garmin-sync.scheduler.ts` (`@nestjs/schedule`, `@Cron(...)`, non livré : story #9) — un Inbound Adapter comme un autre, sans logique métier, qui appelle un Use Case `SyncGarminActivities`. Le déclenchement manuel livré est le contrôleur `presentation/http/controllers/garmin-sync.controller.ts` (`POST /api/garmin-sync/run`).
 - Idempotence : la synchronisation doit pouvoir être rejouée sans dupliquer (upsert par identifiant externe, typé en Value Object `GarminActivityId`).
 
 ### Génération de séances par IA (Claude)
 - Outbound Port `domain/ports/outbound/workout-ai-generator.port.ts` (`IWorkoutAiGenerator`), ex. `generate(input: GenerateWorkoutInput): Promise<GeneratedWorkout>`.
-- Adapter `infrastructure/adapters/claude-workout-generator.adapter.ts` : encapsule `@anthropic-ai/sdk`, construit le prompt (les gabarits de prompt sont un détail technique, ex. `infrastructure/adapters/prompts/`), parse la réponse. Le Domain ne connaît ni le SDK ni le format de réponse du modèle.
+- Adapter `infrastructure/adapters/claude-workout-generator.adapter.ts` : encapsule `@anthropic-ai/sdk`, construit le prompt (les gabarits de prompt sont un détail technique, ex. `infrastructure/adapters/prompts/`) ; la traduction de la réponse vit dans `infrastructure/mappers/claude-workout-generator.external-mapper.ts`. Le Domain ne connaît ni le SDK ni le format de réponse du modèle.
 - Le résultat généré doit être validé par les invariants du Domain avant persistance (passer par la Factory/`create()` de l'Entity concernée) : un contenu généré invalide est rejeté comme n'importe quelle construction invalide, pas fait confiance aveuglément.
 - Un échec d'appel au modèle (timeout, erreur API) est une **Technical Error**, pas une Business Error (`00` §5).
 
