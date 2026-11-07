@@ -29,6 +29,7 @@ Le script compile (`nest build`) puis lance `dist/openapi/generate-openapi.js`, 
 | `creneaux` | `POST /api/slots`, `GET /api/slots`, `PATCH /api/slots/:id`, `DELETE /api/slots/:id` |
 | `garmin-sync` | `GET /api/activities`, `POST /api/garmin-sync/run` |
 | `health` | `GET /api/health` |
+| `objectifs` | `POST /api/goals`, `GET /api/goals`, `GET /api/goals/:id`, `PATCH /api/goals/:id`, `DELETE /api/goals/:id` |
 | `training-stats` | `GET /api/stats` |
 | `workout-generation` | `POST /api/workouts/generate` |
 
