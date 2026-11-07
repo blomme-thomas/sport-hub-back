@@ -2,7 +2,7 @@
 
 Bounded Context de synchronisation des activités Garmin dans la base locale. Code : `src/modules/garmin-sync/`. Usage mono-utilisateur.
 
-Périmètre livré : déclenchement manuel de la synchronisation (issue #8), consultation de la liste des activités (issue #10) et synchronisation planifiée (story #9, voir [Synchronisation planifiée](#synchronisation-planifiée)). Hors périmètre à ce jour : autres données Garmin que les activités.
+Périmètre livré : déclenchement manuel de la synchronisation (issue #8), consultation de la liste des activités (issue #10), synchronisation planifiée (story #9, voir [Synchronisation planifiée](#synchronisation-planifiée)) et enregistrement des disciplines vues pendant la synchronisation (issue #45, voir [Contexte disciplines](disciplines.md)). Hors périmètre à ce jour : autres données Garmin que les activités.
 
 ## Rôle
 
@@ -16,20 +16,21 @@ Importer dans la table `activities` les activités Garmin nouvelles ou modifiée
 | Domain | `domain/value-objects/garmin-activity-id.vo.ts` | `GarminActivityId` : identifiant Garmin, texte non vide après retrait des espaces |
 | Domain | `domain/value-objects/sync-window.vo.ts` | `SyncWindow.resumingFrom(latest)` : début de la fenêtre de synchronisation |
 | Domain | `domain/errors/` | `GarminAccessDeniedError` (`GARMIN_ACCESS_DENIED`), `GarminUnavailableError` (`GARMIN_UNAVAILABLE`), `InvalidActivityError` (`ACTIVITY_INVALID`) |
-| Domain | `domain/ports/outbound/` | `IGarminConnectClient` (token `GARMIN_CONNECT_CLIENT`), `IActivityRepository` (token `ACTIVITY_REPOSITORY`), `IActivityListReadModel` (token `ACTIVITY_LIST_READ_MODEL`, fichier `activity-list.read-model.port.ts`) |
+| Domain | `domain/ports/outbound/` | `IGarminConnectClient` (token `GARMIN_CONNECT_CLIENT`), `IActivityRepository` (token `ACTIVITY_REPOSITORY`), `IActivityListReadModel` (token `ACTIVITY_LIST_READ_MODEL`, fichier `activity-list.read-model.port.ts`), `IDisciplineRegistry` (token `DISCIPLINE_REGISTRY`, fichier `discipline-registry.port.ts`) |
 | Application | `application/use-cases/sync-garmin-activities.use-case.ts` | `SyncGarminActivitiesUseCase.execute()` |
 | Application | `application/use-cases/list-activities.use-case.ts` | `ListActivitiesUseCase.execute(query)` : page d'activités et total |
 | Application | `application/dtos/sync-garmin-activities-result.dto.ts` | `SyncGarminActivitiesResultDto` (`created`, `updated`, `ignored`) |
 | Application | `application/dtos/activity-list.dto.ts` | `ActivityListQuery`, `ActivityListDto`, `ActivitySummaryDto` |
 | Infrastructure | `infrastructure/adapters/garmin-connect.adapter.ts` | Adapter `GarminConnectAdapter`, anti-corruption layer vers l'API Garmin |
 | Infrastructure | `infrastructure/adapters/garmin-personal-api-token.provider.ts` | Obtention et cache du jeton d'accès |
+| Infrastructure | `infrastructure/adapters/disciplines-registry.adapter.ts` | `DisciplinesRegistryAdapter` : ACL vers le module `disciplines` (appelle `RecordDisciplineAppearancesUseCase`) |
 | Infrastructure | `infrastructure/persistence/prisma/` | `PrismaActivityRepositoryAdapter`, `ActivityMapper`, read model `PrismaActivityListReadModel` |
 | Infrastructure | `infrastructure/scheduler/garmin-sync.scheduler.ts` | `GarminSyncScheduler` : déclenchement planifié de la synchronisation (`SchedulerRegistry` et `CronJob`), verrou en mémoire |
 | Presentation | `presentation/http/controllers/garmin-sync.controller.ts` | `POST /api/garmin-sync/run` |
 | Presentation | `presentation/http/controllers/activities.controller.ts` | `GET /api/activities` |
 | Presentation | `presentation/http/dtos/sync-garmin-activities.response.dto.ts` | Transport DTO de la réponse de synchronisation |
 | Presentation | `presentation/http/dtos/list-activities.request.dto.ts`, `activity-list.response.dto.ts` | Transport DTOs de la liste (paramètres de requête validés, page de résumés) |
-| Composition | `garmin-sync.module.ts` | Câblage des tokens, du contrôleur et du scheduler, import de `ScheduleModule.forRoot()` |
+| Composition | `garmin-sync.module.ts` | Câblage des tokens, du contrôleur et du scheduler, import de `ScheduleModule.forRoot()` et de `DisciplinesModule`, `DISCIPLINE_REGISTRY` lié à `DisciplinesRegistryAdapter` |
 
 ## Ports publics
 
@@ -41,6 +42,8 @@ Importer dans la table `activities` les activités Garmin nouvelles ou modifiée
 - `save(activities: Activity[]): Promise<void>` : crée ou met à jour les activités dans une seule transaction Prisma.
 
 **`IActivityListReadModel.list(criteria): Promise<ActivityListPage>`** (port de lecture, token `ACTIVITY_LIST_READ_MODEL`) : une page de résumés et le total correspondant aux filtres. Consommé uniquement par `ListActivitiesUseCase`.
+
+**`IDisciplineRegistry.recordAppearances(typeKeys: string[]): Promise<void>`** (token `DISCIPLINE_REGISTRY`) : enregistre l'apparition des clés de type brutes telles que Garmin les fournit (clés vides ou répétées sans effet). Implémenté par `DisciplinesRegistryAdapter`, qui délègue au module `disciplines` (voir [Contexte disciplines](disciplines.md#enregistrement-depuis-garmin-sync)).
 
 ## Lecture des activités
 
@@ -112,8 +115,9 @@ Tests : e2e avec `GARMIN_SYNC_CRON_ENABLED=false` (`vitest.config.e2e.ts`), donc
    - **créée** (`created`) : identifiant inconnu en base ;
    - **mise à jour** (`updated`) : identifiant connu, contenu différent ;
    - **ignorée** (`ignored`) : identifiant connu, contenu identique.
-7. `save()` écrit les créées et les mises à jour dans une seule transaction. Les ignorées ne sont pas réécrites.
-8. Le use case renvoie les trois compteurs.
+7. **Enregistrement des disciplines** : `recordAppearances` reçoit les types distincts de toutes les activités reçues de Garmin (`incoming`), y compris les ignorées, et ce même si aucune activité n'est à écrire. Le module `disciplines` crée les disciplines inconnues et avance la dernière apparition des autres (voir [Contexte disciplines](disciplines.md#modèle-et-règles)). Cette étape précède l'écriture des activités.
+8. `save()` écrit les créées et les mises à jour dans une seule transaction (seulement s'il y en a). Les ignorées ne sont pas réécrites.
+9. Le use case renvoie les trois compteurs. `SyncGarminActivitiesResultDto` ne change pas : les disciplines n'y figurent pas.
 
 Le contenu est comparé sur le type, la date de début, la durée, la distance et le payload Garmin source complet (égalité profonde). Une modification de n'importe quel champ du payload, même hors de ces quatre champs, compte donc comme `updated`.
 
@@ -144,6 +148,7 @@ L'adapter traduit les erreurs techniques en erreurs du module, sans transmettre 
 - Les requêtes d'activités étant des GET, le client HTTP peut réessayer les erreurs réseau, les délais et les 5xx (voir [Architecture](../architecture.md)). Le POST du jeton n'est jamais réessayé.
 - Une activité Garmin invalide (format non conforme au schéma zod, ou valeurs refusées par `Activity.create`) est **sautée** : un `warn` est journalisé avec son seul identifiant, et elle n'est ni écrite ni comptée. La synchronisation continue.
 - Le use case ne capture aucune erreur : ce qui remonte est traduit par le filtre global.
+- Une erreur du référentiel des disciplines (`DisciplinesRegistryAdapter`) n'est pas traduite : elle remonte en 500 `INTERNAL_ERROR`, et comme l'enregistrement précède l'écriture, aucune activité de cette exécution n'est écrite.
 
 Messages renvoyés (`detail`, fixes, sans donnée interne) :
 - `GARMIN_ACCESS_DENIED` : « L'accès à Garmin a été refusé : vérifiez la clé de l'API Garmin Personal. »
@@ -189,7 +194,7 @@ Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes) et `garmin
 
 ## Tests
 
-- Unitaires (colocalisés) : `Activity`, `GarminActivityId`, `SyncWindow`, `SyncGarminActivitiesUseCase` (fakes des ports), `GarminConnectAdapter` (serveur HTTP local `node:http`), `GarminPersonalApiTokenProvider`, `ActivityMapper`, `GarminSyncController`.
+- Unitaires (colocalisés) : `Activity`, `GarminActivityId`, `SyncWindow`, `SyncGarminActivitiesUseCase` (fakes des ports ; types distincts enregistrés, registre rejeté), `DisciplinesRegistryAdapter`, `GarminConnectAdapter` (serveur HTTP local `node:http`), `GarminPersonalApiTokenProvider`, `ActivityMapper`, `GarminSyncController`.
 - Unitaires (colocalisés) complémentaires : `ListActivitiesUseCase` (fake du read model), `ActivitiesController` (use case substitué), `GarminSyncScheduler` (planification, verrou, journalisation des échecs).
 - e2e (`test/`) : `activity-repository.e2e-spec.ts` (upsert sans doublon, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping) ; `garmin-sync.e2e-spec.ts` (Garmin simulé : première exécution, rejeu, payload modifié, fenêtre de 7 jours décalée d'un jour (`startDate`), activité invalide sautée, 502 et 503, absence de clé dans le corps) ; `activities.e2e-spec.ts` (liste vide, tri et pagination, filtres seuls et combinés, bornes incluses, pas de fuite de `rawPayload`, 400 `VALIDATION_FAILED` par champ).
 - `openapi.e2e-spec.ts` vérifie que les deux codes figurent dans l'enum `ProblemCode`, que la route de synchronisation documente 200, 502 et 503, et que `GET /api/activities` documente ses paramètres et son 400.

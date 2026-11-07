@@ -21,3 +21,8 @@ Périmètre visé (d'après `CLAUDE.md`) : synchronisation Garmin Connect, calcu
 | Objectifs | Calcul de la progression vers l'objectif | Non livré (hors périmètre de l'issue #36) |
 | Objectifs | Génération de planning à partir de l'objectif | Non livré (hors périmètre de l'issue #36) |
 | Objectifs | Arbitrage entre plusieurs objectifs simultanés | Non livré (question ouverte dans [la vision produit](vision.md)) |
+| Disciplines | Enregistrement automatique des disciplines (types d'activité Garmin) pendant chaque synchronisation, sans doublon | Livré (issue #45). Contexte : [disciplines](../technique/contextes/disciplines.md). Parcours : à compléter |
+| Disciplines | Liste des disciplines avec leur libellé, triée par libellé (`GET /api/disciplines`) | Livré (issue #45) |
+| Disciplines | Renommage d'une discipline (`PATCH /api/disciplines/:typeKey`) ; le libellé survit aux synchronisations | Livré (issue #45). Route ajoutée par le plan, non demandée explicitement par l'issue |
+| Disciplines | Affichage du libellé dans la liste des activités et les statistiques | Non livré : `GET /api/activities` et `GET /api/stats` renvoient toujours la clé brute |
+| Disciplines | Création manuelle, suppression ou fusion de disciplines | Non livré (hors périmètre de l'issue #45) |

@@ -27,6 +27,7 @@ Le script compile (`nest build`) puis lance `dist/openapi/generate-openapi.js`, 
 | Tag | Routes |
 |---|---|
 | `creneaux` | `POST /api/slots`, `GET /api/slots`, `PATCH /api/slots/:id`, `DELETE /api/slots/:id` |
+| `disciplines` | `GET /api/disciplines`, `PATCH /api/disciplines/:typeKey` |
 | `garmin-sync` | `GET /api/activities`, `POST /api/garmin-sync/run` |
 | `health` | `GET /api/health` |
 | `objectifs` | `POST /api/goals`, `GET /api/goals`, `GET /api/goals/:id`, `PATCH /api/goals/:id`, `DELETE /api/goals/:id` |
@@ -34,6 +35,8 @@ Le script compile (`nest build`) puis lance `dist/openapi/generate-openapi.js`, 
 | `workout-generation` | `POST /api/workouts/generate` |
 
 Les contrôleurs portent ces tags via `@ApiTags`. Les anciens tags `activities`, `stats` et `workouts` ont été remplacés par cette story (#22) : le regroupement Swagger et Apidog a changé.
+
+Écart constaté (issue #45) : le tag `disciplines` est porté par les opérations, mais il n'est pas déclaré dans la liste `API_TAGS` de `src/swagger.setup.ts`. Le fichier `docs/api/openapi.json` ne contient donc pas d'entrée `disciplines` dans `tags` de premier niveau (les six autres tags y figurent). Le tag n'a pas été ajouté à cette liste, car ce n'est pas un changement de documentation ; à corriger dans le code, puis à régénérer.
 
 ## Déterminisme
 
