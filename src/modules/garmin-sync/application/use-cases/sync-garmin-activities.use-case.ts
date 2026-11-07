@@ -5,6 +5,10 @@ import {
   type IActivityRepository,
 } from '../../domain/ports/outbound/activity.repository.port.js';
 import {
+  DISCIPLINE_REGISTRY,
+  type IDisciplineRegistry,
+} from '../../domain/ports/outbound/discipline-registry.port.js';
+import {
   GARMIN_CONNECT_CLIENT,
   type IGarminConnectClient,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
@@ -18,6 +22,8 @@ export class SyncGarminActivitiesUseCase {
     private readonly activities: IActivityRepository,
     @Inject(GARMIN_CONNECT_CLIENT)
     private readonly garmin: IGarminConnectClient,
+    @Inject(DISCIPLINE_REGISTRY)
+    private readonly disciplines: IDisciplineRegistry,
   ) {}
 
   /**
@@ -61,6 +67,10 @@ export class SyncGarminActivitiesUseCase {
         toSave.push(activity);
       }
     }
+
+    await this.disciplines.recordAppearances([
+      ...new Set(incoming.map((activity) => activity.type)),
+    ]);
 
     if (toSave.length > 0) {
       await this.activities.save(toSave);

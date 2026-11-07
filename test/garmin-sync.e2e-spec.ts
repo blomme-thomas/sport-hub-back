@@ -109,10 +109,12 @@ describe('Synchronisation Garmin (e2e)', () => {
 
     prisma = app.get(PrismaService);
     await prisma.activity.deleteMany();
+    await prisma.discipline.deleteMany();
   });
 
   afterEach(async () => {
     await prisma.activity.deleteMany();
+    await prisma.discipline.deleteMany();
     await app.close();
   });
 
@@ -267,5 +269,76 @@ describe('Synchronisation Garmin (e2e)', () => {
     expect(body).not.toContain(baseUrl);
     expect(body).not.toContain('127.0.0.1');
     expect(res.body).not.toHaveProperty('stack');
+  });
+
+  describe('disciplines', () => {
+    function disciplinesList() {
+      return request(app.getHttpServer()).get('/api/disciplines');
+    }
+
+    it('type_inconnu_cree_une_discipline_dont_le_libelle_est_la_cle', async () => {
+      activitiesHandler = (_req, res) =>
+        reply(res, 200, [
+          garminItem(1, { activityType: { typeKey: 'strength_training' } }),
+        ]);
+
+      await run().expect(200);
+
+      const res = await disciplinesList().expect(200);
+      expect(res.body.items).toEqual([
+        expect.objectContaining({
+          typeKey: 'strength_training',
+          label: 'strength_training',
+        }),
+      ]);
+    });
+
+    it('resynchronisation_avance_la_derniere_apparition_sans_doublon', async () => {
+      const seenBefore = new Date('2026-01-01T00:00:00.000Z');
+      await prisma.discipline.create({
+        data: {
+          typeKey: 'running',
+          label: 'running',
+          firstSeenAt: seenBefore,
+          lastSeenAt: seenBefore,
+        },
+      });
+      activitiesHandler = (_req, res) => reply(res, 200, [garminItem(1)]);
+
+      await run().expect(200);
+
+      const stored = await prisma.discipline.findMany();
+      expect(stored).toHaveLength(1);
+      expect(stored[0].firstSeenAt).toEqual(seenBefore);
+      expect(stored[0].lastSeenAt.getTime()).toBeGreaterThan(
+        seenBefore.getTime(),
+      );
+    });
+
+    it('libelle_renomme_est_conserve_apres_resynchronisation', async () => {
+      activitiesHandler = (_req, res) => reply(res, 200, [garminItem(1)]);
+      await run().expect(200);
+      await request(app.getHttpServer())
+        .patch('/api/disciplines/running')
+        .send({ label: 'Course à pied' })
+        .expect(200);
+
+      await run().expect(200);
+
+      const res = await disciplinesList().expect(200);
+      expect(res.body.items).toEqual([
+        expect.objectContaining({ typeKey: 'running', label: 'Course à pied' }),
+      ]);
+    });
+
+    it('activite_sans_typeKey_est_ignoree_sans_creer_de_discipline_vide', async () => {
+      activitiesHandler = (_req, res) =>
+        reply(res, 200, [garminItem(1, { activityType: {} })]);
+
+      const res = await run().expect(200);
+
+      expect(res.body).toEqual({ created: 0, updated: 0, ignored: 0 });
+      expect(await prisma.discipline.count()).toBe(0);
+    });
   });
 });
