@@ -26,6 +26,7 @@ npm run start:dev
 - API sur `http://localhost:3000`, préfixe global `/api` (valeurs par défaut, configurables).
 - Route technique de santé : `GET /api/health` interroge la base (`SELECT 1`). Base joignable : 200 `{ "status": "ok", "checks": { "database": "up" } }`. Base injoignable : 503 Problem Details, `code` `SERVICE_UNAVAILABLE`, `checks.database` = `down` (voir [Erreurs de l'API](erreurs-api.md)).
 - Synchronisation Garmin manuelle : `POST /api/garmin-sync/run` (sans corps), réponse `{ created, updated, ignored }`. Elle nécessite `GARMIN_PERSONAL_API_KEY` dans `.env` ; sans clé valide : 502 `GARMIN_ACCESS_DENIED` ; Garmin indisponible : 503 `GARMIN_UNAVAILABLE` (voir [Contexte garmin-sync](contextes/garmin-sync.md)).
+- Génération de séance : `POST /api/workouts/generate` (corps facultatif, `{}` valide), réponse 200 avec la séance, non persistée. Elle nécessite `ANTHROPIC_API_KEY` dans `.env` ; sans clé, la route répond 503 `WORKOUT_GENERATION_UNAVAILABLE` sans appel réseau, et l'application démarre quand même. Clé refusée : 502 `WORKOUT_GENERATION_ACCESS_DENIED` ; sortie du modèle inexploitable : 502 `WORKOUT_GENERATION_INVALID_OUTPUT` (voir [Contexte workout-generation](contextes/workout-generation.md)).
 - Swagger : `/swagger` (hors préfixe `/api`).
 - Header `X-Correlation-Id` : présent sur toutes les réponses ; envoyer le sien (`/^[A-Za-z0-9._:-]{1,128}$/`) pour le retrouver dans les logs, sinon un UUID est généré.
 - Erreurs : toutes au format `application/problem+json` (RFC 9457), voir [Erreurs de l'API](erreurs-api.md).
@@ -92,6 +93,18 @@ API Garmin Personal (toutes optionnelles) :
 | `GARMIN_PERSONAL_API_BASE_URL` | `https://personal.connectapi.garmin.com` | URL |
 
 Voir [API Garmin Personal](garmin-personal-api.md). La clé est un secret : la renseigner uniquement dans `.env`.
+
+API Anthropic (génération de séances, toutes optionnelles) :
+
+| Variable | Défaut | Contrainte |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | absente | chaîne ; vide = absente. Sans clé, l'API démarre et la génération répond 503 `WORKOUT_GENERATION_UNAVAILABLE` |
+| `ANTHROPIC_MODEL` | `claude-sonnet-5-5` | chaîne non vide |
+| `ANTHROPIC_MAX_TOKENS` | `2048` | entier au moins égal à 1 (`max_tokens` de l'appel) |
+| `ANTHROPIC_TIMEOUT_MS` | `30000` | entier au moins égal à 1, délai par tentative |
+| `ANTHROPIC_MAX_RETRIES` | `2` | entier de 0 à 5, réessais gérés par le SDK |
+
+La clé est un secret : la renseigner uniquement dans `.env`. Elle n'est jamais journalisée.
 
 `DATABASE_URL` est lue par Prisma (`prisma.config.ts`) et doit être écrite en clair : la CLI Prisma n'étend pas les `${variables}`. Les variables `DB_*` sont aussi lues par `docker-compose.yml`.
 

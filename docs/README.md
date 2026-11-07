@@ -1,6 +1,6 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8) et consultation paginée de la liste (story #10), et le module `training-stats` : statistiques de volume par semaine ou par mois (story #11). Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec le modèle `Activity` et sa première migration, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12). Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
@@ -13,12 +13,14 @@
 - Contextes (`technique/contextes/<nom>.md`) :
   - [garmin-sync](technique/contextes/garmin-sync.md) (synchronisation des activités, ports, route, erreurs, hypothèses Garmin)
   - [training-stats](technique/contextes/training-stats.md) (statistiques de volume, calcul à la demande, route `GET /api/stats`, règles de période)
+  - [workout-generation](technique/contextes/workout-generation.md) (génération de séance par Claude, route `POST /api/workouts/generate`, sans persistance, erreurs IA)
 - Décisions (`technique/decisions/`) :
   - [0001 : table centralisée code vers statut HTTP](technique/decisions/0001-table-centralisee-code-statut.md)
   - [0002 : correlation id par middleware et AsyncLocalStorage](technique/decisions/0002-correlation-id-middleware-als.md)
   - [0003 : connexion à la base au démarrage et dans le health check](technique/decisions/0003-connexion-base-au-demarrage.md)
   - [0004 : erreurs techniques Garmin modélisées en DomainError](technique/decisions/0004-erreurs-techniques-garmin-en-domain-error.md)
   - [0005 : statistiques calculées à la volée depuis la table activities](technique/decisions/0005-statistiques-calculees-a-la-volee.md)
+  - [0006 : génération de séances sans persistance, statistiques lues par ACL, erreurs IA en DomainError](technique/decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)
 
 ## Fonctionnel
 - [Fonctionnalités](fonctionnel/fonctionnalites.md)

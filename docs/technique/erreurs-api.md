@@ -140,7 +140,7 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 
-Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats).
+Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation).
 
 ## Échec d'un service externe (`ExternalServiceError`)
 
@@ -171,6 +171,20 @@ Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) l
 - Route concernée : `GET /api/stats`, documentée avec `@ApiProblemResponses(400)`.
 - Un `to` antérieur à `from` renvoie `VALIDATION_FAILED` (400) avec `errors[].field` = `to` et `code` = `IS_NOT_BEFORE_FROM`, pas `STATS_RANGE_INVALID`.
 - Ces codes ont un `detail` renvoyé tel quel (message de la `DomainError`) ; le statut 400 n'étant pas 5xx, il n'est pas concerné par la règle de masquage des 5xx.
+
+## Codes du module workout-generation
+
+| Code | Statut | `title` | `detail` renvoyé | Cas |
+|---|---|---|---|---|
+| `WORKOUT_GENERATION_UNAVAILABLE` | 503 | Service Unavailable | « La génération de séance est momentanément indisponible. Réessayez plus tard. » | clé `ANTHROPIC_API_KEY` absente, connexion ou délai dépassé, 429, 5xx du service d'IA (après les réessais du SDK) |
+| `WORKOUT_GENERATION_ACCESS_DENIED` | 502 | Bad Gateway | « La génération de séance n'est pas autorisée par le service d'IA. » | 401 ou 403 du service d'IA (clé refusée ou droits insuffisants) |
+| `WORKOUT_GENERATION_INVALID_OUTPUT` | 502 | Bad Gateway | message fixe décrivant l'anomalie, par exemple « La séance générée ne respecte pas le format attendu. » | réponse du modèle inexploitable : `stop_reason` autre que `end_turn` (`max_tokens`, refus), bloc non texte, JSON invalide, schéma non respecté, invariant de la séance violé (durée totale, ordre des étapes, etc.) |
+
+- `type` : `urn:sport-hub:problem:workout-generation-unavailable`, `urn:sport-hub:problem:workout-generation-access-denied` et `urn:sport-hub:problem:workout-generation-invalid-output`.
+- Route concernée : `POST /api/workouts/generate`, documentée avec `@ApiProblemResponses(400, 502, 503)`.
+- `WORKOUT_GENERATION_INVALID_OUTPUT` renvoie son message tel quel (un 5xx de `DomainError` n'est pas masqué) : ces messages sont fixes, ils ne contiennent jamais de contenu renvoyé par le modèle. Aucune séance partielle n'est renvoyée dans ce cas.
+- Aucune `cause` ni message du SDK Anthropic n'est transmis (voir [ADR 0006](decisions/0006-generation-seances-sans-persistance-et-acl-stats.md) et [Contexte workout-generation](contextes/workout-generation.md)).
+- Une erreur qui n'est pas une `AnthropicError` côté adapter atteint le filtre comme exception inconnue : 500 `INTERNAL_ERROR`.
 
 ## Business Errors : règle du statut
 

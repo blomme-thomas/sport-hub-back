@@ -2,7 +2,7 @@
 
 Bounded Context des statistiques d'entraînement : volume de séances (nombre, durée, distance) par semaine ISO ou par mois, total et par type, avec la période précédente et la variation. Code : `src/modules/training-stats/`. Usage mono-utilisateur.
 
-Périmètre livré : `GET /api/stats` (issue #11). Hors périmètre : métriques physiologiques (VO2max, TSS), graphiques, prédictions, génération de séances (story #12, qui consommera `GetTrainingStatsUseCase`).
+Périmètre livré : `GET /api/stats` (issue #11). Consommateur livré : le module `workout-generation` (story #12) lit les volumes par semaine via `GetTrainingStatsUseCase`, par son adapter ACL (voir [Contexte workout-generation](workout-generation.md)). Hors périmètre : métriques physiologiques (VO2max, TSS), graphiques, prédictions.
 
 ## Rôle
 
@@ -35,7 +35,7 @@ Les tests unitaires sont colocalisés (`*.spec.ts`) ; le test e2e est `test/trai
 
 ## Ports publics
 
-**`GetTrainingStatsUseCase.execute(query: TrainingStatsQuery): Promise<TrainingStatsDto>`** : exporté par `TrainingStatsModule`, c'est le point d'entrée pour les consommateurs du module (la route HTTP, et la story #12 à venir). Lève `InvalidStatsRangeError` si `from` est postérieur à `to`, `StatsRangeTooLargeError` si la plage dépasse 104 périodes. Le DTO applicatif `TrainingStatsDto` est un contrat : il ne se renomme pas.
+**`GetTrainingStatsUseCase.execute(query: TrainingStatsQuery): Promise<TrainingStatsDto>`** : exporté par `TrainingStatsModule`, c'est le point d'entrée pour les consommateurs du module (la route HTTP, et le module `workout-generation`, via son adapter `TrainingStatsContextAdapter`). Lève `InvalidStatsRangeError` si `from` est postérieur à `to`, `StatsRangeTooLargeError` si la plage dépasse 104 périodes. Le DTO applicatif `TrainingStatsDto` est un contrat : il ne se renomme pas.
 
 **`ITrainingActivityReadModel.findFacts(window: TrainingActivityWindow): Promise<TrainingActivityFact[]>`** (token `TRAINING_ACTIVITY_READ_MODEL`) : faits d'activités (`type`, `startedAt`, `durationSeconds`, `distanceMeters`) dont la date de début est dans `[from, toExclusive)`, filtrés sur `type` si la fenêtre en porte un. Le port ne connaît ni Prisma ni `Activity` (l'Entity de `garmin-sync`).
 

@@ -9,8 +9,8 @@ Seul le socle technique est livré, dans `src/` :
 - `main.ts` : démarrage, Swagger (`/swagger`).
 - `swagger.setup.ts` : `buildOpenApiDocument`, construction du document OpenAPI (isolée de `main.ts` pour être testable ; enregistre les modèles d'erreur).
 - `app.setup.ts` : réglages HTTP partagés avec les tests e2e (middleware de correlation id en premier, logger, préfixe global, CORS avec `X-Correlation-Id` exposé, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted`, `transform` et `exceptionFactory`, filtre global d'erreurs).
-- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule`, `HealthModule`, `GarminSyncModule` et `TrainingStatsModule`.
-- `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app`, `database` et `garmin` (`GARMIN_PERSONAL_API_KEY` optionnelle, vide = absente ; `GARMIN_PERSONAL_API_BASE_URL`).
+- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule`, `HealthModule`, `GarminSyncModule`, `TrainingStatsModule` et `WorkoutGenerationModule`.
+- `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app`, `database`, `garmin` (`GARMIN_PERSONAL_API_KEY` optionnelle, vide = absente ; `GARMIN_PERSONAL_API_BASE_URL`) et `anthropic` (`ANTHROPIC_API_KEY` optionnelle, vide = absente ; `ANTHROPIC_MODEL`, `ANTHROPIC_MAX_TOKENS`, `ANTHROPIC_TIMEOUT_MS`, `ANTHROPIC_MAX_RETRIES`, voir [Développement](developpement.md#variables-denvironnement)).
 - `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`) : vérifie la base au démarrage (`onModuleInit`) et lève `DatabaseUnavailableError` si elle ne répond pas, voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md) ; client généré dans `generated/`.
 - `src/core/health` : route technique `GET /api/health` (200 si la base répond via `DatabaseHealthIndicator`, sinon 503 `SERVICE_UNAVAILABLE`).
 - `src/core/filters` : filtre d'exceptions global `ProblemDetailsExceptionFilter`, table code vers statut HTTP (`error-status.table.ts`), `DependencyUnavailableException` (dépendance technique indisponible, rendue en 503), factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`. Voir [Erreurs de l'API](erreurs-api.md).
@@ -18,14 +18,15 @@ Seul le socle technique est livré, dans `src/` :
 - `src/core/http` : client HTTP sortant commun (`HttpClientModule` exporte `HttpClientService`), non global ; seul consommateur à ce jour : `GarminSyncModule`. Détail ci-dessous.
 - `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
 
-Deux modules existent dans `src/modules/`, chacun dans les quatre couches (`domain`, `application`, `infrastructure`, `presentation`) :
+Trois modules existent dans `src/modules/`, chacun dans les quatre couches (`domain`, `application`, `infrastructure`, `presentation`) :
 
 - `garmin-sync` : il authentifie l'API Garmin Personal (`GarminPersonalApiTokenProvider`, détail : [API Garmin Personal](garmin-personal-api.md)), synchronise les activités dans la base via `POST /api/garmin-sync/run` et les consulte via `GET /api/activities` (détail : [Contexte garmin-sync](contextes/garmin-sync.md)). `GarminSyncModule` importe `HttpClientModule` et enregistre les tokens `GARMIN_CONNECT_CLIENT` (adapter `GarminConnectAdapter`), `ACTIVITY_REPOSITORY` (`PrismaActivityRepositoryAdapter`) et `ACTIVITY_LIST_READ_MODEL`. La planification (#9) n'est pas livrée.
 - `training-stats` : il calcule le volume d'entraînement par semaine ou par mois via `GET /api/stats` (détail : [Contexte training-stats](contextes/training-stats.md)). Il lit la table `activities` par son propre port de lecture, sans importer `garmin-sync`.
+- `workout-generation` : il génère une séance d'entraînement par Claude via `POST /api/workouts/generate`, sans la persister (détail : [Contexte workout-generation](contextes/workout-generation.md), [ADR 0006](decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)). Il lit les statistiques de `training-stats` par son adapter ACL, en important `TrainingStatsModule`.
 
 ## Client HTTP sortant (`src/core/http`)
 
-Réservé aux Adapters d'Infrastructure qui appellent un système externe (Garmin, Anthropic). Un adapter importe `HttpClientModule` (de `src/core/http`) et injecte `HttpClientService` ; il n'importe jamais `HttpModule` de `@nestjs/axios`. Le Domain et l'Application ne l'utilisent pas (règle `domain-application-no-http-client` de `deps:check`).
+Réservé aux Adapters d'Infrastructure qui appellent un système externe en HTTP (Garmin). Un adapter importe `HttpClientModule` (de `src/core/http`) et injecte `HttpClientService` ; il n'importe jamais `HttpModule` de `@nestjs/axios`. Le Domain et l'Application ne l'utilisent pas (règle `domain-application-no-http-client` de `deps:check`). L'adapter Anthropic n'utilise pas ce client : il appelle l'API Claude par le SDK `@anthropic-ai/sdk`, avec ses propres réglages de délai et de réessais (`ANTHROPIC_*`).
 
 API : `get(target, url, options?)`, `post(target, url, data?, options?)` et `request(target, { method, url, data?, headers?, timeoutMs? })`. `target` est un libellé du système appelé (utilisé dans les logs et l'erreur). Retour : `{ status, data }` pour un statut 2xx.
 
@@ -63,11 +64,14 @@ dependency-cruiser (`.dependency-cruiser.cjs`) vérifie ces règles sur `src/`, 
 
 Avertissement seulement : `modules-isolated` (un module n'importe pas l'intérieur d'un autre), le contrat entre modules n'étant pas encore défini. Le client Prisma généré est exclu de l'analyse.
 
-Ces règles s'exercent sur les deux modules, `garmin-sync` et `training-stats`, dans leurs quatre couches.
+Ces règles s'exercent sur les trois modules, `garmin-sync`, `training-stats` et `workout-generation`, dans leurs quatre couches.
 
 ## Bounded contexts
 - `garmin-sync` : livré (synchronisation manuelle des activités, consultation de la liste et authentification Garmin). Fiche : [Contexte garmin-sync](contextes/garmin-sync.md).
 - `training-stats` : livré (statistiques de volume par semaine ou par mois, `GET /api/stats`). Fiche : [Contexte training-stats](contextes/training-stats.md).
+- `workout-generation` : livré (génération de séance par Claude, `POST /api/workouts/generate`, sans persistance). Fiche : [Contexte workout-generation](contextes/workout-generation.md).
 
 ## Flux entre contextes
-Aucun flux de code entre les deux contextes : `training-stats` lit la table `activities` directement via son propre port de lecture, sans importer `garmin-sync`. Le flux interne de chaque contexte (Presentation, use case, ports, adapters) est décrit dans sa fiche.
+- `garmin-sync` et `training-stats` n'échangent aucun code : `training-stats` lit la table `activities` directement via son propre port de lecture, sans importer `garmin-sync`.
+- `workout-generation` consomme `training-stats` : son adapter `TrainingStatsContextAdapter` (anti-corruption layer) appelle `GetTrainingStatsUseCase`, exporté par `TrainingStatsModule`, en granularité semaine. Le Domain de `workout-generation` ne voit ni le DTO ni le module de statistiques. Il ne lit pas la table `activities`.
+- Le flux interne de chaque contexte (Presentation, use case, ports, adapters) est décrit dans sa fiche.
