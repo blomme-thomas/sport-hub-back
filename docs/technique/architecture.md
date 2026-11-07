@@ -4,12 +4,12 @@ API NestJS (ESM, TypeScript) en architecture hexagonale / DDD. Conventions déta
 
 ## État actuel
 
-Seul le socle technique est livré, dans `src/` :
+Le socle technique et les modules livrés sont dans `src/` :
 
 - `main.ts` : démarrage, Swagger (`/swagger`).
 - `swagger.setup.ts` : `buildOpenApiDocument`, construction du document OpenAPI (isolée de `main.ts` pour être testable ; enregistre les modèles d'erreur).
 - `app.setup.ts` : réglages HTTP partagés avec les tests e2e (middleware de correlation id en premier, logger, préfixe global, CORS avec `X-Correlation-Id` exposé, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted`, `transform` et `exceptionFactory`, filtre global d'erreurs).
-- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule`, `HealthModule`, `GarminSyncModule`, `TrainingStatsModule`, `WorkoutGenerationModule` et `CreneauxModule`.
+- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule`, `HealthModule`, `GarminSyncModule`, `TrainingStatsModule`, `WorkoutGenerationModule`, `CreneauxModule` et `ObjectifsModule`.
 - `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app`, `database`, `garmin` (`GARMIN_PERSONAL_API_KEY` optionnelle, vide = absente ; `GARMIN_PERSONAL_API_BASE_URL` ; planification `GARMIN_SYNC_CRON_ENABLED` et `GARMIN_SYNC_CRON_EXPRESSION`) et `anthropic` (`ANTHROPIC_API_KEY` optionnelle, vide = absente ; `ANTHROPIC_MODEL`, `ANTHROPIC_MAX_TOKENS`, `ANTHROPIC_TIMEOUT_MS`, `ANTHROPIC_MAX_RETRIES`, voir [Développement](developpement.md#variables-denvironnement)).
 - `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`) : vérifie la base au démarrage (`onModuleInit`) et lève `DatabaseUnavailableError` si elle ne répond pas, voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md) ; client généré dans `generated/`.
 - `src/core/health` : route technique `GET /api/health` (200 si la base répond via `DatabaseHealthIndicator`, sinon 503 `SERVICE_UNAVAILABLE`).
@@ -18,12 +18,13 @@ Seul le socle technique est livré, dans `src/` :
 - `src/core/http` : client HTTP sortant commun (`HttpClientModule` exporte `HttpClientService`), non global ; seul consommateur à ce jour : `GarminSyncModule`. Détail ci-dessous.
 - `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
 
-Quatre modules existent dans `src/modules/`, chacun dans les quatre couches (`domain`, `application`, `infrastructure`, `presentation`) :
+Cinq modules existent dans `src/modules/`, chacun dans les quatre couches (`domain`, `application`, `infrastructure`, `presentation`) :
 
 - `garmin-sync` : il authentifie l'API Garmin Personal (`GarminPersonalApiTokenProvider`, détail : [API Garmin Personal](garmin-personal-api.md)), synchronise les activités dans la base via `POST /api/garmin-sync/run` et les consulte via `GET /api/activities` (détail : [Contexte garmin-sync](contextes/garmin-sync.md)). Une synchronisation planifiée (story #9) est déclenchée par `GarminSyncScheduler` (`infrastructure/scheduler/`, `CronJob` de `cron` via `SchedulerRegistry`, [ADR 0007](decisions/0007-planification-cronjob-via-scheduler-registry.md)). `GarminSyncModule` importe `HttpClientModule` et `ScheduleModule.forRoot()`, et enregistre les tokens `GARMIN_CONNECT_CLIENT` (adapter `GarminConnectAdapter`), `ACTIVITY_REPOSITORY` (`PrismaActivityRepositoryAdapter`) et `ACTIVITY_LIST_READ_MODEL`.
 - `training-stats` : il calcule le volume d'entraînement par semaine ou par mois via `GET /api/stats` (détail : [Contexte training-stats](contextes/training-stats.md)). Il lit la table `activities` par son propre port de lecture, sans importer `garmin-sync`.
 - `workout-generation` : il génère une séance d'entraînement par Claude via `POST /api/workouts/generate`, sans la persister (détail : [Contexte workout-generation](contextes/workout-generation.md), [ADR 0006](decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)). Il lit les statistiques de `training-stats` par son adapter ACL, en important `TrainingStatsModule`.
 - `creneaux` : il enregistre les créneaux de disponibilité (libres ou occupés, ponctuels ou hebdomadaires) via `/api/slots` et les développe en occurrences par période (détail : [Contexte creneaux](contextes/creneaux.md), [ADR 0009](decisions/0009-creneaux-heure-murale-locale.md)). Il possède sa table `slots`. La génération de séances qui le consommera est une story à venir.
+- `objectifs` : il enregistre les objectifs sportifs (événement avec format et temps cible, volume ou régularité, date cible facultative) via `/api/goals` et les consulte, avec le filtre des objectifs à venir (détail : [Contexte objectifs](contextes/objectifs.md)). Il possède sa table `goals`. Le calcul de progression et la génération de planning sont hors périmètre.
 
 ## Client HTTP sortant (`src/core/http`)
 
@@ -65,16 +66,18 @@ dependency-cruiser (`.dependency-cruiser.cjs`) vérifie ces règles sur `src/`, 
 
 Avertissement seulement : `modules-isolated` (un module n'importe pas l'intérieur d'un autre), le contrat entre modules n'étant pas encore défini. Le client Prisma généré est exclu de l'analyse.
 
-Ces règles s'exercent sur les quatre modules, `garmin-sync`, `training-stats`, `workout-generation` et `creneaux`, dans leurs quatre couches.
+Ces règles s'exercent sur les cinq modules, `garmin-sync`, `training-stats`, `workout-generation`, `creneaux` et `objectifs`, dans leurs quatre couches.
 
 ## Bounded contexts
 - `garmin-sync` : livré (synchronisation manuelle et planifiée des activités, consultation de la liste et authentification Garmin). Fiche : [Contexte garmin-sync](contextes/garmin-sync.md).
 - `training-stats` : livré (statistiques de volume par semaine ou par mois, `GET /api/stats`). Fiche : [Contexte training-stats](contextes/training-stats.md).
 - `workout-generation` : livré (génération de séance par Claude, `POST /api/workouts/generate`, sans persistance). Fiche : [Contexte workout-generation](contextes/workout-generation.md).
 - `creneaux` : livré (créneaux libres ou occupés, ponctuels ou hebdomadaires, `/api/slots`). Fiche : [Contexte creneaux](contextes/creneaux.md).
+- `objectifs` : livré (objectifs événement, volume ou régularité, `/api/goals`, filtre des objectifs à venir). Fiche : [Contexte objectifs](contextes/objectifs.md).
 
 ## Flux entre contextes
 - `garmin-sync` et `training-stats` n'échangent aucun code : `training-stats` lit la table `activities` directement via son propre port de lecture, sans importer `garmin-sync`.
 - `workout-generation` consomme `training-stats` : son adapter `TrainingStatsContextAdapter` (anti-corruption layer) appelle `GetTrainingStatsUseCase`, exporté par `TrainingStatsModule`, en granularité semaine. Le Domain de `workout-generation` ne voit ni le DTO ni le module de statistiques. Il ne lit pas la table `activities`.
 - `creneaux` n'importe aucun autre module et aucun autre module ne l'importe. Il ne fournit aucun port public à ce jour.
+- `objectifs` n'importe aucun autre module et aucun autre module ne l'importe. Il ne fournit aucun port public à ce jour.
 - Le flux interne de chaque contexte (Presentation, use case, ports, adapters) est décrit dans sa fiche.

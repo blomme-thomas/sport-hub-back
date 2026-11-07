@@ -1,8 +1,8 @@
 # Données
 
-Prisma 7 + PostgreSQL. Deux modèles : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »), et `Slot` (table `slots`), propre au module `creneaux` (voir « Modèle Slot » plus bas). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
+Prisma 7 + PostgreSQL. Trois modèles : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »), `Slot` (table `slots`), propre au module `creneaux` (voir « Modèle Slot » plus bas), et `Goal` (table `goals`), propre au module `objectifs` (voir « Modèle Goal » plus bas). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
 
-- `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèles `Activity` et `Slot`.
+- `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèles `Activity`, `Slot` et `Goal`.
 - `prisma.config.ts` : chemin du schéma, dossier de migrations `prisma/migrations`, URL de connexion lue dans `DATABASE_URL`.
 - Client généré dans `src/core/prisma/generated`, ignoré par Git : le régénérer avec `npm run prisma:generate` (nécessaire avant lint, tests et build ; la CI le fait).
 - Connexion via l'adaptateur `@prisma/adapter-pg` dans `PrismaService` (`src/core/prisma`), qui vérifie la base au démarrage (voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md)).
@@ -60,6 +60,35 @@ Accès depuis creneaux : port `ISlotRepository` (`src/modules/creneaux/domain/po
 
 Couvert par `test/slot-repository.e2e-spec.ts` (voir le contexte pour le détail).
 
+## Modèle `Goal` (table `goals`)
+
+Objectif sportif saisi par l'utilisateur (module `objectifs`, voir [Contexte objectifs](contextes/objectifs.md)). Un seul modèle pour les trois types d'objectif : les champs propres à l'événement sont nullables.
+
+| Champ Prisma | Colonne | Type PostgreSQL | Notes |
+|---|---|---|---|
+| `id` | `id` | `UUID` | clé primaire ; le Domain génère l'identifiant (`GoalId`, `randomUUID`) et l'envoie à l'écriture, le `uuid()` Prisma n'intervient pas |
+| `title` | `title` | `TEXT` | non vide après trim, 200 caractères au plus ; contrôlé par le Domain, sans contrainte SQL |
+| `type` | `type` | `TEXT` | `evenement`, `volume` ou `regularite` ; validé par le Domain, contrainte SQL seulement sur les champs d'événement |
+| `targetDate` | `target_date` | `DATE` | nullable : date cible au format `YYYY-MM-DD`, sans heure ; relue à minuit UTC |
+| `eventFormat` | `event_format` | `TEXT`, nullable | `sprint`, `olympique`, `half`, `full` ou `autre` ; réservé au type `evenement` |
+| `targetTimeSeconds` | `target_time_seconds` | `INTEGER`, nullable | temps cible en secondes ; réservé au type `evenement` |
+| `createdAt` | `created_at` | `TIMESTAMPTZ(3)` | défaut `now()` |
+| `updatedAt` | `updated_at` | `TIMESTAMPTZ(3)` | maintenu par Prisma (`@updatedAt`), sans défaut SQL |
+
+- Contrainte `goals_target_time_check` : `target_time_seconds IS NULL OR target_time_seconds > 0`.
+- Contrainte `goals_event_fields_check` : `type = 'evenement' OR (event_format IS NULL AND target_time_seconds IS NULL)`. Ces deux contraintes ont été ajoutées à la main dans la migration, comme prévu au plan ; `schema.prisma` ne les déclare pas.
+- Index : `goals_target_date_idx` sur `target_date`.
+- Choix : une table, colonnes nullables, pas d'agrégat `Event` séparé.
+
+Accès depuis objectifs : port `IGoalRepository` (`src/modules/objectifs/domain/ports/outbound/goal.repository.port.ts`), implémenté par `PrismaGoalRepositoryAdapter` (`infrastructure/persistence/prisma/`), mapping par `GoalMapper`.
+
+- `findById(id)` : `findUnique`, `null` si absent.
+- `findAll({ upcomingFrom })` : `findMany`, avec `targetDate >= upcomingFrom` si le filtre est présent (un objectif sans date n'est alors jamais renvoyé) ; tri `targetDate asc` avec les valeurs nulles en dernier, puis `createdAt asc`, puis `id asc`.
+- `save(goal)` : upsert sur `id`, avec les mêmes données en création et en mise à jour.
+- `delete(id)` : `deleteMany` sur `id`, sans erreur si l'identifiant n'existe pas.
+
+Couvert par `test/goal-repository.e2e-spec.ts` (voir le contexte pour le détail).
+
 ## Accès depuis garmin-sync
 
 Port `IActivityRepository` (`src/modules/garmin-sync/domain/ports/outbound/activity.repository.port.ts`), implémenté par `PrismaActivityRepositoryAdapter` (`infrastructure/persistence/prisma/`). Le mapping entre l'entité `Activity` et le modèle Prisma est fait par `ActivityMapper`.
@@ -93,7 +122,7 @@ Couvert par `test/training-stats.e2e-spec.ts`.
 
 ## Migrations
 
-- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main) et `migration_lock.toml`.
+- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main), une migration `20261107221922_create_goals` (création de `goals`, avec les contraintes `goals_target_time_check` et `goals_event_fields_check` ajoutées à la main) et `migration_lock.toml`.
 - Les fichiers `migration.sql` sont générés par `prisma migrate dev` et ne sont jamais édités à la main ; un changement de schéma = une nouvelle migration.
 - Création / évolution en local : `npm run prisma:migrate` (`migrate dev`).
 - Application sans génération (CI, tests, déploiement) : `npm run prisma:migrate:deploy` (`migrate deploy`).

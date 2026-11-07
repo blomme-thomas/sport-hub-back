@@ -140,7 +140,7 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 
-Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation) ; `SLOT_END_NOT_AFTER_START`, `SLOT_PERIOD_INVALID`, `SLOT_PERIOD_TOO_LARGE` et `SLOT_INVALID` (400) et `SLOT_NOT_FOUND` (404), voir [Codes du module creneaux](#codes-du-module-creneaux).
+Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation) ; `SLOT_END_NOT_AFTER_START`, `SLOT_PERIOD_INVALID`, `SLOT_PERIOD_TOO_LARGE` et `SLOT_INVALID` (400) et `SLOT_NOT_FOUND` (404), voir [Codes du module creneaux](#codes-du-module-creneaux) ; `GOAL_INVALID`, `GOAL_TARGET_TIME_INVALID` (400) et `GOAL_NOT_FOUND` (404), voir [Codes du module objectifs](#codes-du-module-objectifs).
 
 ## Échec d'un service externe (`ExternalServiceError`)
 
@@ -200,6 +200,19 @@ Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) l
 - `SLOT_INVALID` porte une raison en clair dans `detail` : `le type doit être libre ou occupe`, `la récurrence doit être aucune ou hebdomadaire`, `la date est invalide`, `la date doit être au format YYYY-MM-DD`, `l'heure doit être au format HH:mm`, `le nombre de minutes doit être compris entre 0 et 1439`, `le fuseau horaire est inconnu`, `l'identifiant du créneau n'est pas un UUID`. Le transport couvre déjà ces cas : `SLOT_INVALID` n'est pas attendu en pratique.
 - Routes concernées : `POST /api/slots` (400), `GET /api/slots` (400), `PATCH /api/slots/:id` (400, 404), `DELETE /api/slots/:id` (400, 404), documentées avec `@ApiProblemResponses`.
 - Les erreurs de forme restent `VALIDATION_FAILED` (400) avec `errors[]` : `type` et `recurrence` hors valeurs (`IS_IN`), `date`, `from` et `to` (`IS_CALENDAR_DATE`), `startTime` et `endTime` (`IS_SLOT_TIME`), `timeZone` (`IS_IANA_TIME_ZONE`), `id` non UUID (`IS_UUID`), champ inconnu (`PROPERTY_NOT_ALLOWED`). Un `id` non UUID renvoie donc `VALIDATION_FAILED`, et non `SLOT_INVALID`.
+
+## Codes du module objectifs
+
+| Code | Statut | `title` | `detail` renvoyé | Cas |
+|---|---|---|---|---|
+| `GOAL_INVALID` | 400 | Bad Request | « Objectif invalide : <raison>. » | titre vide après retrait des espaces ; format ou temps cible posé sur un objectif qui n'est pas un `evenement` (`POST /api/goals`, `PATCH /api/goals/:id`, y compris un PATCH qui passe un événement à un autre type sans effacer son format ou son temps cible) |
+| `GOAL_TARGET_TIME_INVALID` | 400 | Bad Request | « Le temps cible doit être un nombre entier de secondes strictement positif. » | filet du Domain pour un temps cible hors de 1 à 2147483647 ; non atteignable par les routes, la validation du transport (`IS_TARGET_TIME_SECONDS`) répond avant |
+| `GOAL_NOT_FOUND` | 404 | Not Found | « L'objectif demandé est introuvable. » | identifiant inconnu (`GET`, `PATCH` et `DELETE` sur `/api/goals/:id`) |
+
+- `type` : `urn:sport-hub:problem:goal-invalid`, `urn:sport-hub:problem:goal-target-time-invalid` et `urn:sport-hub:problem:goal-not-found`.
+- `GOAL_INVALID` porte une raison en clair dans `detail` : `le titre ne peut pas être vide`, `le titre dépasse 200 caractères`, `le type doit être evenement, volume ou regularite`, `la date cible est invalide`, `le format et le temps cible ne sont permis que pour un événement`, `le format doit être sprint, olympique, half, full ou autre`, `l'identifiant de l'objectif n'est pas un UUID`. Le transport couvre déjà la plupart de ces cas : seuls le titre vide et les règles de cohérence par type sont attendus en pratique.
+- Routes concernées : `POST /api/goals` (400), `GET /api/goals` (400), `GET /api/goals/:id` (400, 404), `PATCH /api/goals/:id` (400, 404), `DELETE /api/goals/:id` (400, 404), documentées avec `@ApiProblemResponses`.
+- Les erreurs de forme restent `VALIDATION_FAILED` (400) avec `errors[]` : titre absent ou non texte, titre de plus de 200 caractères, `type` et `eventFormat` hors valeurs (`IS_IN`), `targetDate` mal formée ou inexistante (`IS_CALENDAR_DATE`), `targetTimeSeconds` négatif, nul, non entier ou au-delà de 2147483647 (`IS_TARGET_TIME_SECONDS`), `upcoming` non booléen (`IS_BOOLEAN`), `id` non UUID (`IS_UUID`), champ inconnu (`PROPERTY_NOT_ALLOWED`). Un `id` non UUID renvoie donc `VALIDATION_FAILED`, et non `GOAL_INVALID`.
 
 ## Business Errors : règle du statut
 

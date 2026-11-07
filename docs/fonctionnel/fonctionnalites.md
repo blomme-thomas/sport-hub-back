@@ -16,3 +16,8 @@ Périmètre visé (d'après `CLAUDE.md`) : synchronisation Garmin Connect, calcu
 | Créneaux | Règle de résolution des chevauchements entre créneaux | Non livrée (reportée à la story de génération : les chevauchements sont acceptés et renvoyés tous deux) |
 | Créneaux | Génération de séance tenant compte des créneaux libres et occupés | Non livrée (story à venir) |
 | Créneaux | Fuseau horaire utilisé pour les calculs | Non livré : le fuseau est une métadonnée, les heures restent murales ([ADR 0009](../technique/decisions/0009-creneaux-heure-murale-locale.md)) |
+| Objectifs | Création, consultation, modification et suppression d'un objectif (`/api/goals`) : événement avec titre, date cible, format et temps cible, ou volume et régularité ; modifiable à tout moment, sans contrainte de date | Livrée (issue #36). Contexte : [objectifs](../technique/contextes/objectifs.md). Parcours : à compléter |
+| Objectifs | Liste des objectifs à venir (`GET /api/goals?upcoming=true` : date cible aujourd'hui ou postérieure, jour UTC ; sans date, jamais à venir) | Livrée (issue #36) |
+| Objectifs | Calcul de la progression vers l'objectif | Non livré (hors périmètre de l'issue #36) |
+| Objectifs | Génération de planning à partir de l'objectif | Non livré (hors périmètre de l'issue #36) |
+| Objectifs | Arbitrage entre plusieurs objectifs simultanés | Non livré (question ouverte dans [la vision produit](vision.md)) |

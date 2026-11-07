@@ -36,6 +36,11 @@ const API_TAGS: readonly { name: string; description: string }[] = [
     description:
       'Créneaux de disponibilité libres ou occupés, ponctuels ou récurrents',
   },
+  {
+    name: 'objectifs',
+    description:
+      'Objectifs sportifs : événements avec format et temps cible, volumes et régularité',
+  },
 ];
 
 /**
