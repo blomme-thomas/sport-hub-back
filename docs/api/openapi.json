@@ -1,0 +1,1037 @@
+{
+  "components": {
+    "schemas": {
+      "ActivityListResponseDto": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ActivitySummaryResponseDto"
+            },
+            "type": "array"
+          },
+          "page": {
+            "description": "Numéro de la page renvoyée",
+            "example": 1,
+            "type": "number"
+          },
+          "pageSize": {
+            "description": "Taille de la page demandée",
+            "example": 20,
+            "type": "number"
+          },
+          "total": {
+            "description": "Nombre total d'activités correspondant aux filtres",
+            "example": 45,
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object"
+      },
+      "ActivitySummaryResponseDto": {
+        "properties": {
+          "distanceMeters": {
+            "description": "Distance en mètres, null si Garmin ne la fournit pas",
+            "example": 10250.75,
+            "nullable": true,
+            "type": "number"
+          },
+          "durationSeconds": {
+            "description": "Durée en secondes",
+            "example": 3600.5,
+            "type": "number"
+          },
+          "garminActivityId": {
+            "description": "Identifiant de l'activité côté Garmin",
+            "example": "12345678901",
+            "type": "string"
+          },
+          "id": {
+            "description": "Identifiant interne de l'activité",
+            "example": "3f2c9a4e-8b1d-4c7a-9e2f-6a5b4c3d2e1f",
+            "type": "string"
+          },
+          "startedAt": {
+            "description": "Date de début de l'activité",
+            "example": "2026-05-01T06:30:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type d'activité tel que fourni par Garmin",
+            "example": "running",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "garminActivityId",
+          "type",
+          "startedAt",
+          "durationSeconds",
+          "distanceMeters"
+        ],
+        "type": "object"
+      },
+      "GenerateWorkoutRequestDto": {
+        "properties": {
+          "durationMinutes": {
+            "description": "Durée souhaitée de la séance, en minutes entières",
+            "example": 45,
+            "maximum": 240,
+            "minimum": 10,
+            "type": "number"
+          },
+          "goal": {
+            "description": "Objectif de l'athlète, transmis à l'IA comme donnée",
+            "example": "préparer un 10 km en juin",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "sport": {
+            "description": "Sport visé ; absent = sport déduit du contexte",
+            "example": "course à pied",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "weeks": {
+            "default": 4,
+            "description": "Nombre de semaines complètes de statistiques prises en compte (4 par défaut)",
+            "maximum": 12,
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "GeneratedWorkoutResponseDto": {
+        "properties": {
+          "basedOn": {
+            "$ref": "#/components/schemas/WorkoutBasedOnResponseDto"
+          },
+          "sport": {
+            "example": "running",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/GeneratedWorkoutStepResponseDto"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "example": "Échauffement, fractions, retour au calme.",
+            "type": "string"
+          },
+          "title": {
+            "example": "Fractionné court",
+            "type": "string"
+          },
+          "totalDurationMinutes": {
+            "example": 45,
+            "maximum": 300,
+            "minimum": 5,
+            "type": "number"
+          }
+        },
+        "required": [
+          "title",
+          "sport",
+          "summary",
+          "totalDurationMinutes",
+          "steps",
+          "basedOn"
+        ],
+        "type": "object"
+      },
+      "GeneratedWorkoutStepResponseDto": {
+        "properties": {
+          "durationMinutes": {
+            "example": 10,
+            "minimum": 1,
+            "type": "number"
+          },
+          "intensity": {
+            "enum": [
+              "easy",
+              "moderate",
+              "hard"
+            ],
+            "example": "easy",
+            "type": "string"
+          },
+          "label": {
+            "example": "Échauffement",
+            "type": "string"
+          },
+          "notes": {
+            "example": "Allure conversationnelle",
+            "nullable": true,
+            "type": "string"
+          },
+          "order": {
+            "example": 1,
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "order",
+          "label",
+          "durationMinutes",
+          "intensity"
+        ],
+        "type": "object"
+      },
+      "HealthChecksDto": {
+        "properties": {
+          "database": {
+            "description": "État de la base",
+            "enum": [
+              "up"
+            ],
+            "example": "up",
+            "type": "string"
+          }
+        },
+        "required": [
+          "database"
+        ],
+        "type": "object"
+      },
+      "HealthResponseDto": {
+        "properties": {
+          "checks": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HealthChecksDto"
+              }
+            ],
+            "description": "État des dépendances"
+          },
+          "status": {
+            "description": "État du service",
+            "example": "ok",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ],
+        "type": "object"
+      },
+      "MetricVariationResponseDto": {
+        "properties": {
+          "absolute": {
+            "description": "Écart absolu : valeur courante moins valeur précédente",
+            "example": 1,
+            "type": "number"
+          },
+          "percent": {
+            "description": "Écart en pourcentage de la valeur précédente, arrondi à une décimale ; null si la période précédente vaut zéro",
+            "example": 50,
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "absolute",
+          "percent"
+        ],
+        "type": "object"
+      },
+      "PeriodStatsResponseDto": {
+        "properties": {
+          "byType": {
+            "description": "Volumes par type, triés par type ; vide si la période est vide",
+            "items": {
+              "$ref": "#/components/schemas/TypeVolumeResponseDto"
+            },
+            "type": "array"
+          },
+          "end": {
+            "description": "Fin de la période (incluse, dernière milliseconde)",
+            "example": "2026-05-17T23:59:59.999Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/PreviousPeriodResponseDto"
+          },
+          "start": {
+            "description": "Début de la période (incluse)",
+            "example": "2026-05-11T00:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/VolumeResponseDto"
+          },
+          "variation": {
+            "$ref": "#/components/schemas/PeriodVariationResponseDto"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "totals",
+          "byType",
+          "previous",
+          "variation"
+        ],
+        "type": "object"
+      },
+      "PeriodVariationResponseDto": {
+        "properties": {
+          "byType": {
+            "items": {
+              "$ref": "#/components/schemas/TypeVariationResponseDto"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/VariationResponseDto"
+          }
+        },
+        "required": [
+          "totals",
+          "byType"
+        ],
+        "type": "object"
+      },
+      "PreviousPeriodResponseDto": {
+        "properties": {
+          "byType": {
+            "items": {
+              "$ref": "#/components/schemas/TypeVolumeResponseDto"
+            },
+            "type": "array"
+          },
+          "end": {
+            "description": "Fin de la période précédente (incluse)",
+            "example": "2026-05-10T23:59:59.999Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "start": {
+            "description": "Début de la période précédente (incluse)",
+            "example": "2026-05-04T00:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/VolumeResponseDto"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "totals",
+          "byType"
+        ],
+        "type": "object"
+      },
+      "ProblemCode": {
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n\nUne Business Error non mappée répond 422.",
+        "enum": [
+          "VALIDATION_FAILED",
+          "BAD_REQUEST",
+          "MALFORMED_REQUEST_BODY",
+          "NOT_FOUND",
+          "PAYLOAD_TOO_LARGE",
+          "CLIENT_ERROR",
+          "INTERNAL_ERROR",
+          "SERVICE_UNAVAILABLE",
+          "GARMIN_ACCESS_DENIED",
+          "GARMIN_UNAVAILABLE",
+          "STATS_RANGE_INVALID",
+          "STATS_RANGE_TOO_LARGE",
+          "WORKOUT_GENERATION_UNAVAILABLE",
+          "WORKOUT_GENERATION_ACCESS_DENIED",
+          "WORKOUT_GENERATION_INVALID_OUTPUT"
+        ],
+        "type": "string"
+      },
+      "ProblemDetailsDto": {
+        "properties": {
+          "checks": {
+            "additionalProperties": {
+              "enum": [
+                "up",
+                "down"
+              ],
+              "type": "string"
+            },
+            "description": "Présent uniquement pour SERVICE_UNAVAILABLE : état des dépendances",
+            "example": {
+              "database": "down"
+            },
+            "type": "object"
+          },
+          "code": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProblemCode"
+              }
+            ],
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n\nUne Business Error non mappée répond 422.",
+            "example": "VALIDATION_FAILED"
+          },
+          "correlationId": {
+            "description": "Identifiant de corrélation (aussi dans X-Correlation-Id)",
+            "type": "string"
+          },
+          "detail": {
+            "example": "La requête contient 2 erreur(s) de validation.",
+            "type": "string"
+          },
+          "errors": {
+            "description": "Présent uniquement pour VALIDATION_FAILED",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorItemDto"
+            },
+            "type": "array"
+          },
+          "instance": {
+            "example": "/api/workouts",
+            "type": "string"
+          },
+          "status": {
+            "example": 400,
+            "type": "number"
+          },
+          "title": {
+            "example": "Bad Request",
+            "type": "string"
+          },
+          "type": {
+            "example": "urn:sport-hub:problem:validation-failed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "code",
+          "correlationId"
+        ],
+        "type": "object"
+      },
+      "SyncGarminActivitiesResponseDto": {
+        "properties": {
+          "created": {
+            "description": "Activités enregistrées pour la première fois",
+            "example": 3,
+            "type": "number"
+          },
+          "ignored": {
+            "description": "Activités déjà connues et inchangées",
+            "example": 12,
+            "type": "number"
+          },
+          "updated": {
+            "description": "Activités déjà connues que Garmin a modifiées",
+            "example": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "created",
+          "updated",
+          "ignored"
+        ],
+        "type": "object"
+      },
+      "TrainingStatsResponseDto": {
+        "properties": {
+          "from": {
+            "example": "2026-05-11",
+            "format": "date",
+            "type": "string"
+          },
+          "granularity": {
+            "enum": [
+              "week",
+              "month"
+            ],
+            "example": "week",
+            "type": "string"
+          },
+          "periods": {
+            "description": "Périodes complètes de la plage, en ordre chronologique ; une période sans activité a des valeurs à zéro",
+            "items": {
+              "$ref": "#/components/schemas/PeriodStatsResponseDto"
+            },
+            "type": "array"
+          },
+          "to": {
+            "example": "2026-05-31",
+            "format": "date",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type filtré, null si tous les types sont inclus",
+            "example": "running",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "granularity",
+          "from",
+          "to",
+          "type",
+          "periods"
+        ],
+        "type": "object"
+      },
+      "TypeVariationResponseDto": {
+        "properties": {
+          "count": {
+            "$ref": "#/components/schemas/MetricVariationResponseDto"
+          },
+          "distanceMeters": {
+            "$ref": "#/components/schemas/MetricVariationResponseDto"
+          },
+          "durationSeconds": {
+            "$ref": "#/components/schemas/MetricVariationResponseDto"
+          },
+          "type": {
+            "description": "Type d'activité",
+            "example": "running",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "durationSeconds",
+          "distanceMeters",
+          "type"
+        ],
+        "type": "object"
+      },
+      "TypeVolumeResponseDto": {
+        "properties": {
+          "count": {
+            "description": "Nombre de séances",
+            "example": 3,
+            "type": "number"
+          },
+          "distanceMeters": {
+            "description": "Distance totale en mètres ; une séance sans distance compte pour zéro mètre",
+            "example": 50000,
+            "type": "number"
+          },
+          "durationSeconds": {
+            "description": "Durée totale en secondes",
+            "example": 9000.5,
+            "type": "number"
+          },
+          "type": {
+            "description": "Type d'activité",
+            "example": "running",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "durationSeconds",
+          "distanceMeters",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ValidationErrorItemDto": {
+        "properties": {
+          "code": {
+            "description": "Code de la contrainte",
+            "example": "IS_NOT_EMPTY",
+            "type": "string"
+          },
+          "field": {
+            "description": "Chemin du champ en erreur",
+            "example": "address.city",
+            "type": "string"
+          },
+          "message": {
+            "example": "city should not be empty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "VariationResponseDto": {
+        "properties": {
+          "count": {
+            "$ref": "#/components/schemas/MetricVariationResponseDto"
+          },
+          "distanceMeters": {
+            "$ref": "#/components/schemas/MetricVariationResponseDto"
+          },
+          "durationSeconds": {
+            "$ref": "#/components/schemas/MetricVariationResponseDto"
+          }
+        },
+        "required": [
+          "count",
+          "durationSeconds",
+          "distanceMeters"
+        ],
+        "type": "object"
+      },
+      "VolumeResponseDto": {
+        "properties": {
+          "count": {
+            "description": "Nombre de séances",
+            "example": 3,
+            "type": "number"
+          },
+          "distanceMeters": {
+            "description": "Distance totale en mètres ; une séance sans distance compte pour zéro mètre",
+            "example": 50000,
+            "type": "number"
+          },
+          "durationSeconds": {
+            "description": "Durée totale en secondes",
+            "example": 9000.5,
+            "type": "number"
+          }
+        },
+        "required": [
+          "count",
+          "durationSeconds",
+          "distanceMeters"
+        ],
+        "type": "object"
+      },
+      "WorkoutBasedOnResponseDto": {
+        "properties": {
+          "from": {
+            "description": "Premier jour de la fenêtre (YYYY-MM-DD, UTC)",
+            "example": "2026-10-05",
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
+          "to": {
+            "description": "Dernier jour de la fenêtre (YYYY-MM-DD, UTC)",
+            "example": "2026-11-01",
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
+          "weeks": {
+            "description": "Nombre de semaines complètes utilisées",
+            "example": 4,
+            "type": "number"
+          }
+        },
+        "required": [
+          "weeks",
+          "from",
+          "to"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "",
+    "title": "sport-hub-back",
+    "version": "0.0.1"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/activities": {
+      "get": {
+        "operationId": "activitiesList",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 1000000,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Date de début minimale (incluse), au format ISO 8601",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Date de début maximale (incluse), au format ISO 8601, postérieure ou égale à from",
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type d'activité, correspondance exacte (sensible à la casse), espaces en bordure ignorés",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "example": "running",
+              "maxLength": 64,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListResponseDto"
+                }
+              }
+            },
+            "description": "Une page des activités et le total correspondant aux filtres"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Liste paginée des activités synchronisées, de la plus récente à la plus ancienne",
+        "tags": [
+          "garmin-sync"
+        ]
+      }
+    },
+    "/api/garmin-sync/run": {
+      "post": {
+        "operationId": "garminSyncRun",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncGarminActivitiesResponseDto"
+                }
+              }
+            },
+            "description": "Résumé de la synchronisation"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Synchronise les activités Garmin dans la base",
+        "tags": [
+          "garmin-sync"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            },
+            "description": "Le service et la base répondent"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Vérifie que le service tourne et que la base répond",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "operationId": "trainingStatsGet",
+        "parameters": [
+          {
+            "description": "Granularité des périodes : semaine ISO (lundi au dimanche, UTC) ou mois calendaire UTC",
+            "in": "query",
+            "name": "granularity",
+            "required": true,
+            "schema": {
+              "enum": [
+                "week",
+                "month"
+              ],
+              "example": "week",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Premier jour de la plage (YYYY-MM-DD, UTC) ; la période qui le contient est incluse",
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "example": "2026-05-01",
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Dernier jour de la plage (YYYY-MM-DD, UTC), postérieur ou égal à from ; la période qui le contient est incluse",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "example": "2026-05-31",
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type d'activité, correspondance exacte (sensible à la casse), espaces en bordure ignorés ; absent = tous les types",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "example": "running",
+              "maxLength": 64,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingStatsResponseDto"
+                }
+              }
+            },
+            "description": "Périodes complètes de la plage, avec totaux, ventilation par type, période précédente et variation"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Statistiques de volume d'entraînement (séances, durée, distance) par semaine ou par mois, avec comparaison à la période précédente",
+        "tags": [
+          "training-stats"
+        ]
+      }
+    },
+    "/api/workouts/generate": {
+      "post": {
+        "operationId": "workoutsGenerate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateWorkoutRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedWorkoutResponseDto"
+                }
+              }
+            },
+            "description": "Séance générée et validée, fenêtre de statistiques utilisée"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Génère une séance d'entraînement à partir des statistiques récentes, sans la persister",
+        "tags": [
+          "workout-generation"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "API locale",
+      "url": "http://localhost:3000"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Synchronisation et consultation des activités Garmin",
+      "name": "garmin-sync"
+    },
+    {
+      "description": "Santé du service et de la base",
+      "name": "health"
+    },
+    {
+      "description": "Statistiques de volume d'entraînement",
+      "name": "training-stats"
+    },
+    {
+      "description": "Génération de séances d'entraînement par IA",
+      "name": "workout-generation"
+    }
+  ]
+}
