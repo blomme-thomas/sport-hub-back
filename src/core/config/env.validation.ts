@@ -88,10 +88,24 @@ export const garminEnvSchema = z.object({
     .default(DEFAULT_GARMIN_PERSONAL_API_BASE_URL),
 });
 
+export const DEFAULT_ANTHROPIC_MODEL = 'claude-sonnet-5-5';
+
+export const anthropicEnvSchema = z.object({
+  ANTHROPIC_API_KEY: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().optional(),
+  ),
+  ANTHROPIC_MODEL: z.string().min(1).default(DEFAULT_ANTHROPIC_MODEL),
+  ANTHROPIC_MAX_TOKENS: z.coerce.number().int().min(1).default(2048),
+  ANTHROPIC_TIMEOUT_MS: z.coerce.number().int().min(1).default(30000),
+  ANTHROPIC_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+});
+
 export const databaseEnvSchema = databaseEnvShape.superRefine(checkDatabaseUrl);
 
 export const envSchema = appEnvSchema
   .extend(garminEnvSchema.shape)
+  .extend(anthropicEnvSchema.shape)
   .extend(databaseEnvShape.shape)
   .superRefine(checkDatabaseUrl);
 

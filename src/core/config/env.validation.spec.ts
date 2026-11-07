@@ -225,6 +225,88 @@ describe('validateEnv', () => {
     });
   });
 
+  describe('Anthropic', () => {
+    it('laisse la clé absente et applique les valeurs par défaut', () => {
+      const env = validateEnv(validDatabase);
+
+      expect(env.ANTHROPIC_API_KEY).toBeUndefined();
+      expect(env.ANTHROPIC_MODEL).toBe('claude-sonnet-5-5');
+      expect(env.ANTHROPIC_MAX_TOKENS).toBe(2048);
+      expect(env.ANTHROPIC_TIMEOUT_MS).toBe(30000);
+      expect(env.ANTHROPIC_MAX_RETRIES).toBe(2);
+    });
+
+    it('traite une clé vide comme absente', () => {
+      expect(
+        validateEnv({ ...validDatabase, ANTHROPIC_API_KEY: '' })
+          .ANTHROPIC_API_KEY,
+      ).toBeUndefined();
+    });
+
+    it('conserve une clé fournie', () => {
+      expect(
+        validateEnv({ ...validDatabase, ANTHROPIC_API_KEY: 'sk-ant-abc-123' })
+          .ANTHROPIC_API_KEY,
+      ).toBe('sk-ant-abc-123');
+    });
+
+    it('accepte un modèle et des paramètres personnalisés en convertissant les nombres', () => {
+      const env = validateEnv({
+        ...validDatabase,
+        ANTHROPIC_MODEL: 'claude-test-model',
+        ANTHROPIC_MAX_TOKENS: '1024',
+        ANTHROPIC_TIMEOUT_MS: '5000',
+        ANTHROPIC_MAX_RETRIES: '0',
+      });
+
+      expect(env.ANTHROPIC_MODEL).toBe('claude-test-model');
+      expect(env.ANTHROPIC_MAX_TOKENS).toBe(1024);
+      expect(env.ANTHROPIC_TIMEOUT_MS).toBe(5000);
+      expect(env.ANTHROPIC_MAX_RETRIES).toBe(0);
+    });
+
+    it.each([['0'], ['5']])(
+      'accepte le nombre de réessais %s, borne incluse',
+      (retries) => {
+        expect(
+          validateEnv({ ...validDatabase, ANTHROPIC_MAX_RETRIES: retries })
+            .ANTHROPIC_MAX_RETRIES,
+        ).toBe(Number(retries));
+      },
+    );
+
+    it.each([['6'], ['-1'], ['abc'], ['1.5']])(
+      'rejette le nombre de réessais %s',
+      (retries) => {
+        expect(() =>
+          validateEnv({ ...validDatabase, ANTHROPIC_MAX_RETRIES: retries }),
+        ).toThrow('ANTHROPIC_MAX_RETRIES');
+      },
+    );
+
+    it('rejette un nombre de jetons non numérique', () => {
+      expect(() =>
+        validateEnv({ ...validDatabase, ANTHROPIC_MAX_TOKENS: 'beaucoup' }),
+      ).toThrow('ANTHROPIC_MAX_TOKENS');
+    });
+
+    it("rejette un délai d'expiration non numérique", () => {
+      expect(() =>
+        validateEnv({ ...validDatabase, ANTHROPIC_TIMEOUT_MS: 'long' }),
+      ).toThrow('ANTHROPIC_TIMEOUT_MS');
+    });
+
+    it("n'affiche jamais la clé Anthropic dans l'erreur de validation", () => {
+      expect(() =>
+        validateEnv({
+          ...validDatabase,
+          ANTHROPIC_API_KEY: 'sk-ant-cle-secrete-longue',
+          APP_PORT: 'abc',
+        }),
+      ).toThrow(/^(?![\s\S]*sk-ant-cle-secrete-longue)/);
+    });
+  });
+
   it('liste ensemble les erreurs de champs de plusieurs domaines', () => {
     expect(() =>
       validateEnv({ ...validDatabase, APP_PORT: 'abc', DB_PORT: 'abc' }),
