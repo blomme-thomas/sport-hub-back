@@ -1,6 +1,6 @@
 # Glossaire
 
-Langage commun du domaine. Les termes DDD/hexagonaux (Aggregate, Port, Adapter, etc.) sont définis dans `instructions/00-glossary-and-artifacts.instructions.md`. Les termes ci-dessous sont ceux du code livré ; le vocabulaire de la génération de séances reste à compléter.
+Langage commun du domaine. Les termes DDD/hexagonaux (Aggregate, Port, Adapter, etc.) sont définis dans `instructions/00-glossary-and-artifacts.instructions.md`. Les termes ci-dessous sont ceux du code livré ; le vocabulaire de la génération de séances est partiellement couvert (voir les dernières lignes).
 
 | Terme | Définition | Dans le code |
 |---|---|---|
@@ -24,3 +24,6 @@ Langage commun du domaine. Les termes DDD/hexagonaux (Aggregate, Port, Adapter, 
 | Période précédente | Période de même granularité immédiatement antérieure à la période courante (la semaine précédente, ou le mois précédent, y compris au changement d'année). Sert de référence à la variation. | `StatsPeriod.previous()`, champ `previous` de la réponse |
 | Volume | Ensemble de trois mesures d'une période : `count` (nombre de séances), `durationSeconds` (somme des durées), `distanceMeters` (somme des distances). Une séance sans distance compte pour zéro mètre, mais reste comptée en nombre et en durée. | Value Object `ActivityVolume` |
 | Variation | Écart entre la période courante et la période précédente, pour chaque mesure du volume : `absolute` (courant moins précédent) et `percent` (écart relatif arrondi à une décimale, `null` si la période précédente vaut zéro). | Value Object `VolumeVariation` |
+| Séance générée | Séance d'entraînement produite par Claude (titre, résumé, étapes, durée totale), validée par les invariants de la Entity avant d'être renvoyée. Non persistée. | Entity `GeneratedWorkout` (`workout-generation`), `POST /api/workouts/generate` |
+| Étape | Partie d'une séance générée : ordre à partir de 1, libellé, durée entière en minutes, intensité (`easy`, `moderate`, `hard`) et notes facultatives. | Value Object `WorkoutStep`, `WorkoutIntensity` |
+| Contexte récent | Statistiques de volume des dernières semaines complètes, transmises à l'IA pour concevoir la séance. Une semaine sans activité figure à zéro. | `RecentTrainingContext`, port `IRecentTrainingContextProvider` |
