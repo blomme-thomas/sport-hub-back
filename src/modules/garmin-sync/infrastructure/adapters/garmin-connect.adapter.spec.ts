@@ -81,6 +81,8 @@ describe('GarminConnectAdapter', () => {
     const config = {
       personalApiKey: key ?? undefined,
       personalApiBaseUrl: baseUrl,
+      syncCronEnabled: false,
+      syncCronExpression: '0 */3 * * *',
     };
     return new GarminConnectAdapter(
       http,
@@ -521,7 +523,12 @@ describe('GarminConnectAdapter', () => {
         .useValue({ ...FAST_DEFAULTS, timeoutMs: 50 })
         .compile();
       const slowHttp = slowModule.get(HttpClientService);
-      const config = { personalApiKey: API_KEY, personalApiBaseUrl: baseUrl };
+      const config = {
+        personalApiKey: API_KEY,
+        personalApiBaseUrl: baseUrl,
+        syncCronEnabled: false,
+        syncCronExpression: '0 */3 * * *',
+      };
       const slow = new GarminConnectAdapter(
         slowHttp,
         new GarminPersonalApiTokenProvider(slowHttp, config),
@@ -538,6 +545,8 @@ describe('GarminConnectAdapter', () => {
       const config = {
         personalApiKey: API_KEY,
         personalApiBaseUrl: 'http://127.0.0.1:1',
+        syncCronEnabled: false,
+        syncCronExpression: '0 */3 * * *',
       };
       const unreachable = new GarminConnectAdapter(
         http,

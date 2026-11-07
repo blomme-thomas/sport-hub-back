@@ -12,11 +12,15 @@ describe('garminConfig', () => {
       ...originalEnv,
       GARMIN_PERSONAL_API_KEY: 'abc-123',
       GARMIN_PERSONAL_API_BASE_URL: 'http://127.0.0.1:9999',
+      GARMIN_SYNC_CRON_ENABLED: 'false',
+      GARMIN_SYNC_CRON_EXPRESSION: '*/15 * * * *',
     };
 
     expect(garminConfig()).toEqual({
       personalApiKey: 'abc-123',
       personalApiBaseUrl: 'http://127.0.0.1:9999',
+      syncCronEnabled: false,
+      syncCronExpression: '*/15 * * * *',
     });
   });
 
@@ -33,6 +37,47 @@ describe('garminConfig', () => {
     expect(config.personalApiBaseUrl).toBe(
       'https://personal.connectapi.garmin.com',
     );
+  });
+
+  it('active la synchronisation planifiée toutes les trois heures par défaut', () => {
+    process.env = {
+      ...originalEnv,
+      GARMIN_SYNC_CRON_ENABLED: undefined,
+      GARMIN_SYNC_CRON_EXPRESSION: undefined,
+    };
+
+    const config = garminConfig();
+
+    expect(config.syncCronEnabled).toBe(true);
+    expect(config.syncCronExpression).toBe('0 */3 * * *');
+  });
+
+  it('désactive la synchronisation planifiée quand la variable vaut false', () => {
+    process.env = { ...originalEnv, GARMIN_SYNC_CRON_ENABLED: 'false' };
+
+    expect(garminConfig().syncCronEnabled).toBe(false);
+  });
+
+  it('refuse une valeur booléenne invalide pour la synchronisation planifiée', () => {
+    process.env = { ...originalEnv, GARMIN_SYNC_CRON_ENABLED: 'oui' };
+
+    expect(() => garminConfig()).toThrow('GARMIN_SYNC_CRON_ENABLED');
+  });
+
+  it('refuse une expression cron invalide et nomme la variable sans afficher sa valeur', () => {
+    process.env = {
+      ...originalEnv,
+      GARMIN_SYNC_CRON_EXPRESSION: 'pas une expression cron',
+    };
+
+    expect(() => garminConfig()).toThrow('GARMIN_SYNC_CRON_EXPRESSION');
+    let thrown = '';
+    try {
+      garminConfig();
+    } catch (error) {
+      thrown = String(error);
+    }
+    expect(thrown).not.toContain('pas une expression cron');
   });
 
   it('traite une clé vide comme absente', () => {

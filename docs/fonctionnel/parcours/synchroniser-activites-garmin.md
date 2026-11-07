@@ -16,6 +16,16 @@ Issu de l'issue #8. Pas d'interface utilisateur à ce jour : le parcours est ex�
 
 Relancer le parcours ne crée aucun doublon.
 
+## Déclenchement automatique
+
+Sans appel manuel, la synchronisation s'exécute selon `GARMIN_SYNC_CRON_EXPRESSION` (par défaut `0 */3 * * *`, toutes les 3 heures) ; `GARMIN_SYNC_CRON_ENABLED=false` la désactive. La planification démarre avec l'API et s'arrête avec elle. Elle suit l'heure locale du processus.
+
+- Chaque déclenchement exécute la même synchronisation que `POST /api/garmin-sync/run` et journalise son résumé (créées, mises à jour, ignorées, durée).
+- Un déclenchement arrivé pendant une synchronisation planifiée en cours est ignoré et journalisé.
+- Une erreur (clé refusée, Garmin indisponible) est journalisée sans détail sensible ; le déclenchement suivant a lieu normalement.
+- Pas de réponse HTTP pour ce déclenchement : le suivi se fait dans les logs.
+- La synchronisation manuelle n'est pas sérialisée avec la planifiée : les deux peuvent se chevaucher (les doublons restent évités par la base).
+
 ## Cas d'erreur
 
 | Situation | Réponse | Code |

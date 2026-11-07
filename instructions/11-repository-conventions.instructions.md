@@ -44,7 +44,7 @@ src/modules/<module>/
     persistence/prisma/<name>.mapper.ts               # Domain Entity <-> modèle Prisma
     adapters/<name>.adapter.ts                 # ex: garmin-connect.adapter.ts, claude-workout-generator.adapter.ts
     mappers/<name>.external-mapper.ts          # Traduction modèle externe <-> domaine, toujours présent pour un Adapter externe (voir 08)
-    scheduler/<name>.scheduler.ts              # Inbound Adapter planifié (@nestjs/schedule)
+    scheduler/<name>.scheduler.ts              # Inbound Adapter planifié (SchedulerRegistry + CronJob de la lib cron, voir docs/technique/decisions/0007)
   presentation/
     http/controllers/<name>.controller.ts
     http/mappers/<name>.http-mapper.ts         # Application DTO <-> Transport DTO (toujours présent, voir 08)
@@ -157,7 +157,7 @@ Pour éviter d'alourdir les fichiers `instructions/*.md` avec de longs blocs de 
   - À vérifier à l'implémentation sur la documentation Garmin (pages `developer.garmin.com/gc-developer-program/personal/`) : quotas, profondeur d'historique, format exact des activités (JSON ou FIT). Non vérifié à la livraison de la story #8 : endpoint, pagination et format des activités sont des hypothèses isolées dans `garmin-connect.adapter.ts` (voir `docs/technique/contextes/garmin-sync.md`).
 - Outbound Port `domain/ports/outbound/garmin-connect-client.port.ts` (`IGarminConnectClient`) — contrat exprimé en langage du domaine (`fetchActivitiesSince(since: Date | null): Promise<Activity[]>`, sans `athleteId` : mono-utilisateur), pas en termes de l'API Garmin.
 - Adapter `infrastructure/adapters/garmin-connect.adapter.ts` : encapsule la librairie/les appels HTTP Garmin Connect et fait office d'**Anti-Corruption Layer** — traduit le modèle externe vers le modèle du domaine ; le Domain ne voit jamais le payload Garmin brut. La traduction est dans un mapper dédié `infrastructure/mappers/garmin-connect.external-mapper.ts` (voir §Nommage), jamais inline dans l'Adapter.
-- Déclenchement : `infrastructure/scheduler/garmin-sync.scheduler.ts` (`@nestjs/schedule`, `@Cron(...)`, non livré : story #9) — un Inbound Adapter comme un autre, sans logique métier, qui appelle un Use Case `SyncGarminActivities`. Le déclenchement manuel livré est le contrôleur `presentation/http/controllers/garmin-sync.controller.ts` (`POST /api/garmin-sync/run`).
+- Déclenchement planifié (livré : story #9) : `infrastructure/scheduler/garmin-sync.scheduler.ts` (`GarminSyncScheduler`, `SchedulerRegistry` + `CronJob` de la lib `cron`, et non `@Cron`, car l'expression vient de la configuration : `GARMIN_SYNC_CRON_ENABLED`, `GARMIN_SYNC_CRON_EXPRESSION`, voir `docs/technique/decisions/0007`) — un Inbound Adapter comme un autre, sans logique métier, qui appelle le Use Case `SyncGarminActivitiesUseCase`. Déclenchement manuel : le contrôleur `presentation/http/controllers/garmin-sync.controller.ts` (`POST /api/garmin-sync/run`).
 - Idempotence : la synchronisation doit pouvoir être rejouée sans dupliquer (upsert par identifiant externe, typé en Value Object `GarminActivityId`).
 
 ### Génération de séances par IA (Claude)

@@ -9,6 +9,8 @@ const garminConfig = registerAs(GARMIN_CONFIG_KEY, () => {
   return {
     personalApiKey: env.GARMIN_PERSONAL_API_KEY,
     personalApiBaseUrl: env.GARMIN_PERSONAL_API_BASE_URL,
+    syncCronEnabled: env.GARMIN_SYNC_CRON_ENABLED,
+    syncCronExpression: env.GARMIN_SYNC_CRON_EXPRESSION,
   };
 });
 

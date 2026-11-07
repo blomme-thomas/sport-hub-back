@@ -79,6 +79,8 @@ describe('GarminPersonalApiTokenProvider', () => {
     return new GarminPersonalApiTokenProvider(http, {
       personalApiKey: key.length === 0 ? API_KEY : key[0],
       personalApiBaseUrl: baseUrl,
+      syncCronEnabled: false,
+      syncCronExpression: '0 */3 * * *',
     });
   }
 
@@ -392,7 +394,12 @@ describe('GarminPersonalApiTokenProvider', () => {
         .compile();
       const slow = new GarminPersonalApiTokenProvider(
         slowModule.get(HttpClientService),
-        { personalApiKey: API_KEY, personalApiBaseUrl: baseUrl },
+        {
+          personalApiKey: API_KEY,
+          personalApiBaseUrl: baseUrl,
+          syncCronEnabled: false,
+          syncCronExpression: '0 */3 * * *',
+        },
       );
 
       const error = await rejection(slow.getAccessToken());

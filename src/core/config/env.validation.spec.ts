@@ -214,6 +214,41 @@ describe('validateEnv', () => {
       ).toThrow('GARMIN_PERSONAL_API_BASE_URL');
     });
 
+    it('active la synchronisation planifiée toutes les trois heures par défaut', () => {
+      const env = validateEnv(validDatabase);
+
+      expect(env.GARMIN_SYNC_CRON_ENABLED).toBe(true);
+      expect(env.GARMIN_SYNC_CRON_EXPRESSION).toBe('0 */3 * * *');
+    });
+
+    it('convertit false en booléen faux', () => {
+      expect(
+        validateEnv({ ...validDatabase, GARMIN_SYNC_CRON_ENABLED: 'false' })
+          .GARMIN_SYNC_CRON_ENABLED,
+      ).toBe(false);
+    });
+
+    it('rejette un booléen de synchronisation planifiée invalide', () => {
+      expect(() =>
+        validateEnv({ ...validDatabase, GARMIN_SYNC_CRON_ENABLED: 'oui' }),
+      ).toThrow('GARMIN_SYNC_CRON_ENABLED');
+    });
+
+    it('rejette une expression cron invalide sans afficher sa valeur', () => {
+      let thrown = '';
+      try {
+        validateEnv({
+          ...validDatabase,
+          GARMIN_SYNC_CRON_EXPRESSION: 'pas une expression cron',
+        });
+      } catch (error) {
+        thrown = String(error);
+      }
+
+      expect(thrown).toContain('GARMIN_SYNC_CRON_EXPRESSION');
+      expect(thrown).not.toContain('pas une expression cron');
+    });
+
     it("n'affiche jamais la clé dans l'erreur de validation", () => {
       expect(() =>
         validateEnv({

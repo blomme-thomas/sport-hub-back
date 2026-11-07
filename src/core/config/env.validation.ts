@@ -1,4 +1,5 @@
 import type { LogLevel } from '@nestjs/common';
+import { validateCronExpression } from 'cron';
 import { z } from 'zod';
 
 export const APP_ENVIRONMENTS = ['development', 'test', 'production'] as const;
@@ -78,6 +79,8 @@ function checkDatabaseUrl(env: DatabaseEnv, ctx: z.RefinementCtx): void {
 export const DEFAULT_GARMIN_PERSONAL_API_BASE_URL =
   'https://personal.connectapi.garmin.com';
 
+export const DEFAULT_GARMIN_SYNC_CRON_EXPRESSION = '0 */3 * * *';
+
 export const garminEnvSchema = z.object({
   GARMIN_PERSONAL_API_KEY: z.preprocess(
     (value) => (value === '' ? undefined : value),
@@ -86,6 +89,17 @@ export const garminEnvSchema = z.object({
   GARMIN_PERSONAL_API_BASE_URL: z
     .url()
     .default(DEFAULT_GARMIN_PERSONAL_API_BASE_URL),
+  GARMIN_SYNC_CRON_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
+  GARMIN_SYNC_CRON_EXPRESSION: z
+    .string()
+    .min(1)
+    .default(DEFAULT_GARMIN_SYNC_CRON_EXPRESSION)
+    .refine((value) => validateCronExpression(value).valid, {
+      message: 'syntaxe cron invalide',
+    }),
 });
 
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-sonnet-5-5';

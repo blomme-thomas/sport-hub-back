@@ -2,7 +2,7 @@
 
 Bounded Context de synchronisation des activités Garmin dans la base locale. Code : `src/modules/garmin-sync/`. Usage mono-utilisateur.
 
-Périmètre livré : déclenchement manuel de la synchronisation (issue #8) et consultation de la liste des activités (issue #10). Hors périmètre à ce jour : synchronisation planifiée (story #9), autres données Garmin que les activités.
+Périmètre livré : déclenchement manuel de la synchronisation (issue #8), consultation de la liste des activités (issue #10) et synchronisation planifiée (story #9, voir [Synchronisation planifiée](#synchronisation-planifiée)). Hors périmètre à ce jour : autres données Garmin que les activités.
 
 ## Rôle
 
@@ -24,11 +24,12 @@ Importer dans la table `activities` les activités Garmin nouvelles ou modifiée
 | Infrastructure | `infrastructure/adapters/garmin-connect.adapter.ts` | Adapter `GarminConnectAdapter`, anti-corruption layer vers l'API Garmin |
 | Infrastructure | `infrastructure/adapters/garmin-personal-api-token.provider.ts` | Obtention et cache du jeton d'accès |
 | Infrastructure | `infrastructure/persistence/prisma/` | `PrismaActivityRepositoryAdapter`, `ActivityMapper`, read model `PrismaActivityListReadModel` |
+| Infrastructure | `infrastructure/scheduler/garmin-sync.scheduler.ts` | `GarminSyncScheduler` : déclenchement planifié de la synchronisation (`SchedulerRegistry` et `CronJob`), verrou en mémoire |
 | Presentation | `presentation/http/controllers/garmin-sync.controller.ts` | `POST /api/garmin-sync/run` |
 | Presentation | `presentation/http/controllers/activities.controller.ts` | `GET /api/activities` |
 | Presentation | `presentation/http/dtos/sync-garmin-activities.response.dto.ts` | Transport DTO de la réponse de synchronisation |
 | Presentation | `presentation/http/dtos/list-activities.request.dto.ts`, `activity-list.response.dto.ts` | Transport DTOs de la liste (paramètres de requête validés, page de résumés) |
-| Composition | `garmin-sync.module.ts` | Câblage des tokens et du contrôleur |
+| Composition | `garmin-sync.module.ts` | Câblage des tokens, du contrôleur et du scheduler, import de `ScheduleModule.forRoot()` |
 
 ## Ports publics
 
@@ -73,6 +74,32 @@ Route `GET /api/activities` : voir [Consulter les activités](../../fonctionnel/
 | 500 | `INTERNAL_ERROR` | erreur non prévue (par exemple la base) |
 
 Détail des codes et du format des erreurs : [Erreurs de l'API](../erreurs-api.md#codes-du-module-garmin-sync) et [ADR 0004](decisions/0004-erreurs-techniques-garmin-en-domain-error.md).
+
+## Synchronisation planifiée
+
+`GarminSyncScheduler` (Inbound Adapter, `infrastructure/scheduler/garmin-sync.scheduler.ts`) déclenche `SyncGarminActivitiesUseCase.execute()` selon une expression cron. Il ne contient aucune logique métier. Choix d'implémentation : `SchedulerRegistry` et `CronJob` (bibliothèque `cron` 4.4.0, dépendance directe) plutôt que `@Cron`, parce que `@Cron` est figé à la compilation alors que la fréquence est configurable (voir [ADR 0007](decisions/0007-planification-cronjob-via-scheduler-registry.md)).
+
+Variables (validées au démarrage, voir [Développement](../developpement.md#variables-denvironnement)) :
+
+| Variable | Défaut | Contrainte |
+|---|---|---|
+| `GARMIN_SYNC_CRON_ENABLED` | `true` | exactement `true` ou `false` ; une autre valeur fait échouer le démarrage |
+| `GARMIN_SYNC_CRON_EXPRESSION` | `0 */3 * * *` (toutes les 3 heures) | expression acceptée par `validateCronExpression` de la bibliothèque `cron` ; invalide, le démarrage échoue et la valeur n'est pas affichée |
+
+Cycle de vie :
+
+- **Démarrage** (`onApplicationBootstrap`) : si `GARMIN_SYNC_CRON_ENABLED` vaut `false`, aucun job n'est créé et le log « Synchronisation Garmin planifiée désactivée » est écrit. Sinon un `CronJob` nommé `garmin-sync` est démarré et enregistré dans `SchedulerRegistry`, et le log indique l'expression.
+- **Arrêt** (`onApplicationShutdown`) : le job est retiré du registre.
+- **Fuseau horaire** : celui du processus Node (aucun fuseau configuré). Une expression comme `0 8 * * *` s'exécute donc à 8 h heure locale de la machine.
+- **Défaut** : sans `GARMIN_PERSONAL_API_KEY`, la planification active (valeur par défaut) fait échouer chaque déclenchement en `GARMIN_ACCESS_DENIED`, journalisé. Le démarrage n'est pas affecté.
+
+Exécution (`runScheduledSync()`, à chaque déclenchement) :
+
+- Succès : log de niveau `log` avec les compteurs `created`, `updated`, `ignored` et la durée en millisecondes.
+- Échec : log de niveau `error` avec le nom de la classe d'erreur et, pour une `DomainError`, son code (par exemple `GarminUnavailableError (GARMIN_UNAVAILABLE)`). Ni la clé, ni le jeton, ni le message brut ne sont journalisés. L'erreur n'est pas relancée : le déclenchement suivant reste possible.
+- Verrou en mémoire (processus unique) : un déclenchement reçu pendant une exécution planifiée en cours est ignoré, avec un log `warn`. Le verrou ne couvre que les exécutions planifiées : `POST /api/garmin-sync/run` n'y est pas soumis et peut donc chevaucher une exécution planifiée. La contrainte unique sur `garmin_activity_id` protège des doublons.
+
+Tests : e2e avec `GARMIN_SYNC_CRON_ENABLED=false` (`vitest.config.e2e.ts`), donc aucun job ne démarre pendant les tests. Unitaires : `garmin-sync.scheduler.spec.ts`, avec `SchedulerRegistry` et use case simulés et fake timers, sans `CronJob` réel.
 
 ## Flux de synchronisation
 
@@ -156,13 +183,13 @@ Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes) et `garmin
 
 - **Fenêtre de mise à jour** : seules les activités comprises dans la fenêtre sont relues. Une activité plus ancienne que la dernière activité connue moins 7 jours, modifiée côté Garmin, n'est pas mise à jour.
 - **Pas de suppression** : une activité supprimée côté Garmin reste en base.
-- **Pas de verrou** : deux déclenchements simultanés ne sont pas sérialisés. La contrainte unique sur `garmin_activity_id` protège des doublons ; le comportement en cas de conflit concurrent n'est pas testé. Le traitement est prévu avec la synchronisation planifiée (#9).
+- **Verrou partiel** : le verrou du scheduler ne sérialise que les exécutions planifiées (voir [Synchronisation planifiée](#synchronisation-planifiée)). `POST /api/garmin-sync/run` n'est pas sérialisé avec elles : deux exécutions simultanées sont possibles. La contrainte unique sur `garmin_activity_id` protège des doublons ; le comportement en cas de conflit concurrent n'est pas testé.
 - **Payload opaque** : le Domain stocke `sourcePayload` comme `unknown`. Le format n'est pas versionné ; un changement de format Garmin change le contenu comparé.
 - **Activités invalides** : sautées et journalisées, sans compteur dédié.
 
 ## Tests
 
 - Unitaires (colocalisés) : `Activity`, `GarminActivityId`, `SyncWindow`, `SyncGarminActivitiesUseCase` (fakes des ports), `GarminConnectAdapter` (serveur HTTP local `node:http`), `GarminPersonalApiTokenProvider`, `ActivityMapper`, `GarminSyncController`.
-- Unitaires (colocalisés) complémentaires : `ListActivitiesUseCase` (fake du read model), `ActivitiesController` (use case substitué).
+- Unitaires (colocalisés) complémentaires : `ListActivitiesUseCase` (fake du read model), `ActivitiesController` (use case substitué), `GarminSyncScheduler` (planification, verrou, journalisation des échecs).
 - e2e (`test/`) : `activity-repository.e2e-spec.ts` (upsert sans doublon, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping) ; `garmin-sync.e2e-spec.ts` (Garmin simulé : première exécution, rejeu, payload modifié, fenêtre de 7 jours décalée d'un jour (`startDate`), activité invalide sautée, 502 et 503, absence de clé dans le corps) ; `activities.e2e-spec.ts` (liste vide, tri et pagination, filtres seuls et combinés, bornes incluses, pas de fuite de `rawPayload`, 400 `VALIDATION_FAILED` par champ).
 - `openapi.e2e-spec.ts` vérifie que les deux codes figurent dans l'enum `ProblemCode`, que la route de synchronisation documente 200, 502 et 503, et que `GET /api/activities` documente ses paramètres et son 400.

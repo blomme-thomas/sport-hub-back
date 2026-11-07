@@ -18,6 +18,7 @@ export default defineConfig({
       DB_USERNAME: 'sporthub',
       DB_PASSWORD: 'sporthub',
       DATABASE_URL: TEST_DATABASE_URL,
+      GARMIN_SYNC_CRON_ENABLED: 'false',
     },
   },
 });
