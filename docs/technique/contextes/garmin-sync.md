@@ -126,16 +126,17 @@ La clé et le jeton n'apparaissent ni dans les réponses, ni dans les erreurs, n
 
 ## Hypothèses non vérifiées sur l'API Garmin
 
-Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes et schéma zod `garminActivitySchema`). Ils n'ont pas été confirmés sur la documentation Garmin : à vérifier avant de s'y fier en production.
+Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes et schéma zod `garminActivitySchema`). Le catalogue [API Garmin Personal, endpoints](../garmin-personal-api-endpoints.md) (story #24, source `garmin/swagger.json`) dit pour chacun s'il est confirmé, en écart ou non vérifié (section « Écarts entre la spécification et les hypothèses de #8 »).
 
-- **Endpoint** : `GET {GARMIN_PERSONAL_API_BASE_URL}/activitylist-service/activities/search/activities` (constante `ACTIVITIES_PATH`).
-- **Paramètres** : `startDate` (date seule `AAAA-MM-JJ`, en UTC), `start` (offset) et `limit`. Comme `startDate` est une date et non un instant, la fenêtre réelle couvre entre 7 et 8 jours selon l'heure.
-- **Pagination** : pages de 100 éléments (`PAGE_SIZE`), arrêt quand une page en contient moins. Plafond de 50 pages (`MAX_PAGES`, soit 5 000 activités) ; au-delà, un `warn` est journalisé et les activités suivantes ne sont pas récupérées.
-- **Format d'un élément** : `activityId` (nombre ou texte), `activityType.typeKey` (type), `startTimeGMT` au format `AAAA-MM-JJ HH:MM:SS` lu comme UTC, `duration` (secondes), `distance` (mètres, optionnel ou nul). Le reste de l'objet est conservé tel quel comme `sourcePayload`.
-- **Historique initial** : 365 jours quand aucune activité n'est connue (`DEFAULT_HISTORY_DAYS`), hypothèse du plan.
-- **Statuts de refus** : 401 et 403 sont traités comme un refus de la clé ou du jeton.
+- **Endpoint** : `GET {GARMIN_PERSONAL_API_BASE_URL}/activitylist-service/activities/search/activities` (constante `ACTIVITIES_PATH`). Confirmé par la spécification (E03).
+- **Paramètres** : `start` (offset, défaut 0) et `limit` (défaut 99 dans la spécification, maximum non précisé). `startDate` est une date `AAAA-MM-JJ` sur l'**heure locale** de l'activité (et non UTC), inclusive ; `endDate` existe mais n'est pas utilisé. Comme `startDate` est une date et non un instant, la fenêtre réelle couvre entre 7 et 8 jours selon l'heure.
+- **Pagination** : pages de 100 éléments (`PAGE_SIZE`), arrêt quand une page en contient moins. **Écart** : la spécification donne 99 comme défaut de `limit` sans maximum documenté ; si Garmin plafonne à 99, l'arrêt sur page incomplète interrompt la pagination à tort. Plafond de 50 pages (`MAX_PAGES`, soit 5 000 activités) ; au-delà, un `warn` est journalisé et les activités suivantes ne sont pas récupérées. Non documenté par la spécification.
+- **Tri et enfants** : la spécification fixe `sortBy` à `startLocal` et `sortOrder` à `desc` par défaut, et `excludeChildren` à `true` : sans ce paramètre, les activités enfants (jambes d'un multisport) sont exclues.
+- **Format d'un élément** : `activityId` (entier int64, confirmé), `activityType.typeKey` (confirmé), `startTimeGMT` au format `AAAA-MM-JJ HH:MM:SS` lu comme UTC (confirmé : `SummarizedActivityDTO`), `duration` (secondes, confirmé), `distance` (mètres, confirmé). Le reste de l'objet est conservé tel quel comme `sourcePayload`.
+- **Historique initial** : 365 jours quand aucune activité n'est connue (`DEFAULT_HISTORY_DAYS`), hypothèse du plan. La spécification ne donne aucune profondeur pour cet endpoint : non vérifié.
+- **Statuts de refus** : 401 et 403 sont traités comme un refus de la clé ou du jeton. La spécification les décrit pour les endpoints de données (401 : authentification absente ou invalide ; 403 : accès non autorisé).
 
-Le format réel (JSON ou FIT, quotas, profondeur de l'historique) reste à confirmer. Voir la liste des points non vérifiés dans [API Garmin Personal](../garmin-personal-api.md).
+Format : JSON confirmé pour la liste. Le téléchargement de fichier (E04) renvoie une archive dont le contenu n'est pas décrit : le format FIT n'est pas confirmé. Quotas non décrits. Voir la liste des points non vérifiés dans [API Garmin Personal](../garmin-personal-api.md).
 
 ## Limites connues
 
