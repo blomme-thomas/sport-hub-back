@@ -140,7 +140,7 @@ Définis dans `GENERIC_PROBLEM_CODES` (`src/core/filters/error-status.table.ts`)
 
 Un statut 4xx qui a un code dédié (400, 404, 413) prend ce code ; tous les autres 4xx prennent `CLIENT_ERROR`. La valeur `400` associée à `CLIENT_ERROR` dans `GENERIC_PROBLEM_CODES` n'est qu'un repère : le filtre n'utilise jamais cette valeur et renvoie le statut d'origine.
 
-Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation).
+Les codes des Business Errors s'ajoutent à ces codes (`DOMAIN_ERROR_STATUS`) : `GARMIN_ACCESS_DENIED` (502) et `GARMIN_UNAVAILABLE` (503), voir [Codes du module garmin-sync](#codes-du-module-garmin-sync) ; `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` (400), voir [Codes du module training-stats](#codes-du-module-training-stats) ; `WORKOUT_GENERATION_UNAVAILABLE` (503), `WORKOUT_GENERATION_ACCESS_DENIED` et `WORKOUT_GENERATION_INVALID_OUTPUT` (502), voir [Codes du module workout-generation](#codes-du-module-workout-generation) ; `SLOT_END_NOT_AFTER_START`, `SLOT_PERIOD_INVALID`, `SLOT_PERIOD_TOO_LARGE` et `SLOT_INVALID` (400) et `SLOT_NOT_FOUND` (404), voir [Codes du module creneaux](#codes-du-module-creneaux).
 
 ## Échec d'un service externe (`ExternalServiceError`)
 
@@ -185,6 +185,21 @@ Le client HTTP sortant (`src/core/http`, voir [Architecture](architecture.md)) l
 - `WORKOUT_GENERATION_INVALID_OUTPUT` renvoie son message tel quel (un 5xx de `DomainError` n'est pas masqué) : ces messages sont fixes, ils ne contiennent jamais de contenu renvoyé par le modèle. Aucune séance partielle n'est renvoyée dans ce cas.
 - Aucune `cause` ni message du SDK Anthropic n'est transmis (voir [ADR 0006](decisions/0006-generation-seances-sans-persistance-et-acl-stats.md) et [Contexte workout-generation](contextes/workout-generation.md)).
 - Une erreur qui n'est pas une `AnthropicError` côté adapter atteint le filtre comme exception inconnue : 500 `INTERNAL_ERROR`.
+
+## Codes du module creneaux
+
+| Code | Statut | `title` | `detail` renvoyé | Cas |
+|---|---|---|---|---|
+| `SLOT_END_NOT_AFTER_START` | 400 | Bad Request | « L'heure de fin du créneau doit être strictement postérieure à l'heure de début. » | fin égale ou antérieure au début, à la création ou après fusion lors d'un PATCH (`POST /api/slots`, `PATCH /api/slots/:id`) |
+| `SLOT_PERIOD_INVALID` | 400 | Bad Request | « La date de fin de la période doit être postérieure ou égale à la date de début. » | `to` antérieur à `from` (`GET /api/slots`) |
+| `SLOT_PERIOD_TOO_LARGE` | 400 | Bad Request | « La période demandée dépasse 366 jours. » | période de plus de 366 jours (`GET /api/slots`) |
+| `SLOT_NOT_FOUND` | 404 | Not Found | « Le créneau demandé est introuvable. » | identifiant inconnu (`PATCH /api/slots/:id`, `DELETE /api/slots/:id`) |
+| `SLOT_INVALID` | 400 | Bad Request | « Créneau invalide : <raison>. » | filet du Domain pour une valeur que la validation du transport n'a pas interceptée |
+
+- `type` : `urn:sport-hub:problem:slot-end-not-after-start`, `urn:sport-hub:problem:slot-period-invalid`, `urn:sport-hub:problem:slot-period-too-large`, `urn:sport-hub:problem:slot-not-found` et `urn:sport-hub:problem:slot-invalid`.
+- `SLOT_INVALID` porte une raison en clair dans `detail` : `le type doit être libre ou occupe`, `la récurrence doit être aucune ou hebdomadaire`, `la date est invalide`, `la date doit être au format YYYY-MM-DD`, `l'heure doit être au format HH:mm`, `le nombre de minutes doit être compris entre 0 et 1439`, `le fuseau horaire est inconnu`, `l'identifiant du créneau n'est pas un UUID`. Le transport couvre déjà ces cas : `SLOT_INVALID` n'est pas attendu en pratique.
+- Routes concernées : `POST /api/slots` (400), `GET /api/slots` (400), `PATCH /api/slots/:id` (400, 404), `DELETE /api/slots/:id` (400, 404), documentées avec `@ApiProblemResponses`.
+- Les erreurs de forme restent `VALIDATION_FAILED` (400) avec `errors[]` : `type` et `recurrence` hors valeurs (`IS_IN`), `date`, `from` et `to` (`IS_CALENDAR_DATE`), `startTime` et `endTime` (`IS_SLOT_TIME`), `timeZone` (`IS_IANA_TIME_ZONE`), `id` non UUID (`IS_UUID`), champ inconnu (`PROPERTY_NOT_ALLOWED`). Un `id` non UUID renvoie donc `VALIDATION_FAILED`, et non `SLOT_INVALID`.
 
 ## Business Errors : règle du statut
 

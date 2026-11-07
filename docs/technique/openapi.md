@@ -26,6 +26,7 @@ Le script compile (`nest build`) puis lance `dist/openapi/generate-openapi.js`, 
 
 | Tag | Routes |
 |---|---|
+| `creneaux` | `POST /api/slots`, `GET /api/slots`, `PATCH /api/slots/:id`, `DELETE /api/slots/:id` |
 | `garmin-sync` | `GET /api/activities`, `POST /api/garmin-sync/run` |
 | `health` | `GET /api/health` |
 | `training-stats` | `GET /api/stats` |

@@ -1,8 +1,8 @@
 # Données
 
-Prisma 7 + PostgreSQL. Un seul modèle à ce jour : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
+Prisma 7 + PostgreSQL. Deux modèles : `Activity`, écrit par le module `garmin-sync` (voir la section « Accès depuis garmin-sync » plus bas) et relu par `garmin-sync` et `training-stats` (voir « Lecture pour les statistiques »), et `Slot` (table `slots`), propre au module `creneaux` (voir « Modèle Slot » plus bas). Le module `training-stats` n'a pas de modèle ni de migration qui lui soit propre.
 
-- `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèle `Activity`.
+- `prisma/schema.prisma` : générateur `prisma-client`, datasource `postgresql`, modèles `Activity` et `Slot`.
 - `prisma.config.ts` : chemin du schéma, dossier de migrations `prisma/migrations`, URL de connexion lue dans `DATABASE_URL`.
 - Client généré dans `src/core/prisma/generated`, ignoré par Git : le régénérer avec `npm run prisma:generate` (nécessaire avant lint, tests et build ; la CI le fait).
 - Connexion via l'adaptateur `@prisma/adapter-pg` dans `PrismaService` (`src/core/prisma`), qui vérifie la base au démarrage (voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md)).
@@ -30,6 +30,35 @@ Index : unique sur `garmin_activity_id`, `started_at`, et `(type, started_at)`.
 Choix : `garminActivityId` en texte (identifiants Garmin plus grands qu'un int32) ; `type` en texte pour éviter une migration à chaque nouveau sport. Ces champs peuvent encore évoluer par migration additive ; le format des activités Garmin n'est pas vérifié (voir [Contexte garmin-sync](contextes/garmin-sync.md)).
 
 Couvert par `test/activity-persistence.e2e-spec.ts` (création, relecture, doublon `P2002`, distance nulle), qui utilise directement `PrismaService`.
+
+## Modèle `Slot` (table `slots`)
+
+Créneau de disponibilité saisi par l'utilisateur (module `creneaux`, voir [Contexte creneaux](contextes/creneaux.md)). Les occurrences ne sont pas stockées : elles sont calculées à la lecture.
+
+| Champ Prisma | Colonne | Type PostgreSQL | Notes |
+|---|---|---|---|
+| `id` | `id` | `UUID` | clé primaire ; le Domain génère l'identifiant (`SlotId`, `randomUUID`) et l'envoie à l'écriture, le `uuid()` Prisma n'intervient pas |
+| `type` | `type` | `TEXT` | `libre` ou `occupe` ; validé par le Domain, sans contrainte SQL |
+| `date` | `date` | `DATE` | jour calendaire (ponctuel) ou date d'ancrage (hebdomadaire) ; relu à minuit UTC |
+| `startMinute` | `start_minute` | `INTEGER` | minutes depuis minuit, de 0 à 1439 |
+| `endMinute` | `end_minute` | `INTEGER` | minutes depuis minuit, de 0 à 1439 |
+| `recurrence` | `recurrence` | `TEXT`, défaut `'aucune'` | `aucune` ou `hebdomadaire` ; validé par le Domain |
+| `timeZone` | `time_zone` | `TEXT` | fuseau IANA, métadonnée informative (défaut `Europe/Paris` côté use case) |
+| `createdAt` | `created_at` | `TIMESTAMPTZ(3)` | défaut `now()` |
+| `updatedAt` | `updated_at` | `TIMESTAMPTZ(3)` | maintenu par Prisma (`@updatedAt`), sans défaut SQL |
+
+- Contrainte `slots_minutes_check` : `start_minute >= 0`, `end_minute <= 1439` et `end_minute > start_minute`. Ajoutée à la main dans la migration, comme prévu au plan ; `schema.prisma` ne la déclare pas.
+- Index : `slots_date_idx` sur `date`, `slots_recurrence_date_idx` sur `(recurrence, date)`.
+- Heures stockées en minutes : `LocalTime` convertit depuis et vers `HH:mm`. Pas de conversion de fuseau (voir [ADR 0009](decisions/0009-creneaux-heure-murale-locale.md)).
+
+Accès depuis creneaux : port `ISlotRepository` (`src/modules/creneaux/domain/ports/outbound/slot.repository.port.ts`), implémenté par `PrismaSlotRepositoryAdapter` (`infrastructure/persistence/prisma/`), mapping par `SlotMapper`.
+
+- `findById(id)` : `findUnique`, `null` si absent.
+- `findIntersecting(period)` : `findMany` avec `OR` : (`recurrence = 'aucune'` et `date` entre `from` et `to`) ou (`recurrence = 'hebdomadaire'` et `date <= to`). Le filtrage des occurrences se fait ensuite dans le Domain.
+- `save(slot)` : upsert sur `id`, avec les mêmes données en création et en mise à jour.
+- `delete(id)` : `deleteMany` sur `id`, sans erreur si l'identifiant n'existe pas.
+
+Couvert par `test/slot-repository.e2e-spec.ts` (voir le contexte pour le détail).
 
 ## Accès depuis garmin-sync
 
@@ -64,7 +93,7 @@ Couvert par `test/training-stats.e2e-spec.ts`.
 
 ## Migrations
 
-- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`) et `migration_lock.toml`.
+- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main) et `migration_lock.toml`.
 - Les fichiers `migration.sql` sont générés par `prisma migrate dev` et ne sont jamais édités à la main ; un changement de schéma = une nouvelle migration.
 - Création / évolution en local : `npm run prisma:migrate` (`migrate dev`).
 - Application sans génération (CI, tests, déploiement) : `npm run prisma:migrate:deploy` (`migrate deploy`).

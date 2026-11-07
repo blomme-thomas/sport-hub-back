@@ -12,3 +12,7 @@ Périmètre visé (d'après `CLAUDE.md`) : synchronisation Garmin Connect, calcu
 | Statistiques d'entraînement | Métriques physiologiques (VO2max estimée, charge d'entraînement) | Hors périmètre (issue #11) |
 | Séances | Génération de séance d'entraînement par IA à partir des statistiques des dernières semaines (`POST /api/workouts/generate`), sans enregistrement de la séance | Livrée (issue #12). Parcours : à compléter (critères d'acceptation de l'issue non disponibles dans le dépôt) |
 | Séances | Historique et enregistrement des séances générées | Non livrée (hypothèse du plan, voir [ADR 0006](../technique/decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)) |
+| Créneaux | Saisie, consultation par période, modification et suppression de créneaux libres ou occupés, ponctuels ou hebdomadaires (`/api/slots`), en heure murale locale, avec occurrences développées sur la période | Livrée (issue #35). Contexte : [creneaux](../technique/contextes/creneaux.md). Parcours : à compléter |
+| Créneaux | Règle de résolution des chevauchements entre créneaux | Non livrée (reportée à la story de génération : les chevauchements sont acceptés et renvoyés tous deux) |
+| Créneaux | Génération de séance tenant compte des créneaux libres et occupés | Non livrée (story à venir) |
+| Créneaux | Fuseau horaire utilisé pour les calculs | Non livré : le fuseau est une métadonnée, les heures restent murales ([ADR 0009](../technique/decisions/0009-creneaux-heure-murale-locale.md)) |
