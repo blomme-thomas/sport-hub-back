@@ -129,7 +129,7 @@ Couvert par `test/discipline-repository.e2e-spec.ts`.
 
 ## Modèles `Session`, `SessionModule` et `SessionChangeLog` (tables `sessions`, `session_modules`, `session_change_logs`)
 
-- `sessions` : `id` (UUID), `date` (DATE), `discipline_type_key` (clé du référentiel, sans clé étrangère), `duration_minutes` (entier strictement positif), `status` (`planifiee`, `realisee`, `manquee` ; contrôle SQL), `modified_manually` (défaut faux), `description`, `equipment`, `attention_points`, `created_at`, `updated_at`. Index sur `date` et sur `(status, date)`.
+- `sessions` : `id` (UUID), `date` (DATE), `discipline_type_key` (clé du référentiel, sans clé étrangère), `duration_minutes` (entier strictement positif), `status` (`planifiee`, `realisee`, `manquee` ; contrôle SQL), `modified_manually` (défaut faux), `description`, `equipment`, `attention_points`, `start_time` (heure de début `HH:MM`, facultative, contrôle SQL ; ajoutée par la migration `20261117120000_add_session_start_time`), `created_at`, `updated_at`. Index sur `date` et sur `(status, date)`.
 - `session_modules` : `id`, `session_id` (FK vers `sessions`, suppression en cascade), `position` (au moins 1, unique par séance), `type`, `duration_minutes`, `instruction`, `target_zones` (JSONB, objet ou NULL), `perceived_effort` (1 à 10 ou NULL).
 - `session_change_logs` : `id`, `session_id` (FK, suppression en cascade), `changed_at`, `field`, `previous_value`. Index sur `(session_id, changed_at)`.
 

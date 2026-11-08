@@ -33,6 +33,7 @@ export class CreateSessionUseCase {
       date: toCalendarDate(command.date),
       disciplineTypeKey: command.disciplineTypeKey,
       durationMinutes: command.durationMinutes,
+      startTime: command.startTime,
       description: command.description,
       equipment: command.equipment,
       attentionPoints: command.attentionPoints,

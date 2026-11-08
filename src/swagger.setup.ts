@@ -51,6 +51,10 @@ const API_TAGS: readonly { name: string; description: string }[] = [
     description:
       'Pauses qui suspendent la planification, sans supprimer les séances existantes',
   },
+  {
+    name: 'calendrier',
+    description: 'Export ICS en lecture seule des séances planifiées',
+  },
 ];
 
 /**

@@ -43,6 +43,7 @@ export class UpdateSessionUseCase {
           command.date === undefined ? undefined : toCalendarDate(command.date),
         disciplineTypeKey: command.disciplineTypeKey,
         durationMinutes: command.durationMinutes,
+        startTime: command.startTime,
         status: command.status,
         description: command.description,
         equipment: command.equipment,

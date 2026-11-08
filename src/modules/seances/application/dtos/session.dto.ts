@@ -18,6 +18,7 @@ export interface CreateSessionCommand {
   date: string;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime?: string | null;
   description?: string | null;
   equipment?: string | null;
   attentionPoints?: string | null;
@@ -29,6 +30,7 @@ export interface UpdateSessionCommand {
   date?: string;
   disciplineTypeKey?: string;
   durationMinutes?: number;
+  startTime?: string | null;
   status?: string;
   description?: string | null;
   equipment?: string | null;
@@ -78,6 +80,7 @@ export class SessionDto {
     readonly date: string,
     readonly disciplineTypeKey: string,
     readonly durationMinutes: number,
+    readonly startTime: string | null,
     readonly status: SessionStatus,
     readonly modifiedManually: boolean,
     readonly description: string | null,
@@ -95,6 +98,7 @@ export class SessionDto {
       session.date.toISOString().slice(0, 10),
       session.disciplineTypeKey,
       session.durationMinutes,
+      session.startTime,
       session.status,
       session.modifiedManually,
       session.description,

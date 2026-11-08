@@ -81,3 +81,11 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 - Presentation : specs des DTO, du mapper HTTP et du contrôleur.
 - Persistance : `session.mapper.spec.ts` (unitaire) et `test/session-repository.e2e-spec.ts` (aller-retour Prisma, remplacement des modules, journal, suppression en cascade).
 - HTTP : `test/sessions.e2e-spec.ts` (création, liste, modification, réordonnancement, 409, 404, suppression).
+
+## Heure de début (issue #44)
+
+- Une séance peut porter une heure de début `startTime` au format `HH:MM` (00:00 à 23:59), facultative. `null` ou absente : la séance n'a pas d'heure.
+- La fin n'est pas stockée : elle vaut début + `durationMinutes`.
+- Création : `POST /api/sessions` accepte `startTime`. Modification : `PATCH /api/sessions/:id` accepte `startTime` ; `null` efface l'heure.
+- Une modification d'heure est journalisée (champ `startTime`) et positionne `modifiedManually`, comme les autres champs.
+- L'heure est exportée par le calendrier ICS (`GET /api/calendar.ics`, voir [calendrier](calendrier.md)).

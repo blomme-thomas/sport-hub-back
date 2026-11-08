@@ -11,6 +11,7 @@ import { SeancesModule } from './modules/seances/seances.module.js';
 import { PlanificationModule } from './modules/planification/planification.module.js';
 import { ConseilsModule } from './modules/conseils/conseils.module.js';
 import { PausesModule } from './modules/pauses/pauses.module.js';
+import { CalendrierModule } from './modules/calendrier/calendrier.module.js';
 import { PrismaModule } from './core/prisma/prisma.module.js';
 
 @Module({
@@ -28,6 +29,7 @@ import { PrismaModule } from './core/prisma/prisma.module.js';
     PlanificationModule,
     ConseilsModule,
     PausesModule,
+    CalendrierModule,
   ],
 })
 export class AppModule {}

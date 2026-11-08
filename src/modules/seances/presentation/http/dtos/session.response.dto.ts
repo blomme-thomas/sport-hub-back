@@ -97,6 +97,14 @@ export class SessionResponseDto {
   @ApiProperty({ type: Number, example: 60 })
   durationMinutes!: number;
 
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: '18:00',
+    description: 'Heure de début (HH:MM), absente si la séance n’a pas d’heure',
+  })
+  startTime!: string | null;
+
   @ApiProperty({ enum: SESSION_STATUSES, example: 'planifiee' })
   status!: string;
 
