@@ -5,6 +5,7 @@ function clientReturning(displayName: string | null): IGarminConnectClient {
   return {
     fetchActivitiesSince: vi.fn(),
     fetchDisplayName: vi.fn().mockResolvedValue(displayName),
+    fetchHeartRateZones: vi.fn(),
   };
 }
 
