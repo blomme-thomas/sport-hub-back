@@ -17,6 +17,7 @@ export interface SessionSnapshot {
   durationMinutes: number;
   status: string;
   modifiedManually: boolean;
+  disciplineTypeKey?: string;
 }
 
 export interface FreeSlotCapacity {
@@ -31,6 +32,8 @@ export interface FreeSlotCapacityInput {
   today: string;
   occurrences: readonly SlotOccurrenceSnapshot[];
   sessions: readonly SessionSnapshot[];
+  /** Vrai pour réserver le temps de toutes les séances, planifiées comprises : utile quand une génération ajoute des séances sans en déplacer. */
+  reserveAllSessions?: boolean;
 }
 
 interface PlacedFreeSlot {
@@ -71,7 +74,7 @@ export function computeFreeSlotCapacity(
 
   const fixedMinutesByDate = new Map<string, number>();
   for (const session of input.sessions) {
-    if (isFixed(session)) {
+    if (input.reserveAllSessions === true || isFixed(session)) {
       fixedMinutesByDate.set(
         session.date,
         (fixedMinutesByDate.get(session.date) ?? 0) + session.durationMinutes,

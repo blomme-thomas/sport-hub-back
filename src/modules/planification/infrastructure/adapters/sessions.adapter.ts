@@ -15,6 +15,7 @@ export class SeancesSessionsAdapter implements ISessionsProvider {
       durationMinutes: session.durationMinutes,
       status: session.status,
       modifiedManually: session.modifiedManually,
+      disciplineTypeKey: session.disciplineTypeKey,
     }));
   }
 }

@@ -18,5 +18,6 @@ import { GoalsController } from './presentation/http/controllers/goals.controlle
     DeleteGoalUseCase,
     { provide: GOAL_REPOSITORY, useClass: PrismaGoalRepositoryAdapter },
   ],
+  exports: [GetGoalUseCase],
 })
 export class ObjectifsModule {}
