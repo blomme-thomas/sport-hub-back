@@ -21,6 +21,10 @@ Activité Garmin synchronisée.
 | `startedAt` | `started_at` | `TIMESTAMPTZ(3)` | |
 | `durationSeconds` | `duration_seconds` | `DOUBLE PRECISION` | |
 | `distanceMeters` | `distance_meters` | `DOUBLE PRECISION` | nullable |
+| `calories` | `calories` | `DOUBLE PRECISION` | nullable : absent = `NULL`, jamais 0 (story #50) |
+| `elevationGainMeters` | `elevation_gain_meters` | `DOUBLE PRECISION` | nullable, dénivelé positif (story #50) |
+| `averageHeartRate` | `average_heart_rate` | `DOUBLE PRECISION` | nullable, FC moyenne (story #50) |
+| `hrTimeInZone1` à `hrTimeInZone5` | `hr_time_in_zone_1` à `hr_time_in_zone_5` | `DOUBLE PRECISION` | nullable, temps par zone cardiaque ; unité supposée en secondes, non confirmée (story #50) |
 | `rawPayload` | `raw_payload` | `JSONB` | charge brute Garmin |
 | `createdAt` | `created_at` | `TIMESTAMPTZ(3)` | défaut `now()` |
 | `updatedAt` | `updated_at` | `TIMESTAMPTZ(3)` | maintenu par Prisma (`@updatedAt`), sans défaut SQL |
@@ -176,7 +180,7 @@ Couvert par `test/training-stats.e2e-spec.ts`.
 
 ## Migrations
 
-- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main), une migration `20261107221922_create_goals` (création de `goals`, avec les contraintes `goals_target_time_check` et `goals_event_fields_check` ajoutées à la main), une migration `20261107235900_add_disciplines` (création de `disciplines` et backfill depuis `activities`, voir « Backfill à la migration ») et `migration_lock.toml`.
+- Dossier `prisma/migrations`, versionné : une migration `20261106105629_create_activities` (création de `activities`), une migration `20261107120000_create_slots` (création de `slots`, avec la contrainte `slots_minutes_check` ajoutée à la main), une migration `20261107221922_create_goals` (création de `goals`, avec les contraintes `goals_target_time_check` et `goals_event_fields_check` ajoutées à la main), une migration `20261107235900_add_disciplines` (création de `disciplines` et backfill depuis `activities`, voir « Backfill à la migration »), une migration `20261118120000_add_activity_dashboard_metrics` (huit colonnes nullables de `activities` : calories, dénivelé, FC moyenne, cinq zones cardiaques, avec backfill depuis `raw_payload` ; une valeur non numérique reste `NULL`) et `migration_lock.toml`.
 - Les fichiers `migration.sql` sont générés par `prisma migrate dev` et ne sont jamais édités à la main ; un changement de schéma = une nouvelle migration.
 - Création / évolution en local : `npm run prisma:migrate` (`migrate dev`).
 - Application sans génération (CI, tests, déploiement) : `npm run prisma:migrate:deploy` (`migrate deploy`).
