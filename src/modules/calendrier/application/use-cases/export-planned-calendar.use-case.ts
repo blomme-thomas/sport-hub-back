@@ -23,7 +23,7 @@ export class ExportPlannedCalendarUseCase {
 
   /**
    * Exporte en ICS les séances planifiées de la période, une entrée par séance ; les séances réalisées ou manquées n'y figurent pas.
-   * Une séance est exportée comme événement journée entière : le planning ne fixe pas d'heure de début.
+   * Une séance avec heure de début est horodatée (fin = début + durée) ; sans heure, elle est exportée comme événement journée entière.
    *
    * @throws InvalidSessionError si la période est inversée ou dépasse 366 jours (règle de la lecture des séances).
    */
@@ -35,6 +35,14 @@ export class ExportPlannedCalendarUseCase {
         uid: `${session.id}@sport-hub`,
         date: session.date,
         summary: `${session.disciplineTypeKey} - ${session.durationMinutes} min`,
+        ...(session.startTime == null
+          ? {}
+          : {
+              start: {
+                time: session.startTime,
+                durationMinutes: session.durationMinutes,
+              },
+            }),
       }));
     return serializeIcsCalendar(events, this.clock());
   }

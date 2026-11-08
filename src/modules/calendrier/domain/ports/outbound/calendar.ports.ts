@@ -3,6 +3,7 @@ export interface CalendarSession {
   date: string;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime?: string | null;
   status: string;
 }
 

@@ -16,6 +16,7 @@ export class SeancesCalendarSessionsReader implements ICalendarSessionsReader {
       date: session.date,
       disciplineTypeKey: session.disciplineTypeKey,
       durationMinutes: session.durationMinutes,
+      startTime: session.startTime,
       status: session.status,
     }));
   }
