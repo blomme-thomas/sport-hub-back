@@ -2,7 +2,7 @@
 
 Bounded Context des séances planifiées : une séance a une date, une discipline, une durée totale et une liste ordonnée de modules (échauffement, éducatifs, séries, retour au calme, autre). Elle peut être créée à la main et modifiée librement ; chaque modification faite par l'utilisateur est journalisée. Code : `src/modules/seances/`. Usage mono-utilisateur. Issue #37.
 
-Périmètre livré : création, consultation, liste par période, modification, remplacement ordonné des modules et suppression. Hors périmètre : génération de séances par l'IA (epic planning-ia) et rapprochement avec une activité Garmin (epic activites-suivi).
+Périmètre livré : création, consultation, liste par période, modification, remplacement ordonné des modules, suppression, et rapprochement avec les activités Garmin réalisées (issue #40). Hors périmètre : génération de séances par l'IA (epic planning-ia), affichage côte à côte (dépôt front) et commentaire sur l'activité (epic conseils-bilans).
 
 ## Rôle
 
@@ -42,8 +42,22 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 | `PATCH` | `/api/sessions/:id` | Modifie les champs fournis ; `null` efface description, matériel ou points d'attention | 400, 404, 409 |
 | `PUT` | `/api/sessions/:id/modules` | Remplace la liste ordonnée des modules et renumérote les positions de 1 à n | 400, 404, 409 |
 | `DELETE` | `/api/sessions/:id` | Supprime la séance, réalisée ou non (204) | 400, 404 |
+| `POST` | `/api/sessions/reconcile?from&to` | Rapproche automatiquement les séances planifiées de la période avec les activités du même jour et de la même discipline ; renvoie les couples créés (`items`) | 400 |
+| `PUT` | `/api/sessions/:id/activity` | Associe manuellement une activité du même jour, en remplaçant le lien précédent | 400, 404, 409 |
+| `DELETE` | `/api/sessions/:id/activity` | Dissocie l'activité liée (204) ; sans effet s'il n'y a pas de lien | 400, 404 |
 
-Le journal est renvoyé avec la séance (`changeLog`) : chaque entrée porte `changedAt`, `field` et `previousValue`.
+Le journal est renvoyé avec la séance (`changeLog`) : chaque entrée porte `changedAt`, `field` et `previousValue`. L'activité liée est renvoyée dans `activity` (`id`, `origin`, `linkedAt`), ou `null`.
+
+## Rapprochement avec les activités
+
+Le lien entre une séance et une activité Garmin est persisté dans `session_activity_links` (voir [Données](../donnees.md#modèles-session-session-module-et-session-change-log)). Une activité ne peut être liée qu'à une seule séance, et une séance qu'à une seule activité.
+
+- **Rapprochement automatique** (`POST /api/sessions/reconcile`) : pour chaque couple (jour local de Paris, discipline), lie la séance à l'activité seulement s'il existe exactement une séance candidate et exactement une activité candidate. Candidates : séances `planifiee` sans lien, activités sans lien. Un cas ambigu (deux activités ou deux séances) reste en attente. Lien d'origine `automatique`.
+- **Choix manuel** (`PUT /activity`) : l'activité doit être du même jour que la séance, sinon 404 `SESSION_ACTIVITY_NOT_FOUND` ; une activité liée à une autre séance donne 409 `SESSION_ACTIVITY_ALREADY_LINKED`. Remplace le lien précédent. Lien d'origine `manuel`.
+- **Effet sur le statut** : lier une séance `planifiee` ou `manquee` la passe à `realisee`. Dissocier ne modifie pas le statut. Le lien ne journalise rien et ne positionne pas `modifiedManually`.
+- **Lecture des activités** : l'ACL `GarminActivityCatalogAdapter` appelle `ListActivitiesUseCase` du module `garmin-sync` et convertit chaque date de début en jour de Paris. Le module ne lit pas la table `activities`.
+
+Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmin ; il se lance par l'appel de `POST /api/sessions/reconcile`.
 
 ## Règles
 

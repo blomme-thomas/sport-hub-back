@@ -56,6 +56,22 @@ export interface SessionModuleDto {
 
 export type ChangeLogEntryDto = SessionChangeLogEntry;
 
+export interface SessionActivityLinkDto {
+  id: string;
+  origin: string;
+  linkedAt: Date;
+}
+
+export interface LinkSessionActivityCommand {
+  sessionId: string;
+  activityId: string;
+}
+
+export interface ReconcileSessionsQuery {
+  from: string;
+  to: string;
+}
+
 export class SessionDto {
   private constructor(
     readonly id: string,
@@ -69,9 +85,11 @@ export class SessionDto {
     readonly attentionPoints: string | null,
     readonly modules: SessionModuleDto[],
     readonly changeLog: ChangeLogEntryDto[],
+    readonly activity: SessionActivityLinkDto | null,
   ) {}
 
   static fromDomain(session: Session): SessionDto {
+    const link = session.activityLink;
     return new SessionDto(
       session.id.toString(),
       session.date.toISOString().slice(0, 10),
@@ -84,6 +102,9 @@ export class SessionDto {
       session.attentionPoints,
       session.modules.map((module) => module.toPrimitives()),
       session.changeLog,
+      link === null
+        ? null
+        : { id: link.activityId, origin: link.origin, linkedAt: link.linkedAt },
     );
   }
 }

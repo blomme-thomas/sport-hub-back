@@ -133,7 +133,9 @@ Couvert par `test/discipline-repository.e2e-spec.ts`.
 - `session_modules` : `id`, `session_id` (FK vers `sessions`, suppression en cascade), `position` (au moins 1, unique par séance), `type`, `duration_minutes`, `instruction`, `target_zones` (JSONB, objet ou NULL), `perceived_effort` (1 à 10 ou NULL).
 - `session_change_logs` : `id`, `session_id` (FK, suppression en cascade), `changed_at`, `field`, `previous_value`. Index sur `(session_id, changed_at)`.
 
-Migration `20261108120000_create_sessions`. Couvert par `test/session-repository.e2e-spec.ts`. Règles métier dans [seances](contextes/seances.md).
+- `session_activity_links` : `session_id` (clé primaire, FK vers `sessions`, suppression en cascade), `activity_id` (UUID unique, sans clé étrangère vers `activities` : la donnée reste dans `garmin-sync`), `origin` (`automatique` ou `manuel`, contrôle SQL), `linked_at`.
+
+Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`. Couvert par `test/session-repository.e2e-spec.ts`. Règles métier dans [seances](contextes/seances.md).
 
 ## Accès depuis garmin-sync
 

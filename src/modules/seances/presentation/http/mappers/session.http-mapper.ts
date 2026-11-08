@@ -77,6 +77,13 @@ export class SessionHttpMapper {
       changeLog: dto.changeLog.map((entry) =>
         SessionHttpMapper.toChangeLogResponse(entry),
       ),
+      activity: dto.activity
+        ? {
+            id: dto.activity.id,
+            origin: dto.activity.origin,
+            linkedAt: dto.activity.linkedAt.toISOString(),
+          }
+        : null,
     };
   }
 

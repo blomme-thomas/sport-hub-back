@@ -132,6 +132,7 @@ describe('SessionMapper', () => {
       });
 
       expect(SessionMapper.toPersistence(session)).toEqual({
+        activityLink: null,
         id: SESSION_ID,
         date: new Date('2026-05-04T00:00:00.000Z'),
         disciplineTypeKey: 'swimming',

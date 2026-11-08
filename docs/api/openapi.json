@@ -521,6 +521,20 @@
         ],
         "type": "object"
       },
+      "LinkSessionActivityRequestDto": {
+        "properties": {
+          "activityId": {
+            "description": "Identifiant d’une activité synchronisée du même jour que la séance",
+            "example": "6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activityId"
+        ],
+        "type": "object"
+      },
       "MetricVariationResponseDto": {
         "properties": {
           "absolute": {
@@ -633,7 +647,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -665,7 +679,9 @@
           "SESSION_MODULE_INVALID",
           "SESSION_DISCIPLINE_UNKNOWN",
           "SESSION_NOT_FOUND",
-          "SESSION_ALREADY_COMPLETED"
+          "SESSION_ALREADY_COMPLETED",
+          "SESSION_ACTIVITY_NOT_FOUND",
+          "SESSION_ACTIVITY_ALREADY_LINKED"
         ],
         "type": "string"
       },
@@ -691,7 +707,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -737,6 +753,38 @@
         ],
         "type": "object"
       },
+      "ReconcileSessionsResponseDto": {
+        "properties": {
+          "items": {
+            "description": "Rapprochements automatiques créés par cet appel ; les cas ambigus ne figurent pas dans la liste",
+            "items": {
+              "$ref": "#/components/schemas/ReconciledPairResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ReconciledPairResponseDto": {
+        "properties": {
+          "activityId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "sessionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "activityId"
+        ],
+        "type": "object"
+      },
       "ReplaceSessionModulesRequestDto": {
         "properties": {
           "modules": {
@@ -750,6 +798,35 @@
         },
         "required": [
           "modules"
+        ],
+        "type": "object"
+      },
+      "SessionActivityResponseDto": {
+        "properties": {
+          "id": {
+            "description": "Identifiant de l’activité Garmin synchronisée liée",
+            "example": "6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10",
+            "format": "uuid",
+            "type": "string"
+          },
+          "linkedAt": {
+            "example": "2026-11-08T17:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "automatique",
+              "manuel"
+            ],
+            "example": "automatique",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "origin",
+          "linkedAt"
         ],
         "type": "object"
       },
@@ -874,6 +951,16 @@
       },
       "SessionResponseDto": {
         "properties": {
+          "activity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SessionActivityResponseDto"
+              }
+            ],
+            "description": "Activité réalisée liée à la séance, ou null",
+            "nullable": true,
+            "type": "object"
+          },
           "attentionPoints": {
             "example": "Épaule droite",
             "nullable": true,
@@ -947,7 +1034,8 @@
           "equipment",
           "attentionPoints",
           "modules",
-          "changeLog"
+          "changeLog",
+          "activity"
         ],
         "type": "object"
       },
@@ -2238,6 +2326,71 @@
         ]
       }
     },
+    "/api/sessions/reconcile": {
+      "post": {
+        "operationId": "sessionsReconcile",
+        "parameters": [
+          {
+            "description": "Premier jour de la période (YYYY-MM-DD, inclus). La période compte au plus 366 jours",
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "example": "2026-05-01",
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Dernier jour de la période (YYYY-MM-DD, inclus), postérieur ou égal à from",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "example": "2026-05-31",
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileSessionsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Rapproche automatiquement les séances planifiées de la période avec les activités du même jour et de la même discipline, sans les cas ambigus",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
     "/api/sessions/{id}": {
       "delete": {
         "operationId": "sessionsRemove",
@@ -2434,6 +2587,145 @@
           }
         },
         "summary": "Modifie une séance ; les champs absents sont inchangés, null efface description, matériel ou points d’attention",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
+    "/api/sessions/{id}/activity": {
+      "delete": {
+        "operationId": "sessionsUnlinkActivity",
+        "parameters": [
+          {
+            "description": "Identifiant de la séance",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Lien dissocié"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Dissocie l'activité liée à la séance ; le statut est conservé, et l'opération est sans effet sans lien",
+        "tags": [
+          "seances"
+        ]
+      },
+      "put": {
+        "operationId": "sessionsLinkActivity",
+        "parameters": [
+          {
+            "description": "Identifiant de la séance",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkSessionActivityRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Associe manuellement une activité du même jour à la séance, en remplaçant le lien précédent ; la séance passe à réalisée",
         "tags": [
           "seances"
         ]

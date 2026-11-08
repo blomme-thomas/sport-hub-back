@@ -56,6 +56,30 @@ export class ChangeLogEntryResponseDto {
   previousValue!: string | null;
 }
 
+export class SessionActivityResponseDto {
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    example: '6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10',
+    description: 'Identifiant de l’activité Garmin synchronisée liée',
+  })
+  id!: string;
+
+  @ApiProperty({
+    type: String,
+    enum: ['automatique', 'manuel'],
+    example: 'automatique',
+  })
+  origin!: string;
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    example: '2026-11-08T17:00:00.000Z',
+  })
+  linkedAt!: string;
+}
+
 export class SessionResponseDto {
   @ApiProperty({
     type: String,
@@ -103,4 +127,11 @@ export class SessionResponseDto {
     description: 'Journal des modifications manuelles, par ordre chronologique',
   })
   changeLog!: ChangeLogEntryResponseDto[];
+
+  @ApiProperty({
+    type: SessionActivityResponseDto,
+    nullable: true,
+    description: 'Activité réalisée liée à la séance, ou null',
+  })
+  activity!: SessionActivityResponseDto | null;
 }

@@ -66,19 +66,20 @@ model Discipline {
 }
 
 model Session {
-  id                String             @id @default(uuid()) @db.Uuid
-  date              DateTime           @db.Date
-  disciplineTypeKey String             @map("discipline_type_key")
-  durationMinutes   Int                @map("duration_minutes")
-  status            String             @default("planifiee")
-  modifiedManually  Boolean            @default(false) @map("modified_manually")
+  id                String               @id @default(uuid()) @db.Uuid
+  date              DateTime             @db.Date
+  disciplineTypeKey String               @map("discipline_type_key")
+  durationMinutes   Int                  @map("duration_minutes")
+  status            String               @default("planifiee")
+  modifiedManually  Boolean              @default(false) @map("modified_manually")
   description       String?
   equipment         String?
-  attentionPoints   String?            @map("attention_points")
-  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  attentionPoints   String?              @map("attention_points")
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
   modules           SessionModule[]
   changeLogs        SessionChangeLog[]
+  activityLink      SessionActivityLink?
 
   @@index([date])
   @@index([status, date])
@@ -110,4 +111,14 @@ model SessionChangeLog {
 
   @@index([sessionId, changedAt])
   @@map("session_change_logs")
+}
+
+model SessionActivityLink {
+  sessionId  String   @id @map("session_id") @db.Uuid
+  activityId String   @unique @map("activity_id") @db.Uuid
+  origin     String
+  linkedAt   DateTime @map("linked_at") @db.Timestamptz(3)
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_activity_links")
 }

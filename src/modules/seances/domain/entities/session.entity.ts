@@ -20,6 +20,14 @@ export interface SessionChangeLogEntry {
   previousValue: string | null;
 }
 
+export type ActivityLinkOrigin = 'automatique' | 'manuel';
+
+export interface SessionActivityLink {
+  activityId: string;
+  origin: ActivityLinkOrigin;
+  linkedAt: Date;
+}
+
 export interface SessionProps {
   date: Date;
   disciplineTypeKey: string;
@@ -42,6 +50,7 @@ export interface SessionReconstitutionProps {
   attentionPoints: string | null;
   modules: SessionModule[];
   changeLog: SessionChangeLogEntry[];
+  activityLink?: SessionActivityLink | null;
 }
 
 export interface SessionChanges {
@@ -79,6 +88,7 @@ interface SessionState extends SessionFields {
   modifiedManually: boolean;
   modules: SessionModule[];
   changeLog: SessionChangeLogEntry[];
+  activityLink: SessionActivityLink | null;
   pendingLogEntries: SessionChangeLogEntry[];
 }
 
@@ -104,6 +114,7 @@ export class Session {
       id: SessionId.generate(),
       ...fields,
       modifiedManually: false,
+      activityLink: null,
       modules: renumber(assertModulesCount(props.modules ?? [])),
       changeLog: [],
       pendingLogEntries: [],
@@ -129,6 +140,7 @@ export class Session {
       id: props.id,
       ...fields,
       modifiedManually: props.modifiedManually,
+      activityLink: props.activityLink ?? null,
       modules: [...props.modules],
       changeLog: [...props.changeLog],
       pendingLogEntries: [],
@@ -169,6 +181,10 @@ export class Session {
 
   get attentionPoints(): string | null {
     return this.state.attentionPoints;
+  }
+
+  get activityLink(): SessionActivityLink | null {
+    return this.state.activityLink;
   }
 
   get modules(): SessionModule[] {
@@ -242,6 +258,46 @@ export class Session {
       modifiedManually: current.modifiedManually || entries.length > 0,
       changeLog: [...current.changeLog, ...entries],
       pendingLogEntries: [...current.pendingLogEntries, ...entries],
+    });
+  }
+
+  /**
+   * Renvoie une nouvelle séance liée à l'activité. Une séance planifiée ou manquée passe à réalisée ; lier l'activité déjà liée ne change rien.
+   * Le journal des modifications n'est pas alimenté : le lien n'est pas une modification manuelle des champs.
+   */
+  linkActivity(
+    activityId: string,
+    origin: ActivityLinkOrigin,
+    now: Date,
+  ): Session {
+    const current = this.state;
+    if (current.activityLink?.activityId === activityId) {
+      return this;
+    }
+    return new Session({
+      ...current,
+      status: 'realisee',
+      activityLink: { activityId, origin, linkedAt: now },
+      modules: [...current.modules],
+      changeLog: [...current.changeLog],
+      pendingLogEntries: [...current.pendingLogEntries],
+    });
+  }
+
+  /**
+   * Renvoie une nouvelle séance sans activité liée ; le statut est conservé.
+   */
+  unlinkActivity(): Session {
+    const current = this.state;
+    if (current.activityLink === null) {
+      return this;
+    }
+    return new Session({
+      ...current,
+      activityLink: null,
+      modules: [...current.modules],
+      changeLog: [...current.changeLog],
+      pendingLogEntries: [...current.pendingLogEntries],
     });
   }
 }
