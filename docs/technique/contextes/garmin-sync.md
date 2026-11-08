@@ -2,7 +2,19 @@
 
 Bounded Context de synchronisation des activités Garmin dans la base locale. Code : `src/modules/garmin-sync/`. Usage mono-utilisateur.
 
-Périmètre livré : déclenchement manuel de la synchronisation (issue #8), consultation de la liste des activités (issue #10), synchronisation planifiée (story #9, voir [Synchronisation planifiée](#synchronisation-planifiée)) et enregistrement des disciplines vues pendant la synchronisation (issue #45, voir [Contexte disciplines](disciplines.md)). Hors périmètre à ce jour : autres données Garmin que les activités.
+Périmètre livré : déclenchement manuel de la synchronisation (issue #8), consultation de la liste des activités (issue #10), synchronisation planifiée (story #9, voir [Synchronisation planifiée](#synchronisation-planifiée)), enregistrement des disciplines vues pendant la synchronisation (issue #45, voir [Contexte disciplines](disciplines.md)), indicateurs des activités pour le tableau de bord (issue #50, voir [Contexte training-stats](training-stats.md)), nom affiché du compte (issue #51, voir [Données Garmin complémentaires](#données-garmin-complémentaires)), seuils des zones cardiaques (issue #52) et données de récupération journalières (issue #53). Hors périmètre à ce jour : les autres données Garmin (stress, Body Battery détaillée, nutrition, poids).
+
+## Données Garmin complémentaires
+
+Chaque lecture passe par `GarminConnectAdapter`, avec le même traitement d'erreur que la synchronisation (voir [Traitement des erreurs (adapter)](#traitement-des-erreurs-adapter)) : un refus de la clé ou du jeton donne `GARMIN_ACCESS_DENIED` (502), une panne ou une réponse inattendue donne `GARMIN_UNAVAILABLE` (503). Le mapping existant est gardé pour toutes les routes, même si les critères d'une issue évoquaient un 401 ou 403.
+
+| Route | Source Garmin | Réponse | Règles |
+|---|---|---|---|
+| `GET /api/profile` (#51) | E21 `GET /userprofile-service/userprofile/settings` | `{ displayName }` | `displayName` absent ou vide : `null`, jamais une chaîne inventée. |
+| `GET /api/heart-rate-zones` (#52) | E19 `GET /biometric-service/heartRateZones/v2?generateDefaults=false` | `available`, `trainingMethod`, `maxHeartRateUsed`, `restingHeartRateUsed`, `zone1Floor` à `zone5Floor` | Seule l'entrée `sport = DEFAULT` est lue. `generateDefaults=false` : Garmin ne génère pas de zones ; aucune configuration donne `available: false` et des `null`. |
+| `GET /api/recovery?from&to` (#53) | E10 sommeil, E08 HRV, E16 Body Battery, E18 FC de repos | un élément par jour : `sleepSeconds`, `hrvLastNightAvg`, `hrvWeeklyAvg`, `bodyBatteryCharged`, `bodyBatteryDrained`, `restingHeartRate` | Plage de 31 jours au plus (400 sinon), dates réelles, `to` ≥ `from`. Un jour sans donnée, ou un 204 (corps vide), donne `null` ; jamais zéro. E18 n'acceptant qu'une date, la route fait une requête par jour : jusqu'à 31 appels séquentiels. Mapping pur dans `garmin-recovery.external-mapper.ts`. |
+
+La synchronisation demande désormais `excludeChildren=true` à Garmin. Les activités enfants déjà en base ne sont pas retirées : seules les synchronisations suivantes les filtrent.
 
 ## Rôle
 

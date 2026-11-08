@@ -2,7 +2,7 @@
 
 Bounded Context des statistiques d'entraînement : volume de séances (nombre, durée, distance) par semaine ISO ou par mois, total et par type, avec la période précédente et la variation. Code : `src/modules/training-stats/`. Usage mono-utilisateur.
 
-Périmètre livré : `GET /api/stats` (issue #11). Consommateur livré : le module `workout-generation` (story #12) lit les volumes par semaine via `GetTrainingStatsUseCase`, par son adapter ACL (voir [Contexte workout-generation](workout-generation.md)). Hors périmètre : métriques physiologiques (VO2max, TSS), graphiques, prédictions.
+Périmètre livré : `GET /api/stats` (issue #11) et `GET /api/stats/dashboard` (issue #50, voir [Tableau de bord](#tableau-de-bord)). Consommateur livré : le module `workout-generation` (story #12) lit les volumes par semaine via `GetTrainingStatsUseCase`, par son adapter ACL (voir [Contexte workout-generation](workout-generation.md)). Hors périmètre : métriques physiologiques (VO2max, TSS), graphiques, prédictions.
 
 ## Rôle
 
@@ -72,6 +72,20 @@ Le calcul est dans le Domain : `TrainingStatsCalculator` et les value objects n'
 | 400 | `STATS_RANGE_INVALID` | filet du Domain pour une plage inversée ; la validation du transport couvre déjà ce cas, il ne devrait pas être atteint |
 
 Les codes `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` sont déclarés dans `DOMAIN_ERROR_STATUS` (`src/core/filters/error-status.table.ts`) avec le statut 400. Voir [Erreurs de l'API](../erreurs-api.md#codes-du-module-training-stats).
+
+## Tableau de bord
+
+`GET /api/stats/dashboard?period=7d|30d|3m|1y` (issue #50) renvoie les indicateurs d'une période glissante qui se termine aujourd'hui (UTC), avec la même durée juste avant pour la variation. Code : `GetDashboardStatsUseCase`, `DashboardStatsCalculator` (pur, sans I/O), `DashboardPeriodWindow` (fenêtres). Port : `findDashboardFacts`, qui renvoie `type`, `startedAt`, `durationSeconds` et les indicateurs de la table `activities` (calories, dénivelé, FC moyenne, cinq zones).
+
+- Fenêtres : la courante va de `from` (inclus) jusqu'au lendemain de aujourd'hui (exclu). `7d` et `30d` reculent de jours, `3m` et `1y` de mois calendaires ; le jour est ramené au dernier jour du mois cible s'il n'existe pas (30 mars moins un mois donne le 28 ou 29 février).
+- Absent ≠ zéro : sommes (calories, dénivelé) et moyenne (FC) ne portent que sur les activités qui renseignent la valeur ; `null` si aucune ne la renseigne. Une zone cardiaque est sommée de la même façon.
+- Répartition par sport : une entrée par `type`, triée par type.
+- Série journalière : une entrée par jour de la période, jours vides compris.
+- Variation : calculée sur la durée totale. `unknown` si la période précédente n'a aucune séance (`percent` à `null`) ; sinon `up`, `down` ou `flat`, avec `percent` arrondi à une décimale.
+- Hypothèse : l'unité des zones cardiaques est supposée en secondes, non confirmée par la spec Garmin.
+- Le tableau de bord ne lit que les activités de `garmin-sync` ; les activités enfants sont exclues à la synchronisation (`excludeChildren`).
+
+Validation : `period` obligatoire, parmi les quatre valeurs, sinon `400 VALIDATION_FAILED`. Couvert par les tests unitaires du calculateur et des fenêtres. Pas encore de test e2e sur cette route.
 
 ## Limites connues
 
