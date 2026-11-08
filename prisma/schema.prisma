@@ -132,3 +132,15 @@ model ActivityComment {
 
   @@map("activity_comments")
 }
+
+model WeeklyReview {
+  week           String   @id @db.VarChar(8)
+  suivi          String
+  pointAttention String   @map("point_attention")
+  conseil        String
+  source         String
+  model          String?
+  generatedAt    DateTime @map("generated_at") @db.Timestamptz(3)
+
+  @@map("weekly_reviews")
+}

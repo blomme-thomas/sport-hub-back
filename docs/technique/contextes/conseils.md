@@ -1,10 +1,31 @@
 # Contexte conseils
 
-Bounded Context des conseils : un commentaire par activité réalisée, qui compare l'activité à la séance rapprochée (issue #41). Code : `src/modules/conseils/`. Usage mono-utilisateur.
+Bounded Context des conseils : un commentaire par activité réalisée, qui compare l'activité à la séance rapprochée (issue #41), et un bilan par semaine ISO (issue #42). Code : `src/modules/conseils/`. Usage mono-utilisateur.
 
-Périmètre livré : génération et stockage du commentaire, lecture, régénération à la demande. Hors périmètre : affichage (dépôt front), bilan hebdomadaire (story #42).
+Périmètre livré : génération et stockage du commentaire d'activité et du bilan hebdomadaire, lecture, régénération à la demande. Hors périmètre : affichage (dépôt front), bilan mensuel, conseil du tableau de bord (issue #54).
 
 ## Routes
+
+| Méthode | Chemin | Effet | Erreurs |
+|---|---|---|---|
+| `POST` | `/api/activities/:id/comment` | Génère le commentaire, ou le remplace s'il existe (201) | 400, 404, 502, 503 |
+| `GET` | `/api/activities/:id/comment` | Renvoie le commentaire stocké, sans appel au modèle | 400, 404 |
+| `POST` | `/api/weekly-reviews/:week` | Génère le bilan de la semaine ISO `AAAA-Www`, ou le remplace s'il existe (201) | 400, 502, 503 |
+| `GET` | `/api/weekly-reviews/:week` | Renvoie le bilan stocké de la semaine, sans appel au modèle | 400, 404 |
+
+## Bilan hebdomadaire
+
+- **Contenu** : trois parties en français, `suivi` (séances prévues contre réalisées, volume par rapport à la semaine précédente), `pointAttention` et `conseil` (pour la semaine suivante).
+- **Semaine** : ISO, du lundi au dimanche. Format `AAAA-Www` ; une semaine inexistante dans son année (ex. `2025-W53`) donne 400 `WEEKLY_REVIEW_INVALID_WEEK`.
+- **Source des données** : séances de la semaine (`ListSessionsUseCase`, `seances`) et volumes de la semaine et de la précédente (`GetTrainingStatsUseCase`, `training-stats`), via leurs façades.
+- **Semaine sans séance prévue** : bilan générique stocké (source `generique`, modèle `null`), sans appel au modèle.
+- **Au moins une séance prévue** : un seul appel au modèle, réponse attendue en JSON à trois clés chaînes. Une réponse tronquée, non JSON ou sans les trois clés donne 502 `WEEKLY_REVIEW_INVALID_OUTPUT` et ne remplace rien.
+- **Régénération** : `POST` remplace le bilan existant et enregistre la nouvelle date. `GET` ne fait jamais d'appel au modèle.
+- **Longueur** : chaque partie fait de 1 à 1000 caractères.
+
+Structure : `domain/value-objects/iso-week.vo.ts` (`IsoWeek`), `domain/value-objects/weekly-review.vo.ts` (`WeeklyReview`), `domain/ports/outbound/weekly-review.ports.ts`, `application/use-cases/generate-weekly-review.use-case.ts` et `get-weekly-review.use-case.ts`, `infrastructure/adapters/weekly-data.reader.adapter.ts` (ACL vers `seances` et `training-stats`), `infrastructure/adapters/claude-weekly-review.generator.adapter.ts` avec `infrastructure/mappers/weekly-review.external-mapper.ts` (sortie JSON), `infrastructure/persistence/prisma/weekly-review.repository.adapter.ts` (table `weekly_reviews`), `presentation/http/controllers/weekly-reviews.controller.ts`. Tests : `application/use-cases/*weekly-review*.spec.ts`, `domain/value-objects/iso-week.vo.spec.ts`, `infrastructure/adapters/claude-weekly-review.generator.adapter.spec.ts`, `infrastructure/mappers/weekly-review.external-mapper.spec.ts`, `test/weekly-reviews.e2e-spec.ts`.
+
+## Commentaire d'activité
 
 | Méthode | Chemin | Effet | Erreurs |
 |---|---|---|---|
