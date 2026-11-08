@@ -18,6 +18,12 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DB_NAME: sporthub_test
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_USERNAME: sporthub
+      DB_PASSWORD: sporthub
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
