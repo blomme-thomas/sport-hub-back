@@ -572,6 +572,20 @@
         ],
         "type": "object"
       },
+      "GarminProfileResponseDto": {
+        "properties": {
+          "displayName": {
+            "description": "Nom affiché du compte Garmin ; null si Garmin ne le fournit pas",
+            "example": "Thomas",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName"
+        ],
+        "type": "object"
+      },
       "GeneratePlanningRequestDto": {
         "properties": {
           "from": {
@@ -3232,6 +3246,58 @@
         "summary": "Génère le planning d'une période, ou jusqu'à la date cible d'un objectif, et crée les séances dans les créneaux libres",
         "tags": [
           "planning"
+        ]
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "operationId": "profileGet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GarminProfileResponseDto"
+                }
+              }
+            },
+            "description": "Nom affiché, ou null si Garmin ne le fournit pas"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Nom affiché du compte Garmin courant",
+        "tags": [
+          "garmin-sync"
         ]
       }
     },
