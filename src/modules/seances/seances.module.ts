@@ -27,5 +27,6 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     { provide: DISCIPLINE_CATALOG, useClass: DisciplinesCatalogAdapter },
     { provide: SEANCES_CLOCK, useValue: () => new Date() },
   ],
+  exports: [ListSessionsUseCase],
 })
 export class SeancesModule {}

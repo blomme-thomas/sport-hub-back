@@ -16,5 +16,6 @@ import { SlotsController } from './presentation/http/controllers/slots.controlle
     ListSlotOccurrencesUseCase,
     { provide: SLOT_REPOSITORY, useClass: PrismaSlotRepositoryAdapter },
   ],
+  exports: [ListSlotOccurrencesUseCase],
 })
 export class CreneauxModule {}
