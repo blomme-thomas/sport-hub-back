@@ -102,6 +102,6 @@ Route : `POST /api/planning/generate`, corps `{ from, to?, goalId? }`, dates `YY
 ### Hypothèses et écarts
 
 - **Volume récent non transmis** : la description de l'issue prévoit le volume par discipline des dernières semaines. Il n'est pas envoyé dans cette version ; le modèle ne voit que le temps libre, les séances existantes et l'objectif.
-- **Client Anthropic partagé** : le provider `ANTHROPIC_CLIENT` est réutilisé depuis `workout-generation` (même jeton, donc une seule configuration).
+- **Client Anthropic partagé** : le provider `ANTHROPIC_CLIENT` vit dans `src/core/anthropic/` et est utilisé par `workout-generation` et `planification`.
 - **Pas d'atomicité au-delà du contrôle** : les séances sont créées une à une. Si une création échoue après les premières, les précédentes restent. Le contrôle préalable rend cet échec peu probable.
 - **Fin par événement** : `goalId` utilise la date cible de l'objectif, sans le format ni le temps cible dans le planning.

@@ -65,7 +65,7 @@ dependency-cruiser (`.dependency-cruiser.cjs`) vérifie ces règles sur `src/`, 
 - le Domain et l'Application n'importent pas `src/core/http` (`domain-application-no-http-client`) ;
 - le code de production n'importe ni fichier `.spec.ts`, ni devDependency.
 
-Avertissement seulement : `modules-isolated` (un module n'importe pas l'intérieur d'un autre), le contrat entre modules n'étant pas encore défini. Le client Prisma généré est exclu de l'analyse.
+Erreur bloquante : `modules-public-api-only`. Un module n'importe d'un autre que son contrat public, `src/modules/<module>/index.ts` (facade qui ré-exporte les use cases, DTO et modules consommés par les autres modules) ; ses fichiers internes ne sont jamais importés directement. Le client Prisma généré est exclu de l'analyse.
 
 Ces règles s'exercent sur les six modules, `garmin-sync`, `training-stats`, `workout-generation`, `creneaux`, `objectifs` et `disciplines`, dans leurs quatre couches.
 

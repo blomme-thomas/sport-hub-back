@@ -23,7 +23,7 @@ Périmètre livré : `POST /api/workouts/generate` (issue #12). Hors périmètre
 | Application | `application/use-cases/generate-workout.use-case.ts` | `GenerateWorkoutUseCase.execute(command)` : contexte, génération, DTO |
 | Application | `application/dtos/generate-workout.dto.ts` | `GenerateWorkoutCommand`, `GeneratedWorkoutDto` |
 | Infrastructure | `infrastructure/adapters/training-stats-context.adapter.ts` | Anti-corruption layer vers `training-stats` ; porte aussi le token `WORKOUT_CONTEXT_CLOCK` (horloge injectée, `() => new Date()` en production) |
-| Infrastructure | `infrastructure/adapters/anthropic-client.provider.ts` | Provider `ANTHROPIC_CLIENT` : client SDK, ou `null` sans `ANTHROPIC_API_KEY` |
+| Infrastructure | `src/core/anthropic/anthropic-client.provider.ts` (partagé avec `planification`) | Provider `ANTHROPIC_CLIENT` : client SDK, ou `null` sans `ANTHROPIC_API_KEY` |
 | Infrastructure | `infrastructure/adapters/claude-workout-generator.adapter.ts` | `ClaudeWorkoutGeneratorAdapter` : appel `messages.create`, traduction des erreurs du SDK, logs |
 | Infrastructure | `infrastructure/adapters/prompts/workout-generation.prompt.v1.ts` | `WORKOUT_PROMPT_VERSION = 'v1'`, `buildSystemPrompt()`, `buildUserPrompt(input)` |
 | Infrastructure | `infrastructure/mappers/claude-workout-generator.external-mapper.ts` | `WORKOUT_OUTPUT_SCHEMA` (zod), contrôle du `stop_reason`, parse JSON, `GeneratedWorkout.create()` |
