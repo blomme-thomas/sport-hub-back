@@ -20,6 +20,7 @@
   - [disciplines](technique/contextes/disciplines.md) (référentiel des disciplines, enregistrement par ACL depuis garmin-sync, routes `/api/disciplines`, libellé modifiable, bornes)
   - [seances](technique/contextes/seances.md) (séances planifiées composées de modules ordonnés, modifiables et journalisées, routes `/api/sessions`, règles et erreurs)
   - [planification](technique/contextes/planification.md) (durée disponible restante, génération de planning par l'IA, route `/api/planning/generate`, règles et erreurs)
+  - [conseils](technique/contextes/conseils.md) (commentaire par activité réalisée, génération unique et stockée, régénération à la demande, routes `/api/activities/:id/comment`)
 - Décisions (`technique/decisions/`) :
   - [0001 : table centralisée code vers statut HTTP](technique/decisions/0001-table-centralisee-code-statut.md)
   - [0002 : correlation id par middleware et AsyncLocalStorage](technique/decisions/0002-correlation-id-middleware-als.md)
