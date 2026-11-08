@@ -5,7 +5,9 @@ import { DisciplinesModule } from '../disciplines/index.js';
 import { GetActivityUseCase } from './application/use-cases/get-activity.use-case.js';
 import { GetGarminProfileUseCase } from './application/use-cases/get-garmin-profile.use-case.js';
 import { GetHeartRateZonesUseCase } from './application/use-cases/get-heart-rate-zones.use-case.js';
+import { GetRecoveryUseCase } from './application/use-cases/get-recovery.use-case.js';
 import { HeartRateZonesController } from './presentation/http/controllers/heart-rate-zones.controller.js';
+import { RecoveryController } from './presentation/http/controllers/recovery.controller.js';
 import { ProfileController } from './presentation/http/controllers/profile.controller.js';
 import { ListActivitiesUseCase } from './application/use-cases/list-activities.use-case.js';
 import { SyncGarminActivitiesUseCase } from './application/use-cases/sync-garmin-activities.use-case.js';
@@ -29,6 +31,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     ActivitiesController,
     ProfileController,
     HeartRateZonesController,
+    RecoveryController,
   ],
   providers: [
     SyncGarminActivitiesUseCase,
@@ -36,6 +39,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     GetActivityUseCase,
     GetGarminProfileUseCase,
     GetHeartRateZonesUseCase,
+    GetRecoveryUseCase,
     GarminSyncScheduler,
     GarminPersonalApiTokenProvider,
     { provide: GARMIN_CONNECT_CLIENT, useClass: GarminConnectAdapter },
