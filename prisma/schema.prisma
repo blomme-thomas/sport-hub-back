@@ -70,6 +70,7 @@ model Session {
   date              DateTime             @db.Date
   disciplineTypeKey String               @map("discipline_type_key")
   durationMinutes   Int                  @map("duration_minutes")
+  startTime         String?              @map("start_time") @db.VarChar(5)
   status            String               @default("planifiee")
   modifiedManually  Boolean              @default(false) @map("modified_manually")
   description       String?

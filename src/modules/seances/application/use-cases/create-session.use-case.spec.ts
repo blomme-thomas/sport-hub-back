@@ -133,6 +133,7 @@ describe('CreateSessionUseCase', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
+        startTime: null,
         status: 'planifiee',
         modifiedManually: false,
         description: null,

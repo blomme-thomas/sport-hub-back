@@ -35,6 +35,7 @@ export interface SessionRecord {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime?: string | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -50,6 +51,7 @@ export interface SessionPersistence {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime?: string | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -66,6 +68,7 @@ export class SessionMapper {
       date: record.date,
       disciplineTypeKey: record.disciplineTypeKey,
       durationMinutes: record.durationMinutes,
+      startTime: record.startTime,
       status: record.status,
       modifiedManually: record.modifiedManually,
       activityLink: record.activityLink
@@ -102,6 +105,7 @@ export class SessionMapper {
       date: session.date,
       disciplineTypeKey: session.disciplineTypeKey,
       durationMinutes: session.durationMinutes,
+      startTime: session.startTime,
       status: session.status,
       modifiedManually: session.modifiedManually,
       description: session.description,

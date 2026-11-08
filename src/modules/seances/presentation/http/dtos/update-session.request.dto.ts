@@ -3,6 +3,7 @@ import {
   IsIn,
   IsInt,
   IsString,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -53,6 +54,17 @@ export class UpdateSessionRequestDto {
   @Min(1)
   @Max(1440)
   durationMinutes?: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    example: '18:00',
+    description:
+      'Heure de début (HH:MM) ; null efface l’heure, absent = inchangée',
+  })
+  @ValidateIf(isTextProvided)
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+  startTime?: string | null;
 
   @ApiPropertyOptional({
     enum: SESSION_STATUSES,

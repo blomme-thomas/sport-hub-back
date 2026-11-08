@@ -32,6 +32,7 @@ export interface SessionProps {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime?: string | null;
   description?: string | null;
   equipment?: string | null;
   attentionPoints?: string | null;
@@ -43,6 +44,7 @@ export interface SessionReconstitutionProps {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime?: string | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -57,6 +59,7 @@ export interface SessionChanges {
   date?: Date;
   disciplineTypeKey?: string;
   durationMinutes?: number;
+  startTime?: string | null;
   status?: string;
   description?: string | null;
   equipment?: string | null;
@@ -67,6 +70,7 @@ interface SessionFieldsInput {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime: string | null;
   status: string;
   description: string | null;
   equipment: string | null;
@@ -77,6 +81,7 @@ interface SessionFields {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
+  startTime: string | null;
   status: SessionStatus;
   description: string | null;
   equipment: string | null;
@@ -105,6 +110,7 @@ export class Session {
       date: props.date,
       disciplineTypeKey: props.disciplineTypeKey,
       durationMinutes: props.durationMinutes,
+      startTime: props.startTime ?? null,
       status: 'planifiee',
       description: props.description ?? null,
       equipment: props.equipment ?? null,
@@ -131,6 +137,7 @@ export class Session {
       date: props.date,
       disciplineTypeKey: props.disciplineTypeKey,
       durationMinutes: props.durationMinutes,
+      startTime: props.startTime ?? null,
       status: props.status,
       description: props.description,
       equipment: props.equipment,
@@ -161,6 +168,10 @@ export class Session {
 
   get durationMinutes(): number {
     return this.state.durationMinutes;
+  }
+
+  get startTime(): string | null {
+    return this.state.startTime;
   }
 
   get status(): SessionStatus {
@@ -213,6 +224,8 @@ export class Session {
       date: changes.date ?? current.date,
       disciplineTypeKey: changes.disciplineTypeKey ?? current.disciplineTypeKey,
       durationMinutes: changes.durationMinutes ?? current.durationMinutes,
+      startTime:
+        changes.startTime === undefined ? current.startTime : changes.startTime,
       status: changes.status ?? current.status,
       description:
         changes.description === undefined
@@ -329,6 +342,7 @@ function validateFields(input: SessionFieldsInput): SessionFields {
     date: new Date(input.date.getTime()),
     disciplineTypeKey,
     durationMinutes: input.durationMinutes,
+    startTime: normalizeStartTime(input.startTime),
     status: input.status,
     description: normalizeText(
       input.description,
@@ -364,6 +378,18 @@ function normalizeText(
     throw new InvalidSessionError(`${label} dépasse ${maxLength} caractères`);
   }
   return trimmed;
+}
+
+const START_TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function normalizeStartTime(value: string | null): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (!START_TIME_PATTERN.test(value)) {
+    throw new InvalidSessionError("l'heure de début doit être au format HH:MM");
+  }
+  return value;
 }
 
 function isDuration(value: number): boolean {
@@ -411,6 +437,13 @@ function changedEntries(
       changedAt: now,
       field: 'disciplineTypeKey',
       previousValue: current.disciplineTypeKey,
+    });
+  }
+  if (next.startTime !== current.startTime) {
+    entries.push({
+      changedAt: now,
+      field: 'startTime',
+      previousValue: current.startTime,
     });
   }
   if (next.durationMinutes !== current.durationMinutes) {

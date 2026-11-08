@@ -266,6 +266,12 @@
             },
             "maxItems": 30,
             "type": "array"
+          },
+          "startTime": {
+            "description": "Heure de début (HH:MM), facultative",
+            "example": "18:00",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
@@ -1213,6 +1219,12 @@
             },
             "type": "array"
           },
+          "startTime": {
+            "description": "Heure de début (HH:MM), absente si la séance n’a pas d’heure",
+            "example": "18:00",
+            "nullable": true,
+            "type": "string"
+          },
           "status": {
             "enum": [
               "planifiee",
@@ -1228,6 +1240,7 @@
           "date",
           "disciplineTypeKey",
           "durationMinutes",
+          "startTime",
           "status",
           "modifiedManually",
           "description",
@@ -1657,6 +1670,12 @@
             "description": "Nouveau matériel, absent = inchangé, null = effacé",
             "example": "Palmes",
             "maxLength": 1000,
+            "nullable": true,
+            "type": "string"
+          },
+          "startTime": {
+            "description": "Heure de début (HH:MM) ; null efface l’heure, absent = inchangée",
+            "example": "18:00",
             "nullable": true,
             "type": "string"
           },

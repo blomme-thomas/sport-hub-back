@@ -5,6 +5,7 @@ import {
   IsArray,
   IsInt,
   IsOptional,
+  Matches,
   IsString,
   Max,
   MaxLength,
@@ -47,6 +48,16 @@ export class CreateSessionRequestDto {
   @Min(1)
   @Max(1440)
   durationMinutes!: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    example: '18:00',
+    description: 'Heure de début (HH:MM), facultative',
+  })
+  @IsOptional()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+  startTime?: string | null;
 
   @ApiPropertyOptional({
     type: String,
