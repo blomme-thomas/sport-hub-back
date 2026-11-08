@@ -45,6 +45,10 @@ class FakeTrainingActivityReadModel implements ITrainingActivityReadModel {
     this.windows.push(window);
     return Promise.resolve(this.facts);
   }
+
+  findDashboardFacts(): Promise<[]> {
+    return Promise.resolve([]);
+  }
 }
 
 describe('GetTrainingStatsUseCase', () => {

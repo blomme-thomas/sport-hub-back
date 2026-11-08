@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { Test } from '@nestjs/testing';
+import { GetDashboardStatsUseCase } from '../../../application/use-cases/get-dashboard-stats.use-case.js';
 import { GetTrainingStatsUseCase } from '../../../application/use-cases/get-training-stats.use-case.js';
 import { GetTrainingStatsRequestDto } from '../dtos/get-training-stats.request.dto.js';
 import { TrainingStatsResponseDto } from '../dtos/training-stats.response.dto.js';
@@ -57,7 +58,13 @@ describe('TrainingStatsController', () => {
     execute.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [TrainingStatsController],
-      providers: [{ provide: GetTrainingStatsUseCase, useValue: { execute } }],
+      providers: [
+        { provide: GetTrainingStatsUseCase, useValue: { execute } },
+        {
+          provide: GetDashboardStatsUseCase,
+          useValue: { execute: vi.fn() },
+        },
+      ],
     }).compile();
     controller = moduleRef.get(TrainingStatsController);
   });

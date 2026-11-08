@@ -2,14 +2,33 @@ import { isDeepStrictEqual } from 'node:util';
 import { InvalidActivityError } from '../errors/invalid-activity.error.js';
 import type { GarminActivityId } from '../value-objects/garmin-activity-id.vo.js';
 
+export interface ActivityMetrics {
+  calories: number | null;
+  elevationGainMeters: number | null;
+  averageHeartRate: number | null;
+  /** Cinq zones cardiaques, de la zone 1 à la zone 5. Unité supposée en secondes, non confirmée par la spec Garmin. */
+  hrTimeInZone: readonly (number | null)[];
+}
+
+export const EMPTY_ACTIVITY_METRICS: ActivityMetrics = {
+  calories: null,
+  elevationGainMeters: null,
+  averageHeartRate: null,
+  hrTimeInZone: [null, null, null, null, null],
+};
+
 export interface ActivityProps {
   garminActivityId: GarminActivityId;
   type: string;
   startedAt: Date;
   durationSeconds: number;
   distanceMeters: number | null;
+  metrics?: ActivityMetrics;
   sourcePayload: unknown;
 }
+
+const isAbsentOrNonNegative = (value: number | null): boolean =>
+  value === null || (Number.isFinite(value) && value >= 0);
 
 export class Activity {
   private constructor(private readonly props: ActivityProps) {}
@@ -39,11 +58,29 @@ export class Activity {
         'la distance doit être un nombre positif ou nul',
       );
     }
-    return new Activity({ ...props });
+    const metrics = props.metrics ?? EMPTY_ACTIVITY_METRICS;
+    const metricValues = [
+      metrics.calories,
+      metrics.elevationGainMeters,
+      metrics.averageHeartRate,
+      ...metrics.hrTimeInZone,
+    ];
+    if (
+      metrics.hrTimeInZone.length !== 5 ||
+      !metricValues.every(isAbsentOrNonNegative)
+    ) {
+      throw new InvalidActivityError(
+        'les indicateurs doivent être absents ou des nombres positifs ou nuls',
+      );
+    }
+    return new Activity({ ...props, metrics });
   }
 
   static reconstitute(props: ActivityProps): Activity {
-    return new Activity({ ...props });
+    return new Activity({
+      ...props,
+      metrics: props.metrics ?? EMPTY_ACTIVITY_METRICS,
+    });
   }
 
   get garminActivityId(): GarminActivityId {
@@ -64,6 +101,10 @@ export class Activity {
 
   get distanceMeters(): number | null {
     return this.props.distanceMeters;
+  }
+
+  get metrics(): ActivityMetrics {
+    return this.props.metrics ?? EMPTY_ACTIVITY_METRICS;
   }
 
   get sourcePayload(): unknown {

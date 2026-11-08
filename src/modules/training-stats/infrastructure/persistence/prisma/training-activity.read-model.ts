@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../core/prisma/prisma.service.js';
 import type { Prisma } from '../../../../../core/prisma/generated/client.js';
 import type {
+  DashboardActivityFact,
   ITrainingActivityReadModel,
   TrainingActivityFact,
   TrainingActivityWindow,
@@ -29,6 +30,45 @@ export class PrismaTrainingActivityReadModel implements ITrainingActivityReadMod
       startedAt: record.startedAt,
       durationSeconds: record.durationSeconds,
       distanceMeters: record.distanceMeters,
+    }));
+  }
+
+  async findDashboardFacts(
+    window: TrainingActivityWindow,
+  ): Promise<DashboardActivityFact[]> {
+    const records = await this.prisma.activity.findMany({
+      where: PrismaTrainingActivityReadModel.toWhere({ ...window, type: null }),
+      select: {
+        type: true,
+        startedAt: true,
+        durationSeconds: true,
+        calories: true,
+        elevationGainMeters: true,
+        averageHeartRate: true,
+        hrTimeInZone1: true,
+        hrTimeInZone2: true,
+        hrTimeInZone3: true,
+        hrTimeInZone4: true,
+        hrTimeInZone5: true,
+      },
+      orderBy: { startedAt: 'asc' },
+    });
+    return records.map((record) => ({
+      type: record.type,
+      startedAt: record.startedAt,
+      durationSeconds: record.durationSeconds,
+      metrics: {
+        calories: record.calories,
+        elevationGainMeters: record.elevationGainMeters,
+        averageHeartRate: record.averageHeartRate,
+        hrTimeInZone: [
+          record.hrTimeInZone1,
+          record.hrTimeInZone2,
+          record.hrTimeInZone3,
+          record.hrTimeInZone4,
+          record.hrTimeInZone5,
+        ],
+      },
     }));
   }
 

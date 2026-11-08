@@ -10,6 +10,14 @@ function record(overrides: Record<string, unknown> = {}) {
     startedAt: new Date('2026-05-01T06:30:00.000Z'),
     durationSeconds: 3600.5,
     distanceMeters: 10250.75 as number | null,
+    calories: 850 as number | null,
+    elevationGainMeters: 120 as number | null,
+    averageHeartRate: 148 as number | null,
+    hrTimeInZone1: 600 as number | null,
+    hrTimeInZone2: 1800 as number | null,
+    hrTimeInZone3: null as number | null,
+    hrTimeInZone4: null as number | null,
+    hrTimeInZone5: null as number | null,
     rawPayload: { activityId: 12345678901, name: 'Sortie matinale' },
     createdAt: new Date('2026-05-02T00:00:00.000Z'),
     updatedAt: new Date('2026-05-02T00:00:00.000Z'),
@@ -30,6 +38,17 @@ describe('ActivityMapper', () => {
       expect(activity.sourcePayload).toEqual({
         activityId: 12345678901,
         name: 'Sortie matinale',
+      });
+    });
+
+    it('reprend les indicateurs et laisse à null ceux qui sont absents', () => {
+      const activity = ActivityMapper.toDomain(record());
+
+      expect(activity.metrics).toEqual({
+        calories: 850,
+        elevationGainMeters: 120,
+        averageHeartRate: 148,
+        hrTimeInZone: [600, 1800, null, null, null],
       });
     });
 

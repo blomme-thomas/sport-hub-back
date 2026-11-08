@@ -5,12 +5,22 @@ import { GarminActivityId } from '../../domain/value-objects/garmin-activity-id.
 
 const GMT_TIMESTAMP = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 
+const optionalMetric = z.number().nonnegative().nullish().catch(null);
+
 const garminActivitySchema = z.object({
   activityId: z.number().int().safe().nonnegative(),
   activityType: z.object({ typeKey: z.string().min(1) }),
   startTimeGMT: z.string().regex(GMT_TIMESTAMP),
   duration: z.number().min(0),
   distance: z.number().min(0).nullish(),
+  calories: optionalMetric,
+  elevationGain: optionalMetric,
+  averageHR: optionalMetric,
+  hrTimeInZone_1: optionalMetric,
+  hrTimeInZone_2: optionalMetric,
+  hrTimeInZone_3: optionalMetric,
+  hrTimeInZone_4: optionalMetric,
+  hrTimeInZone_5: optionalMetric,
 });
 
 export type GarminActivityTranslation =
@@ -35,6 +45,18 @@ export class GarminConnectExternalMapper {
         startedAt: new Date(`${data.startTimeGMT.replace(' ', 'T')}Z`),
         durationSeconds: data.duration,
         distanceMeters: data.distance ?? null,
+        metrics: {
+          calories: data.calories ?? null,
+          elevationGainMeters: data.elevationGain ?? null,
+          averageHeartRate: data.averageHR ?? null,
+          hrTimeInZone: [
+            data.hrTimeInZone_1 ?? null,
+            data.hrTimeInZone_2 ?? null,
+            data.hrTimeInZone_3 ?? null,
+            data.hrTimeInZone_4 ?? null,
+            data.hrTimeInZone_5 ?? null,
+          ],
+        },
         sourcePayload: item,
       });
       return { status: 'ok', activity };
