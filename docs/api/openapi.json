@@ -1,6 +1,44 @@
 {
   "components": {
     "schemas": {
+      "ActivityCommentResponseDto": {
+        "properties": {
+          "activityId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "generatedAt": {
+            "example": "2026-11-12T20:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "model": {
+            "example": "claude-sonnet-5-5",
+            "nullable": true,
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "ia",
+              "generique"
+            ],
+            "example": "ia",
+            "type": "string"
+          },
+          "text": {
+            "example": "Bonne sortie, l'allure est restée dans la zone visée.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activityId",
+          "text",
+          "source",
+          "model",
+          "generatedAt"
+        ],
+        "type": "object"
+      },
       "ActivityListResponseDto": {
         "properties": {
           "items": {
@@ -699,7 +737,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -737,7 +775,12 @@
           "PLANNING_PERIOD_INVALID",
           "PLANNING_INVALID_OUTPUT",
           "PLANNING_GENERATION_UNAVAILABLE",
-          "PLANNING_GENERATION_ACCESS_DENIED"
+          "PLANNING_GENERATION_ACCESS_DENIED",
+          "ACTIVITY_NOT_FOUND",
+          "ACTIVITY_COMMENT_NOT_FOUND",
+          "ACTIVITY_COMMENT_INVALID_OUTPUT",
+          "ACTIVITY_COMMENT_UNAVAILABLE",
+          "ACTIVITY_COMMENT_ACCESS_DENIED"
         ],
         "type": "string"
       },
@@ -763,7 +806,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -1809,6 +1852,150 @@
         "summary": "Liste paginée des activités synchronisées, de la plus récente à la plus ancienne",
         "tags": [
           "garmin-sync"
+        ]
+      }
+    },
+    "/api/activities/{id}/comment": {
+      "get": {
+        "operationId": "activityCommentsGet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityCommentResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Renvoie le commentaire stocké de l’activité, sans appel au modèle",
+        "tags": [
+          "conseils"
+        ]
+      },
+      "post": {
+        "operationId": "activityCommentsGenerate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityCommentResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Génère le commentaire d'une activité, ou le régénère en remplaçant le précédent. Un seul appel au modèle ; sans séance rapprochée, commentaire générique sans appel",
+        "tags": [
+          "conseils"
         ]
       }
     },

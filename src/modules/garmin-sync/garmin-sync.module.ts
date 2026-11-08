@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpClientModule } from '../../core/http/http-client.module.js';
 import { DisciplinesModule } from '../disciplines/index.js';
+import { GetActivityUseCase } from './application/use-cases/get-activity.use-case.js';
 import { ListActivitiesUseCase } from './application/use-cases/list-activities.use-case.js';
 import { SyncGarminActivitiesUseCase } from './application/use-cases/sync-garmin-activities.use-case.js';
 import { ACTIVITY_LIST_READ_MODEL } from './domain/ports/outbound/activity-list.read-model.port.js';
@@ -23,6 +24,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
   providers: [
     SyncGarminActivitiesUseCase,
     ListActivitiesUseCase,
+    GetActivityUseCase,
     GarminSyncScheduler,
     GarminPersonalApiTokenProvider,
     { provide: GARMIN_CONNECT_CLIENT, useClass: GarminConnectAdapter },
@@ -33,6 +35,10 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
       useClass: PrismaActivityListReadModel,
     },
   ],
-  exports: [GarminPersonalApiTokenProvider, ListActivitiesUseCase],
+  exports: [
+    GarminPersonalApiTokenProvider,
+    ListActivitiesUseCase,
+    GetActivityUseCase,
+  ],
 })
 export class GarminSyncModule {}
