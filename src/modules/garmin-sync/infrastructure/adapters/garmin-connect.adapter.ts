@@ -9,7 +9,10 @@ import { HttpClientService } from '../../../../core/http/http-client.service.js'
 import type { Activity } from '../../domain/entities/activity.entity.js';
 import { GarminAccessDeniedError } from '../../domain/errors/garmin-access-denied.error.js';
 import { GarminUnavailableError } from '../../domain/errors/garmin-unavailable.error.js';
-import type { IGarminConnectClient } from '../../domain/ports/outbound/garmin-connect-client.port.js';
+import type {
+  HeartRateZonesConfig,
+  IGarminConnectClient,
+} from '../../domain/ports/outbound/garmin-connect-client.port.js';
 import { GarminAuthenticationError } from './garmin-authentication.error.js';
 import { GarminPersonalApiTokenProvider } from './garmin-personal-api-token.provider.js';
 import { GarminConnectExternalMapper } from '../mappers/garmin-connect.external-mapper.js';
@@ -17,7 +20,21 @@ import { GarminConnectExternalMapper } from '../mappers/garmin-connect.external-
 const TARGET = 'garmin-personal-api';
 const ACTIVITIES_PATH = '/activitylist-service/activities/search/activities';
 const SETTINGS_PATH = '/userprofile-service/userprofile/settings';
+const HEART_RATE_ZONES_PATH = '/biometric-service/heartRateZones/v2';
 const settingsSchema = z.object({ displayName: z.string().nullish() });
+const heartRateZonesSchema = z.array(
+  z.object({
+    sport: z.string().nullish(),
+    trainingMethod: z.string().nullish(),
+    maxHeartRateUsed: z.number().int().nullish(),
+    restingHeartRateUsed: z.number().int().nullish(),
+    zone1Floor: z.number().int().nullish(),
+    zone2Floor: z.number().int().nullish(),
+    zone3Floor: z.number().int().nullish(),
+    zone4Floor: z.number().int().nullish(),
+    zone5Floor: z.number().int().nullish(),
+  }),
+);
 const PAGE_SIZE = 99;
 const MAX_PAGES = 50;
 const DEFAULT_HISTORY_DAYS = 365;
@@ -81,6 +98,31 @@ export class GarminConnectAdapter implements IGarminConnectClient {
       throw new GarminUnavailableError();
     }
     return parsed.data.displayName?.trim() || null;
+  }
+
+  async fetchHeartRateZones(): Promise<HeartRateZonesConfig | null> {
+    const query = new URLSearchParams({ generateDefaults: 'false' });
+    const url = `${this.config.personalApiBaseUrl}${HEART_RATE_ZONES_PATH}?${query.toString()}`;
+    const parsed = heartRateZonesSchema.safeParse(await this.getJson(url));
+    if (!parsed.success) {
+      throw new GarminUnavailableError();
+    }
+    const config = parsed.data.find((entry) => entry.sport === 'DEFAULT');
+    if (!config) {
+      return null;
+    }
+    return {
+      trainingMethod: config.trainingMethod ?? null,
+      maxHeartRateUsed: config.maxHeartRateUsed ?? null,
+      restingHeartRateUsed: config.restingHeartRateUsed ?? null,
+      zoneFloors: [
+        config.zone1Floor ?? null,
+        config.zone2Floor ?? null,
+        config.zone3Floor ?? null,
+        config.zone4Floor ?? null,
+        config.zone5Floor ?? null,
+      ],
+    };
   }
 
   private async getJson(url: string): Promise<unknown> {
