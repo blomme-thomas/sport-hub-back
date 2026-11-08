@@ -4,6 +4,7 @@ import { GarminSyncModule } from '../garmin-sync/index.js';
 import { CreateSessionUseCase } from './application/use-cases/create-session.use-case.js';
 import { DeleteSessionUseCase } from './application/use-cases/delete-session.use-case.js';
 import { GetSessionUseCase } from './application/use-cases/get-session.use-case.js';
+import { GetSessionForActivityUseCase } from './application/use-cases/get-session-for-activity.use-case.js';
 import { LinkSessionActivityUseCase } from './application/use-cases/link-session-activity.use-case.js';
 import { ListSessionsUseCase } from './application/use-cases/list-sessions.use-case.js';
 import { ReconcileSessionsUseCase } from './application/use-cases/reconcile-sessions.use-case.js';
@@ -26,6 +27,7 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     CreateSessionUseCase,
     ListSessionsUseCase,
     GetSessionUseCase,
+    GetSessionForActivityUseCase,
     UpdateSessionUseCase,
     ReplaceSessionModulesUseCase,
     DeleteSessionUseCase,
@@ -37,6 +39,10 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     { provide: ACTIVITY_CATALOG, useClass: GarminActivityCatalogAdapter },
     { provide: SEANCES_CLOCK, useValue: () => new Date() },
   ],
-  exports: [ListSessionsUseCase, CreateSessionUseCase],
+  exports: [
+    ListSessionsUseCase,
+    CreateSessionUseCase,
+    GetSessionForActivityUseCase,
+  ],
 })
 export class SeancesModule {}

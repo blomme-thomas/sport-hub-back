@@ -26,6 +26,9 @@ export interface IActivityListReadModel {
    * `from` et `to` sont inclusifs sur la date de début ; `type` est une correspondance exacte.
    */
   list(criteria: ActivityListCriteria): Promise<ActivityListPage>;
+
+  /** Renvoie l'activité portant cet identifiant, ou null si elle n'est pas enregistrée. */
+  findById(id: string): Promise<ActivityListItem | null>;
 }
 
 export const ACTIVITY_LIST_READ_MODEL = Symbol('ACTIVITY_LIST_READ_MODEL');

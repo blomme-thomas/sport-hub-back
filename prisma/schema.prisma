@@ -122,3 +122,13 @@ model SessionActivityLink {
 
   @@map("session_activity_links")
 }
+
+model ActivityComment {
+  activityId  String   @id @map("activity_id") @db.Uuid
+  text        String
+  source      String
+  model       String?
+  generatedAt DateTime @map("generated_at") @db.Timestamptz(3)
+
+  @@map("activity_comments")
+}

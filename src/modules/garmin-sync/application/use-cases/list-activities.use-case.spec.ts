@@ -35,6 +35,10 @@ class FakeActivityListReadModel implements IActivityListReadModel {
     this.criteria.push(criteria);
     return Promise.resolve(this.page);
   }
+
+  findById(): Promise<ActivityListItem | null> {
+    return Promise.resolve(null);
+  }
 }
 
 describe('ListActivitiesUseCase', () => {

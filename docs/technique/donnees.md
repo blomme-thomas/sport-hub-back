@@ -135,7 +135,9 @@ Couvert par `test/discipline-repository.e2e-spec.ts`.
 
 - `session_activity_links` : `session_id` (clé primaire, FK vers `sessions`, suppression en cascade), `activity_id` (UUID unique, sans clé étrangère vers `activities` : la donnée reste dans `garmin-sync`), `origin` (`automatique` ou `manuel`, contrôle SQL), `linked_at`.
 
-Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`. Couvert par `test/session-repository.e2e-spec.ts`. Règles métier dans [seances](contextes/seances.md).
+Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`, `20261112120000_create_activity_comments`.
+
+- `activity_comments` : `activity_id` (clé primaire UUID, sans clé étrangère : la donnée reste dans `garmin-sync`), `text`, `source` (`ia` ou `generique`, contrôle SQL), `model` (NULL pour un commentaire générique), `generated_at`. Un seul commentaire par activité, remplacé à la régénération. Règles dans [conseils](contextes/conseils.md). Couvert par `test/session-repository.e2e-spec.ts`. Règles métier dans [seances](contextes/seances.md).
 
 ## Accès depuis garmin-sync
 

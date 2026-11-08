@@ -9,6 +9,7 @@ import { TrainingStatsModule } from './modules/training-stats/training-stats.mod
 import { WorkoutGenerationModule } from './modules/workout-generation/workout-generation.module.js';
 import { SeancesModule } from './modules/seances/seances.module.js';
 import { PlanificationModule } from './modules/planification/planification.module.js';
+import { ConseilsModule } from './modules/conseils/conseils.module.js';
 import { PrismaModule } from './core/prisma/prisma.module.js';
 
 @Module({
@@ -24,6 +25,7 @@ import { PrismaModule } from './core/prisma/prisma.module.js';
     DisciplinesModule,
     SeancesModule,
     PlanificationModule,
+    ConseilsModule,
   ],
 })
 export class AppModule {}

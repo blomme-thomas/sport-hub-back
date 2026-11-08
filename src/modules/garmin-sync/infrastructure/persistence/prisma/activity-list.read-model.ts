@@ -42,6 +42,21 @@ export class PrismaActivityListReadModel implements IActivityListReadModel {
     return { items, total };
   }
 
+  async findById(id: string): Promise<ActivityListItem | null> {
+    const record = await this.prisma.activity.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        garminActivityId: true,
+        type: true,
+        startedAt: true,
+        durationSeconds: true,
+        distanceMeters: true,
+      },
+    });
+    return record === null ? null : { ...record };
+  }
+
   private static toWhere(
     criteria: ActivityListCriteria,
   ): Prisma.ActivityWhereInput {
