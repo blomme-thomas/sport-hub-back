@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PlanningInvalidOutputError } from '../../domain/errors/planning-invalid-output.error.js';
-import { MODULE_TYPES } from '../../../seances/domain/value-objects/module-type.vo.js';
+import { MODULE_TYPES } from '../../../seances/index.js';
 import type { PlannedSession } from '../../domain/value-objects/planned-session.vo.js';
 
 const ZONE_RANGE_SCHEMA = z.object({

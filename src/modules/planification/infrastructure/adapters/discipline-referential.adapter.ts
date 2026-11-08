@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ListDisciplinesUseCase } from '../../../disciplines/application/use-cases/list-disciplines.use-case.js';
+import { ListDisciplinesUseCase } from '../../../disciplines/index.js';
 import type {
   IDisciplineReferential,
   PlanningDiscipline,

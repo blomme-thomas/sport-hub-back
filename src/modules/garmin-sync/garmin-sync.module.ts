@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpClientModule } from '../../core/http/http-client.module.js';
-import { DisciplinesModule } from '../disciplines/disciplines.module.js';
+import { DisciplinesModule } from '../disciplines/index.js';
 import { ListActivitiesUseCase } from './application/use-cases/list-activities.use-case.js';
 import { SyncGarminActivitiesUseCase } from './application/use-cases/sync-garmin-activities.use-case.js';
 import { ACTIVITY_LIST_READ_MODEL } from './domain/ports/outbound/activity-list.read-model.port.js';

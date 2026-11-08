@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RecordDisciplineAppearancesUseCase } from '../../../disciplines/application/use-cases/record-discipline-appearances.use-case.js';
+import { RecordDisciplineAppearancesUseCase } from '../../../disciplines/index.js';
 import type { IDisciplineRegistry } from '../../domain/ports/outbound/discipline-registry.port.js';
 
 @Injectable()

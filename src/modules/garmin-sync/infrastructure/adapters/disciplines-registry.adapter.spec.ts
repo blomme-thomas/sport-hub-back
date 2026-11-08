@@ -1,4 +1,4 @@
-import type { RecordDisciplineAppearancesUseCase } from '../../../disciplines/application/use-cases/record-discipline-appearances.use-case.js';
+import type { RecordDisciplineAppearancesUseCase } from '../../../disciplines/index.js';
 import { DisciplinesRegistryAdapter } from './disciplines-registry.adapter.js';
 
 describe('DisciplinesRegistryAdapter', () => {

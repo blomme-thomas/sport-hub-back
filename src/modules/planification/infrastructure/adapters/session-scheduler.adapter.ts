@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSessionUseCase } from '../../../seances/application/use-cases/create-session.use-case.js';
+import { CreateSessionUseCase } from '../../../seances/index.js';
 import type {
   IPlanningScheduler,
   ScheduledSession,

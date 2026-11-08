@@ -22,7 +22,7 @@ import {
   WORKOUT_OUTPUT_SCHEMA,
   type ClaudeReply,
 } from '../mappers/claude-workout-generator.external-mapper.js';
-import { ANTHROPIC_CLIENT } from './anthropic-client.provider.js';
+import { ANTHROPIC_CLIENT } from '../../../../core/anthropic/anthropic-client.provider.js';
 import {
   WORKOUT_PROMPT_VERSION,
   buildSystemPrompt,

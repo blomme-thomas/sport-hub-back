@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DisciplineExistsUseCase } from '../../../disciplines/application/use-cases/discipline-exists.use-case.js';
+import { DisciplineExistsUseCase } from '../../../disciplines/index.js';
 import type { IDisciplineCatalog } from '../../domain/ports/outbound/discipline-catalog.port.js';
 
 @Injectable()
