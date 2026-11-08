@@ -12,7 +12,13 @@ import { GarminUnavailableError } from '../../domain/errors/garmin-unavailable.e
 import type {
   HeartRateZonesConfig,
   IGarminConnectClient,
+  RecoveryDay,
+  RecoveryRange,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
+import {
+  GarminRecoveryExternalMapper,
+  enumerateDays,
+} from '../mappers/garmin-recovery.external-mapper.js';
 import { GarminAuthenticationError } from './garmin-authentication.error.js';
 import { GarminPersonalApiTokenProvider } from './garmin-personal-api-token.provider.js';
 import { GarminConnectExternalMapper } from '../mappers/garmin-connect.external-mapper.js';
@@ -21,6 +27,11 @@ const TARGET = 'garmin-personal-api';
 const ACTIVITIES_PATH = '/activitylist-service/activities/search/activities';
 const SETTINGS_PATH = '/userprofile-service/userprofile/settings';
 const HEART_RATE_ZONES_PATH = '/biometric-service/heartRateZones/v2';
+const SLEEP_SUMMARIES_PATH = '/sleep-service/sleep/dailySleepSummariesByDate';
+const HRV_RANGE_PATH = '/hrv-service/hrv/daily';
+const BODY_BATTERY_REPORT_PATH =
+  '/wellness-service/wellness/bodyBattery/reports/daily';
+const DAILY_HEART_RATE_PATH = '/wellness-service/wellness/dailyHeartRate';
 const settingsSchema = z.object({ displayName: z.string().nullish() });
 const heartRateZonesSchema = z.array(
   z.object({
@@ -123,6 +134,36 @@ export class GarminConnectAdapter implements IGarminConnectClient {
         config.zone5Floor ?? null,
       ],
     };
+  }
+
+  async fetchRecoveryDays(range: RecoveryRange): Promise<RecoveryDay[]> {
+    const { from, to } = range;
+    const days = enumerateDays(from, to);
+    const sleep = await this.getJson(
+      `${this.config.personalApiBaseUrl}${SLEEP_SUMMARIES_PATH}?${new URLSearchParams({ startDate: from, endDate: to }).toString()}`,
+    );
+    const hrv = await this.getJson(
+      `${this.config.personalApiBaseUrl}${HRV_RANGE_PATH}/${from}/${to}`,
+    );
+    const bodyBattery = await this.getJson(
+      `${this.config.personalApiBaseUrl}${BODY_BATTERY_REPORT_PATH}?${new URLSearchParams({ startDate: from, endDate: to }).toString()}`,
+    );
+    const restingHeartRateByDate = new Map<string, unknown>();
+    for (const day of days) {
+      const query = new URLSearchParams({ date: day });
+      restingHeartRateByDate.set(
+        day,
+        await this.getJson(
+          `${this.config.personalApiBaseUrl}${DAILY_HEART_RATE_PATH}?${query.toString()}`,
+        ),
+      );
+    }
+    return GarminRecoveryExternalMapper.combine(range, {
+      sleep,
+      hrv,
+      bodyBattery,
+      restingHeartRateByDate,
+    });
   }
 
   private async getJson(url: string): Promise<unknown> {

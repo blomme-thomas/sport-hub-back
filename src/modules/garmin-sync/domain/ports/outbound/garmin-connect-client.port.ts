@@ -25,6 +25,32 @@ export interface IGarminConnectClient {
    * @throws GarminUnavailableError si Garmin est en panne ou répond de façon inattendue.
    */
   fetchHeartRateZones(): Promise<HeartRateZonesConfig | null>;
+
+  /**
+   * Renvoie les données de récupération de chaque jour de la plage (dates incluses, format YYYY-MM-DD), dans l'ordre chronologique.
+   * Un jour sans donnée Garmin (y compris un 204) a ses indicateurs à null, jamais à zéro.
+   *
+   * @throws GarminAccessDeniedError si Garmin refuse la clé ou le jeton.
+   * @throws GarminUnavailableError si Garmin est en panne ou répond de façon inattendue.
+   */
+  fetchRecoveryDays(range: RecoveryRange): Promise<RecoveryDay[]>;
+}
+
+export interface RecoveryRange {
+  /** Premier jour inclus, YYYY-MM-DD. */
+  readonly from: string;
+  /** Dernier jour inclus, YYYY-MM-DD. */
+  readonly to: string;
+}
+
+export interface RecoveryDay {
+  readonly date: string;
+  readonly sleepSeconds: number | null;
+  readonly hrvLastNightAvg: number | null;
+  readonly hrvWeeklyAvg: number | null;
+  readonly bodyBatteryCharged: number | null;
+  readonly bodyBatteryDrained: number | null;
+  readonly restingHeartRate: number | null;
 }
 
 export interface HeartRateZonesConfig {
