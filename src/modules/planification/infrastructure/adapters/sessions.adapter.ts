@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ListSessionsUseCase } from '../../../seances/application/use-cases/list-sessions.use-case.js';
+import { ListSessionsUseCase } from '../../../seances/index.js';
 import type { PlanningPeriod } from '../../domain/ports/outbound/slot-occurrences.provider.port.js';
 import type { ISessionsProvider } from '../../domain/ports/outbound/sessions.provider.port.js';
 import type { SessionSnapshot } from '../../domain/services/free-slot-capacity.calculator.js';

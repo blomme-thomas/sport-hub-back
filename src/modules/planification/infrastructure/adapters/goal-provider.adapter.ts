@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GetGoalUseCase } from '../../../objectifs/application/use-cases/get-goal.use-case.js';
+import { GetGoalUseCase } from '../../../objectifs/index.js';
 import type {
   IGoalProvider,
   PlanningGoal,

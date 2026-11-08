@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { DisciplinesModule } from '../disciplines/disciplines.module.js';
-import { GarminSyncModule } from '../garmin-sync/garmin-sync.module.js';
+import { DisciplinesModule } from '../disciplines/index.js';
+import { GarminSyncModule } from '../garmin-sync/index.js';
 import { CreateSessionUseCase } from './application/use-cases/create-session.use-case.js';
 import { DeleteSessionUseCase } from './application/use-cases/delete-session.use-case.js';
 import { GetSessionUseCase } from './application/use-cases/get-session.use-case.js';

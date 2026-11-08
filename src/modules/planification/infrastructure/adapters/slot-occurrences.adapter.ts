@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ListSlotOccurrencesUseCase } from '../../../creneaux/application/use-cases/list-slot-occurrences.use-case.js';
+import { ListSlotOccurrencesUseCase } from '../../../creneaux/index.js';
 import type {
   ISlotOccurrencesProvider,
   PlanningPeriod,

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { PeriodStatsDto } from '../../../training-stats/application/dtos/training-stats.dto.js';
-import { GetTrainingStatsUseCase } from '../../../training-stats/application/use-cases/get-training-stats.use-case.js';
+import type { PeriodStatsDto } from '../../../training-stats/index.js';
+import { GetTrainingStatsUseCase } from '../../../training-stats/index.js';
 import {
   type IRecentTrainingContextProvider,
   type RecentTrainingContext,

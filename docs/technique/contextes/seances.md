@@ -71,7 +71,7 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 
 ## Décisions
 
-- La discipline est une clé du référentiel et non une entité partagée : le module `seances` ne porte pas le libellé, il dépend d'un port (`IDisciplineCatalog`) implémenté par une ACL vers `disciplines`. Le garde-fou `deps:check` signale cette dépendance en avertissement `modules-isolated`, comme pour les autres ACL du dépôt.
+- La discipline est une clé du référentiel et non une entité partagée : le module `seances` ne porte pas le libellé, il dépend d'un port (`IDisciplineCatalog`) implémenté par une ACL vers `disciplines`. Le garde-fou `deps:check` (`modules-public-api-only`) n'accepte cette dépendance que via la façade `disciplines/index.ts`.
 - Les modules sont remplacés en bloc (`PUT`) plutôt qu'ajoutés ou supprimés un par un : l'ordre reste ainsi toujours cohérent, positions comprises.
 
 ## Tests

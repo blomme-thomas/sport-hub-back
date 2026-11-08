@@ -80,12 +80,15 @@ module.exports = {
       to: { path: '^src/modules/[^/]+/presentation/' },
     },
     {
-      name: 'modules-isolated',
-      severity: 'warn',
+      name: 'modules-public-api-only',
+      severity: 'error',
       comment:
-        "Un module n'importe pas l'intérieur d'un autre module sans contrat explicite (instructions/04). Avertissement : le contrat entre modules n'est pas encore défini.",
+        "Un module n'importe d'un autre module que son contrat public, src/modules/<module>/index.ts. Il n'importe jamais ses fichiers internes (use cases, adapters, modules Nest).",
       from: { path: '^src/modules/([^/]+)/' },
-      to: { path: '^src/modules/', pathNot: '^src/modules/$1/' },
+      to: {
+        path: '^src/modules/[^/]+/(?!index\\.ts$)',
+        pathNot: '^src/modules/$1/',
+      },
     },
     {
       name: 'shared-core-no-modules',

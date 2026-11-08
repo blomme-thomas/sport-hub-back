@@ -2,7 +2,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import type { Provider } from '@nestjs/common';
 import anthropicConfig, {
   type AnthropicConfig,
-} from '../../../../core/config/anthropic/anthropic.config.js';
+} from '../config/anthropic/anthropic.config.js';
 
 export const ANTHROPIC_CLIENT = Symbol('ANTHROPIC_CLIENT');
 

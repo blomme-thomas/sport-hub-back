@@ -17,7 +17,7 @@ import type {
   PlanningGenerationInput,
 } from '../../domain/ports/outbound/planning-ai-generator.port.js';
 import type { PlannedSession } from '../../domain/value-objects/planned-session.vo.js';
-import { ANTHROPIC_CLIENT } from '../../../workout-generation/infrastructure/adapters/anthropic-client.provider.js';
+import { ANTHROPIC_CLIENT } from '../../../../core/anthropic/anthropic-client.provider.js';
 import {
   ClaudePlanningExternalMapper,
   type ClaudePlanningReply,

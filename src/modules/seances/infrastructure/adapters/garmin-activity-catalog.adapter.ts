@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ListActivitiesUseCase } from '../../../garmin-sync/application/use-cases/list-activities.use-case.js';
+import { ListActivitiesUseCase } from '../../../garmin-sync/index.js';
 import type {
   ActivityReference,
   IActivityCatalog,

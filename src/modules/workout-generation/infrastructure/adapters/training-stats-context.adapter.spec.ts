@@ -1,10 +1,10 @@
-import type { GetTrainingStatsUseCase } from '../../../training-stats/application/use-cases/get-training-stats.use-case.js';
+import type { GetTrainingStatsUseCase } from '../../../training-stats/index.js';
 import type {
   TrainingStatsDto,
   PeriodStatsDto,
   VolumeDto,
   VariationDto,
-} from '../../../training-stats/application/dtos/training-stats.dto.js';
+} from '../../../training-stats/index.js';
 import { TrainingStatsContextAdapter } from './training-stats-context.adapter.js';
 
 const ZERO_METRIC = { absolute: 0, percent: null };

@@ -5,7 +5,7 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/core/prisma/prisma.service.js';
-import { ANTHROPIC_CLIENT } from './../src/modules/workout-generation/infrastructure/adapters/anthropic-client.provider.js';
+import { ANTHROPIC_CLIENT } from './../src/core/anthropic/anthropic-client.provider.js';
 import { WORKOUT_CONTEXT_CLOCK } from './../src/modules/workout-generation/infrastructure/adapters/training-stats-context.adapter.js';
 
 const PROBLEM_JSON = /application\/problem\+json/;

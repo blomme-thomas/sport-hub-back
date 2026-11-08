@@ -107,7 +107,7 @@ Codes d'erreur : voir [Erreurs de l'API](../erreurs-api.md#codes-du-module-disci
 - **Pas de création manuelle.** Une discipline n'existe que si Garmin l'a fournie.
 - **Ordre de tri** : libellé puis clé, selon la collation de la base ; non testé sur des libellés accentués.
 - **Espaces.** Le retrait des espaces du backfill utilise `\s` de PostgreSQL, alors que le Domain utilise `String.prototype.trim()` : certains espaces Unicode peuvent être traités différemment. Non vérifié.
-- **Couplage.** L'ACL importe le use case `RecordDisciplineAppearancesUseCase` depuis le module `disciplines` ; `deps:check` ne le signale qu'en avertissement (`modules-isolated`). Non vérifié par cette documentation.
+- **Couplage.** L'ACL importe le use case `RecordDisciplineAppearancesUseCase` depuis le module `disciplines` ; l'import passe par la façade `disciplines/index.ts`, seule autorisée par `deps:check` (`modules-public-api-only`).
 
 ## Voir aussi
 

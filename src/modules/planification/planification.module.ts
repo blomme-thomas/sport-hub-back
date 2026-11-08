@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { DisciplinesModule } from '../disciplines/disciplines.module.js';
-import { ObjectifsModule } from '../objectifs/objectifs.module.js';
-import { CreneauxModule } from '../creneaux/creneaux.module.js';
-import { SeancesModule } from '../seances/seances.module.js';
-import { anthropicClientProvider } from '../workout-generation/infrastructure/adapters/anthropic-client.provider.js';
+import { DisciplinesModule } from '../disciplines/index.js';
+import { ObjectifsModule } from '../objectifs/index.js';
+import { CreneauxModule } from '../creneaux/index.js';
+import { SeancesModule } from '../seances/index.js';
+import { anthropicClientProvider } from '../../core/anthropic/anthropic-client.provider.js';
 import { ComputeFreeSlotCapacityUseCase } from './application/use-cases/compute-free-slot-capacity.use-case.js';
 import { GeneratePlanningUseCase } from './application/use-cases/generate-planning.use-case.js';
 import { DISCIPLINE_REFERENTIAL } from './domain/ports/outbound/discipline-referential.port.js';

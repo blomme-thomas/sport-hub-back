@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { TrainingStatsModule } from '../training-stats/training-stats.module.js';
+import { TrainingStatsModule } from '../training-stats/index.js';
 import { GenerateWorkoutUseCase } from './application/use-cases/generate-workout.use-case.js';
 import { RECENT_TRAINING_CONTEXT_PROVIDER } from './domain/ports/outbound/recent-training-context.port.js';
 import { WORKOUT_AI_GENERATOR } from './domain/ports/outbound/workout-ai-generator.port.js';
-import { anthropicClientProvider } from './infrastructure/adapters/anthropic-client.provider.js';
+import { anthropicClientProvider } from '../../core/anthropic/anthropic-client.provider.js';
 import { ClaudeWorkoutGeneratorAdapter } from './infrastructure/adapters/claude-workout-generator.adapter.js';
 import {
   TrainingStatsContextAdapter,
