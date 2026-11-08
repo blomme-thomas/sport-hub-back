@@ -1,6 +1,6 @@
 # Contexte calendrier
 
-Export ICS en lecture seule des séances planifiées, pour consulter le planning depuis l'agenda du téléphone (issue #44). Code : `src/modules/calendrier/`. Usage mono-utilisateur.
+Export ICS en lecture seule des séances planifiées, pour consulter le planning depuis l'agenda du téléphone (issue #44). Les séances avec heure de début sont horodatées (fuseau Europe/Paris). Code : `src/modules/calendrier/`. Usage mono-utilisateur.
 
 Périmètre livré : `GET /api/calendar.ics?from&to`. Hors périmètre : import ICS, écriture vers Garmin ou tout autre agenda.
 
@@ -14,8 +14,9 @@ Périmètre livré : `GET /api/calendar.ics?from&to`. Hors périmètre : import 
 
 - **Période** : `from` et `to` sont inclus. La règle de la lecture des séances s'applique : fin antérieure au début ou période de plus de 366 jours donnent 400 `SESSION_INVALID`.
 - **Séances exportées** : uniquement celles au statut `planifiee`, une entrée par séance. Une séance `realisee` ou `manquee` n'apparaît pas.
-- **Contenu d'une entrée** : `UID` = `<identifiant de la séance>@sport-hub`, `DTSTART` en date seule (événement journée entière), `SUMMARY` = `<discipline> - <durée> min`, `TRANSP:TRANSPARENT`.
-- **Heure** : le planning ne fixe pas d'heure de début. Les événements sont donc journée entière, sans heure inventée. Si une heure est ajoutée plus tard, elle se fera sur la séance, pas ici.
+- **Contenu d'une entrée** : `UID` = `<identifiant de la séance>@sport-hub`, `SUMMARY` = `<discipline> - <durée> min`, `TRANSP:TRANSPARENT`.
+- **Séance avec heure de début** (`startTime`, HH:MM) : événement horodaté, `DTSTART;TZID=Europe/Paris` à l'heure de début et `DTEND;TZID=Europe/Paris` à début + durée. Un bloc `VTIMEZONE` Europe/Paris (heure d'été et d'hiver) est toujours inclus. Une fin qui dépasse minuit tombe le jour suivant.
+- **Séance sans heure** : événement journée entière (`DTSTART;VALUE=DATE`), sans `DTEND`.
 - **Format** : RFC 5545, fins de ligne CRLF, texte échappé (virgule, point-virgule, retour à la ligne), lignes repliées à 75 octets sans couper un caractère multi-octets. `DTSTAMP` est l'instant de génération en UTC.
 - **Lecture seule** : aucune donnée n'est écrite, aucun appel externe.
 
