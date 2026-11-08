@@ -46,6 +46,11 @@ const API_TAGS: readonly { name: string; description: string }[] = [
     description:
       'Séances planifiées composées de modules ordonnés, modifiables et journalisées',
   },
+  {
+    name: 'pauses',
+    description:
+      'Pauses qui suspendent la planification, sans supprimer les séances existantes',
+  },
 ];
 
 /**

@@ -135,7 +135,9 @@ Couvert par `test/discipline-repository.e2e-spec.ts`.
 
 - `session_activity_links` : `session_id` (clé primaire, FK vers `sessions`, suppression en cascade), `activity_id` (UUID unique, sans clé étrangère vers `activities` : la donnée reste dans `garmin-sync`), `origin` (`automatique` ou `manuel`, contrôle SQL), `linked_at`.
 
-Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`, `20261112120000_create_activity_comments`, `20261115120000_create_weekly_reviews`.
+Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`, `20261112120000_create_activity_comments`, `20261115120000_create_weekly_reviews`, `20261116120000_create_pauses`.
+
+- `pauses` : `id` (UUID), `start_date` et `end_date` (DATE, bornes incluses, contrôle SQL `end_date >= start_date`), `reason` (`blessure`, `vacances` ou `autre`, contrôle SQL), `created_at`, `updated_at`. Index sur `(start_date, end_date)`. Règles dans [pauses](contextes/pauses.md).
 
 - `weekly_reviews` : `week` (clé primaire, format `AAAA-Www`, contrôle SQL), `suivi`, `point_attention`, `conseil`, `source` (`ia` ou `generique`, contrôle SQL), `model` (NULL pour un bilan générique), `generated_at`. Un seul bilan par semaine, remplacé à la régénération. Règles dans [conseils](contextes/conseils.md#bilan-hebdomadaire).
 
