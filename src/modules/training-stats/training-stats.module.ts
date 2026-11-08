@@ -25,6 +25,6 @@ import { TrainingStatsController } from './presentation/http/controllers/trainin
       useClass: PrismaTrainingActivityReadModel,
     },
   ],
-  exports: [GetTrainingStatsUseCase],
+  exports: [GetTrainingStatsUseCase, GetDashboardStatsUseCase],
 })
 export class TrainingStatsModule {}

@@ -37,6 +37,19 @@ export class GetDashboardStatsUseCase {
     now: Date = new Date(),
   ): Promise<DashboardStatsResult> {
     const window = DashboardPeriodWindow.resolve(period, now);
+    return { period, window, stats: await this.computeWindow(window) };
+  }
+
+  /**
+   * Calcule les indicateurs pour une fenêtre explicite (courante et précédente), par exemple une semaine ISO.
+   */
+  async executeForWindow(window: DashboardWindow): Promise<DashboardStats> {
+    return this.computeWindow(window);
+  }
+
+  private async computeWindow(
+    window: DashboardWindow,
+  ): Promise<DashboardStats> {
     const [current, previous] = await Promise.all([
       this.readModel.findDashboardFacts({
         from: window.current.from,
@@ -49,10 +62,6 @@ export class GetDashboardStatsUseCase {
         type: null,
       }),
     ]);
-    return {
-      period,
-      window,
-      stats: this.calculator.compute(window, current, previous),
-    };
+    return this.calculator.compute(window, current, previous);
   }
 }

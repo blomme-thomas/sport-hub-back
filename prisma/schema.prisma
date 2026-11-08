@@ -165,3 +165,14 @@ model Pause {
   @@index([startDate, endDate])
   @@map("pauses")
 }
+
+model DashboardAdvice {
+  week          String   @id @db.VarChar(8)
+  text          String
+  source        String
+  model         String?
+  generatedAt   DateTime @map("generated_at") @db.Timestamptz(3)
+  sourceSummary Json     @map("source_summary") @db.JsonB
+
+  @@map("dashboard_advices")
+}
