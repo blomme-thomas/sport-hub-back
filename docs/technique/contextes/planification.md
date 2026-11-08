@@ -39,7 +39,11 @@ Entrées : les occurrences de la période, les séances de la période, et le jo
 
 Les séances n'ayant pas d'heure de début, une séance fixe est comptée comme une durée à retrancher du jour, et non comme un intervalle horaire précis. Un créneau de 2 h contenant une séance fixe d'1 h laisse 60 minutes.
 
-## Ports publics
+
+## Pauses (issue #43)
+
+La génération retire de la période les occurrences de créneaux tombant dans une pause, via le port `IPauseProvider` (adaptateur `PausesPauseProvider`, façade `ListPausesUseCase` du module `pauses`). Une période entièrement en pause ne fait aucun appel au modèle. Règles dans [pauses](pauses.md).
+
 
 Le calcul n'a pas de route HTTP ; la génération est exposée par `POST /api/planning/generate`. Le point d'entrée du calcul est `ComputeFreeSlotCapacityUseCase.execute(query: { from: string; to: string }): Promise<FreeSlotCapacityDto[]>`, exporté par `PlanificationModule`. Les bornes `from` et `to` sont des jours `YYYY-MM-DD` inclus, validés par les modules `creneaux` et `seances` (période inversée ou de plus de 366 jours : erreurs de ces modules).
 
