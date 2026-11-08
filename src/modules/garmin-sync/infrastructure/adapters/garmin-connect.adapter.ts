@@ -61,6 +61,7 @@ export class GarminConnectAdapter implements IGarminConnectClient {
       startDate,
       start: String(offset),
       limit: String(PAGE_SIZE),
+      excludeChildren: 'true',
     });
     const url = `${this.config.personalApiBaseUrl}${ACTIVITIES_PATH}?${query.toString()}`;
 

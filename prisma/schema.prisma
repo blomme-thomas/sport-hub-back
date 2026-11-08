@@ -14,6 +14,14 @@ model Activity {
   startedAt        DateTime @map("started_at") @db.Timestamptz(3)
   durationSeconds  Float    @map("duration_seconds")
   distanceMeters   Float?   @map("distance_meters")
+  calories         Float?
+  elevationGainMeters Float? @map("elevation_gain_meters")
+  averageHeartRate Float?   @map("average_heart_rate")
+  hrTimeInZone1    Float?   @map("hr_time_in_zone_1")
+  hrTimeInZone2    Float?   @map("hr_time_in_zone_2")
+  hrTimeInZone3    Float?   @map("hr_time_in_zone_3")
+  hrTimeInZone4    Float?   @map("hr_time_in_zone_4")
+  hrTimeInZone5    Float?   @map("hr_time_in_zone_5")
   rawPayload       Json     @map("raw_payload") @db.JsonB
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)

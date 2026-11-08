@@ -253,6 +253,12 @@ describe('GarminConnectAdapter', () => {
       expect(query(activityHits[0]).get('startDate')).toBe('2026-01-09');
     });
 
+    it('exclut les activités enfants côté Garmin', async () => {
+      await adapter().fetchActivitiesSince(null);
+
+      expect(query(activityHits[0]).get('excludeChildren')).toBe('true');
+    });
+
     it('recule la date de début d un jour pour absorber le décalage entre heure locale et UTC', async () => {
       await adapter().fetchActivitiesSince(
         new Date('2026-03-01T00:30:00.000+02:00'),
