@@ -7,6 +7,7 @@ import { ObjectifsModule } from './modules/objectifs/objectifs.module.js';
 import { GarminSyncModule } from './modules/garmin-sync/garmin-sync.module.js';
 import { TrainingStatsModule } from './modules/training-stats/training-stats.module.js';
 import { WorkoutGenerationModule } from './modules/workout-generation/workout-generation.module.js';
+import { SeancesModule } from './modules/seances/seances.module.js';
 import { PrismaModule } from './core/prisma/prisma.module.js';
 
 @Module({
@@ -20,6 +21,7 @@ import { PrismaModule } from './core/prisma/prisma.module.js';
     CreneauxModule,
     ObjectifsModule,
     DisciplinesModule,
+    SeancesModule,
   ],
 })
 export class AppModule {}

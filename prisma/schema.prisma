@@ -64,3 +64,50 @@ model Discipline {
 
   @@map("disciplines")
 }
+
+model Session {
+  id                String             @id @default(uuid()) @db.Uuid
+  date              DateTime           @db.Date
+  disciplineTypeKey String             @map("discipline_type_key")
+  durationMinutes   Int                @map("duration_minutes")
+  status            String             @default("planifiee")
+  modifiedManually  Boolean            @default(false) @map("modified_manually")
+  description       String?
+  equipment         String?
+  attentionPoints   String?            @map("attention_points")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  modules           SessionModule[]
+  changeLogs        SessionChangeLog[]
+
+  @@index([date])
+  @@index([status, date])
+  @@map("sessions")
+}
+
+model SessionModule {
+  id              String  @id @default(uuid()) @db.Uuid
+  sessionId       String  @map("session_id") @db.Uuid
+  position        Int
+  type            String
+  durationMinutes Int     @map("duration_minutes")
+  instruction     String
+  targetZones     Json?   @map("target_zones") @db.JsonB
+  perceivedEffort Int?    @map("perceived_effort")
+  session         Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, position])
+  @@map("session_modules")
+}
+
+model SessionChangeLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String   @map("session_id") @db.Uuid
+  changedAt     DateTime @map("changed_at") @db.Timestamptz(3)
+  field         String
+  previousValue String?  @map("previous_value")
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, changedAt])
+  @@map("session_change_logs")
+}

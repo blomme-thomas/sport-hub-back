@@ -41,6 +41,11 @@ const API_TAGS: readonly { name: string; description: string }[] = [
     description:
       'Objectifs sportifs : événements avec format et temps cible, volumes et régularité',
   },
+  {
+    name: 'seances',
+    description:
+      'Séances planifiées composées de modules ordonnés, modifiables et journalisées',
+  },
 ];
 
 /**

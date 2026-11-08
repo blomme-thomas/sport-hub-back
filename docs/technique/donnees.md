@@ -127,6 +127,14 @@ Accès depuis disciplines : port `IDisciplineRepository` (`src/modules/disciplin
 
 Couvert par `test/discipline-repository.e2e-spec.ts`.
 
+## Modèles `Session`, `SessionModule` et `SessionChangeLog` (tables `sessions`, `session_modules`, `session_change_logs`)
+
+- `sessions` : `id` (UUID), `date` (DATE), `discipline_type_key` (clé du référentiel, sans clé étrangère), `duration_minutes` (entier strictement positif), `status` (`planifiee`, `realisee`, `manquee` ; contrôle SQL), `modified_manually` (défaut faux), `description`, `equipment`, `attention_points`, `created_at`, `updated_at`. Index sur `date` et sur `(status, date)`.
+- `session_modules` : `id`, `session_id` (FK vers `sessions`, suppression en cascade), `position` (au moins 1, unique par séance), `type`, `duration_minutes`, `instruction`, `target_zones` (JSONB, objet ou NULL), `perceived_effort` (1 à 10 ou NULL).
+- `session_change_logs` : `id`, `session_id` (FK, suppression en cascade), `changed_at`, `field`, `previous_value`. Index sur `(session_id, changed_at)`.
+
+Migration `20261108120000_create_sessions`. Couvert par `test/session-repository.e2e-spec.ts`. Règles métier dans [seances](contextes/seances.md).
+
 ## Accès depuis garmin-sync
 
 Port `IActivityRepository` (`src/modules/garmin-sync/domain/ports/outbound/activity.repository.port.ts`), implémenté par `PrismaActivityRepositoryAdapter` (`infrastructure/persistence/prisma/`). Le mapping entre l'entité `Activity` et le modèle Prisma est fait par `ActivityMapper`.
