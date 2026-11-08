@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DisciplineExistsUseCase } from './application/use-cases/discipline-exists.use-case.js';
 import { ListDisciplinesUseCase } from './application/use-cases/list-disciplines.use-case.js';
 import { RecordDisciplineAppearancesUseCase } from './application/use-cases/record-discipline-appearances.use-case.js';
 import { RenameDisciplineUseCase } from './application/use-cases/rename-discipline.use-case.js';
@@ -13,12 +14,13 @@ import { DisciplinesController } from './presentation/http/controllers/disciplin
     ListDisciplinesUseCase,
     RenameDisciplineUseCase,
     RecordDisciplineAppearancesUseCase,
+    DisciplineExistsUseCase,
     {
       provide: DISCIPLINE_REPOSITORY,
       useClass: PrismaDisciplineRepositoryAdapter,
     },
     { provide: DISCIPLINES_CLOCK, useValue: () => new Date() },
   ],
-  exports: [RecordDisciplineAppearancesUseCase],
+  exports: [RecordDisciplineAppearancesUseCase, DisciplineExistsUseCase],
 })
 export class DisciplinesModule {}

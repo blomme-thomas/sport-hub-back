@@ -78,6 +78,30 @@
         ],
         "type": "object"
       },
+      "ChangeLogEntryResponseDto": {
+        "properties": {
+          "changedAt": {
+            "example": "2026-11-08T10:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "field": {
+            "example": "durationMinutes",
+            "type": "string"
+          },
+          "previousValue": {
+            "example": "60",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "changedAt",
+          "field",
+          "previousValue"
+        ],
+        "type": "object"
+      },
       "CreateGoalRequestDto": {
         "properties": {
           "eventFormat": {
@@ -126,6 +150,58 @@
         "required": [
           "title",
           "type"
+        ],
+        "type": "object"
+      },
+      "CreateSessionRequestDto": {
+        "properties": {
+          "attentionPoints": {
+            "example": "Épaule droite",
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "date": {
+            "description": "Jour de la séance (YYYY-MM-DD)",
+            "example": "2026-05-04",
+            "format": "date",
+            "type": "string"
+          },
+          "description": {
+            "example": "Séance de fond",
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "disciplineTypeKey": {
+            "description": "Clé de type d’une discipline du référentiel",
+            "example": "swimming",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "durationMinutes": {
+            "description": "Durée totale prévue en minutes",
+            "example": 60,
+            "maximum": 1440,
+            "minimum": 1,
+            "type": "number"
+          },
+          "equipment": {
+            "example": "Palmes, plaquettes",
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "modules": {
+            "description": "Modules ordonnés ; leur ordre dans la liste fixe leur position",
+            "items": {
+              "$ref": "#/components/schemas/SessionModuleRequestDto"
+            },
+            "maxItems": 30,
+            "type": "array"
+          }
+        },
+        "required": [
+          "date",
+          "disciplineTypeKey",
+          "durationMinutes"
         ],
         "type": "object"
       },
@@ -557,7 +633,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -584,7 +660,12 @@
           "GOAL_NOT_FOUND",
           "DISCIPLINE_INVALID",
           "DISCIPLINE_LABEL_INVALID",
-          "DISCIPLINE_NOT_FOUND"
+          "DISCIPLINE_NOT_FOUND",
+          "SESSION_INVALID",
+          "SESSION_MODULE_INVALID",
+          "SESSION_DISCIPLINE_UNKNOWN",
+          "SESSION_NOT_FOUND",
+          "SESSION_ALREADY_COMPLETED"
         ],
         "type": "string"
       },
@@ -610,7 +691,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -653,6 +734,220 @@
           "instance",
           "code",
           "correlationId"
+        ],
+        "type": "object"
+      },
+      "ReplaceSessionModulesRequestDto": {
+        "properties": {
+          "modules": {
+            "description": "Liste ordonnée qui remplace les modules de la séance ; une liste vide vide la séance",
+            "items": {
+              "$ref": "#/components/schemas/SessionModuleRequestDto"
+            },
+            "maxItems": 30,
+            "type": "array"
+          }
+        },
+        "required": [
+          "modules"
+        ],
+        "type": "object"
+      },
+      "SessionListResponseDto": {
+        "properties": {
+          "items": {
+            "description": "Séances de la période, triées par date croissante",
+            "items": {
+              "$ref": "#/components/schemas/SessionResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "SessionModuleRequestDto": {
+        "properties": {
+          "durationMinutes": {
+            "description": "Durée du module en minutes",
+            "example": 20,
+            "maximum": 1440,
+            "minimum": 1,
+            "type": "number"
+          },
+          "instruction": {
+            "description": "Consigne du module",
+            "example": "4 x 100 m",
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "perceivedEffort": {
+            "description": "Effort perçu visé, de 1 (très facile) à 10 (maximal)",
+            "example": 7,
+            "maximum": 10,
+            "minimum": 1,
+            "nullable": true,
+            "type": "number"
+          },
+          "targetZones": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TargetZonesRequestDto"
+              }
+            ],
+            "description": "Zones cibles : fréquence cardiaque, allure ou puissance",
+            "nullable": true,
+            "type": "object"
+          },
+          "type": {
+            "description": "Type du module : échauffement, éducatifs, séries, retour au calme ou autre",
+            "enum": [
+              "echauffement",
+              "educatifs",
+              "series",
+              "retour_au_calme",
+              "autre"
+            ],
+            "example": "series",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "durationMinutes",
+          "instruction"
+        ],
+        "type": "object"
+      },
+      "SessionModuleResponseDto": {
+        "properties": {
+          "durationMinutes": {
+            "example": 10,
+            "type": "number"
+          },
+          "instruction": {
+            "example": "Nage souple",
+            "type": "string"
+          },
+          "perceivedEffort": {
+            "example": 3,
+            "nullable": true,
+            "type": "number"
+          },
+          "position": {
+            "example": 1,
+            "minimum": 1,
+            "type": "number"
+          },
+          "targetZones": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TargetZonesResponseDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "type": {
+            "enum": [
+              "echauffement",
+              "educatifs",
+              "series",
+              "retour_au_calme",
+              "autre"
+            ],
+            "example": "echauffement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "position",
+          "type",
+          "durationMinutes",
+          "instruction",
+          "targetZones",
+          "perceivedEffort"
+        ],
+        "type": "object"
+      },
+      "SessionResponseDto": {
+        "properties": {
+          "attentionPoints": {
+            "example": "Épaule droite",
+            "nullable": true,
+            "type": "string"
+          },
+          "changeLog": {
+            "description": "Journal des modifications manuelles, par ordre chronologique",
+            "items": {
+              "$ref": "#/components/schemas/ChangeLogEntryResponseDto"
+            },
+            "type": "array"
+          },
+          "date": {
+            "example": "2026-05-04",
+            "format": "date",
+            "type": "string"
+          },
+          "description": {
+            "example": "Séance de fond",
+            "nullable": true,
+            "type": "string"
+          },
+          "disciplineTypeKey": {
+            "example": "swimming",
+            "type": "string"
+          },
+          "durationMinutes": {
+            "example": 60,
+            "type": "number"
+          },
+          "equipment": {
+            "example": "Palmes",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+            "format": "uuid",
+            "type": "string"
+          },
+          "modifiedManually": {
+            "description": "Vrai dès qu’une modification manuelle a été faite",
+            "example": false,
+            "type": "boolean"
+          },
+          "modules": {
+            "description": "Modules triés par position croissante",
+            "items": {
+              "$ref": "#/components/schemas/SessionModuleResponseDto"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "planifiee",
+              "realisee",
+              "manquee"
+            ],
+            "example": "planifiee",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "disciplineTypeKey",
+          "durationMinutes",
+          "status",
+          "modifiedManually",
+          "description",
+          "equipment",
+          "attentionPoints",
+          "modules",
+          "changeLog"
         ],
         "type": "object"
       },
@@ -812,6 +1107,39 @@
           "updated",
           "ignored"
         ],
+        "type": "object"
+      },
+      "TargetZonesRequestDto": {
+        "properties": {
+          "heartRate": {
+            "$ref": "#/components/schemas/ZoneRangeRequestDto"
+          },
+          "pace": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ZoneRangeRequestDto"
+              }
+            ],
+            "description": "Allure cible en secondes par kilomètre"
+          },
+          "power": {
+            "$ref": "#/components/schemas/ZoneRangeRequestDto"
+          }
+        },
+        "type": "object"
+      },
+      "TargetZonesResponseDto": {
+        "properties": {
+          "heartRate": {
+            "$ref": "#/components/schemas/ZoneRangeResponseDto"
+          },
+          "pace": {
+            "$ref": "#/components/schemas/ZoneRangeResponseDto"
+          },
+          "power": {
+            "$ref": "#/components/schemas/ZoneRangeResponseDto"
+          }
+        },
         "type": "object"
       },
       "TrainingStatsResponseDto": {
@@ -975,6 +1303,61 @@
         },
         "type": "object"
       },
+      "UpdateSessionRequestDto": {
+        "properties": {
+          "attentionPoints": {
+            "description": "Nouveaux points d’attention, absent = inchangés, null = effacés",
+            "example": "Épaule droite",
+            "maxLength": 1000,
+            "nullable": true,
+            "type": "string"
+          },
+          "date": {
+            "description": "Nouvelle date (YYYY-MM-DD), absent = inchangée",
+            "example": "2026-05-05",
+            "format": "date",
+            "type": "string"
+          },
+          "description": {
+            "description": "Nouvelle description, absent = inchangée, null = effacée",
+            "example": "Seuil",
+            "maxLength": 2000,
+            "nullable": true,
+            "type": "string"
+          },
+          "disciplineTypeKey": {
+            "description": "Nouvelle discipline du référentiel, absent = inchangée",
+            "example": "running",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "durationMinutes": {
+            "description": "Nouvelle durée totale en minutes, absent = inchangée",
+            "example": 45,
+            "maximum": 1440,
+            "minimum": 1,
+            "type": "number"
+          },
+          "equipment": {
+            "description": "Nouveau matériel, absent = inchangé, null = effacé",
+            "example": "Palmes",
+            "maxLength": 1000,
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "description": "Nouveau statut, absent = inchangé",
+            "enum": [
+              "planifiee",
+              "realisee",
+              "manquee"
+            ],
+            "example": "manquee",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "UpdateSlotRequestDto": {
         "properties": {
           "date": {
@@ -1112,6 +1495,42 @@
           "weeks",
           "from",
           "to"
+        ],
+        "type": "object"
+      },
+      "ZoneRangeRequestDto": {
+        "properties": {
+          "max": {
+            "example": 160,
+            "minimum": 1,
+            "type": "number"
+          },
+          "min": {
+            "example": 140,
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ],
+        "type": "object"
+      },
+      "ZoneRangeResponseDto": {
+        "properties": {
+          "max": {
+            "example": 160,
+            "type": "number"
+          },
+          "min": {
+            "example": 140,
+            "type": "number"
+          }
+        },
+        "required": [
+          "min",
+          "max"
         ],
         "type": "object"
       }
@@ -1704,6 +2123,406 @@
         ]
       }
     },
+    "/api/sessions": {
+      "get": {
+        "operationId": "sessionsList",
+        "parameters": [
+          {
+            "description": "Premier jour de la période (YYYY-MM-DD, inclus). La période compte au plus 366 jours",
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "example": "2026-05-01",
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Dernier jour de la période (YYYY-MM-DD, inclus), postérieur ou égal à from",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "example": "2026-05-31",
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionListResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Liste les séances dont la date est comprise entre from et to (bornes incluses, 366 jours au plus)",
+        "tags": [
+          "seances"
+        ]
+      },
+      "post": {
+        "operationId": "sessionsCreate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Crée une séance planifiée, éventuellement avec ses modules ordonnés",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
+    "/api/sessions/{id}": {
+      "delete": {
+        "operationId": "sessionsRemove",
+        "parameters": [
+          {
+            "description": "Identifiant de la séance",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Séance supprimée"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Supprime une séance, réalisée ou non",
+        "tags": [
+          "seances"
+        ]
+      },
+      "get": {
+        "operationId": "sessionsGet",
+        "parameters": [
+          {
+            "description": "Identifiant de la séance",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Renvoie une séance avec ses modules ordonnés et son journal",
+        "tags": [
+          "seances"
+        ]
+      },
+      "patch": {
+        "operationId": "sessionsUpdate",
+        "parameters": [
+          {
+            "description": "Identifiant de la séance",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Modifie une séance ; les champs absents sont inchangés, null efface description, matériel ou points d’attention",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
+    "/api/sessions/{id}/modules": {
+      "put": {
+        "operationId": "sessionsReplaceModules",
+        "parameters": [
+          {
+            "description": "Identifiant de la séance",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceSessionModulesRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remplace la liste ordonnée des modules d’une séance et renumérote leurs positions",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
     "/api/slots": {
       "get": {
         "operationId": "slotsList",
@@ -2133,6 +2952,10 @@
     {
       "description": "Objectifs sportifs : événements avec format et temps cible, volumes et régularité",
       "name": "objectifs"
+    },
+    {
+      "description": "Séances planifiées composées de modules ordonnés, modifiables et journalisées",
+      "name": "seances"
     },
     {
       "description": "Statistiques de volume d'entraînement",
