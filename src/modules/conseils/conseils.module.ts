@@ -7,6 +7,17 @@ import { GenerateActivityCommentUseCase } from './application/use-cases/generate
 import { GetActivityCommentUseCase } from './application/use-cases/get-activity-comment.use-case.js';
 import { GenerateWeeklyReviewUseCase } from './application/use-cases/generate-weekly-review.use-case.js';
 import { GetWeeklyReviewUseCase } from './application/use-cases/get-weekly-review.use-case.js';
+import { GenerateDashboardAdviceUseCase } from './application/use-cases/generate-dashboard-advice.use-case.js';
+import { GetDashboardAdviceUseCase } from './application/use-cases/get-dashboard-advice.use-case.js';
+import {
+  DASHBOARD_ADVICE_DATA_READER,
+  DASHBOARD_ADVICE_GENERATOR,
+  DASHBOARD_ADVICE_REPOSITORY,
+} from './domain/ports/outbound/dashboard-advice.ports.js';
+import { DashboardAdviceDataReaderAdapter } from './infrastructure/adapters/dashboard-advice.data-reader.adapter.js';
+import { ClaudeDashboardAdviceGeneratorAdapter } from './infrastructure/adapters/claude-dashboard-advice.generator.adapter.js';
+import { PrismaDashboardAdviceRepositoryAdapter } from './infrastructure/persistence/prisma/dashboard-advice.repository.adapter.js';
+import { DashboardAdviceController } from './presentation/http/controllers/dashboard-advice.controller.js';
 import {
   ACTIVITY_COMMENT_GENERATOR,
   ACTIVITY_COMMENT_REPOSITORY,
@@ -31,13 +42,31 @@ import { WeeklyReviewsController } from './presentation/http/controllers/weekly-
 
 @Module({
   imports: [GarminSyncModule, SeancesModule, TrainingStatsModule],
-  controllers: [ActivityCommentsController, WeeklyReviewsController],
+  controllers: [
+    ActivityCommentsController,
+    WeeklyReviewsController,
+    DashboardAdviceController,
+  ],
   providers: [
     GenerateActivityCommentUseCase,
     GetActivityCommentUseCase,
     GenerateWeeklyReviewUseCase,
     GetWeeklyReviewUseCase,
+    GenerateDashboardAdviceUseCase,
+    GetDashboardAdviceUseCase,
     anthropicClientProvider,
+    {
+      provide: DASHBOARD_ADVICE_DATA_READER,
+      useClass: DashboardAdviceDataReaderAdapter,
+    },
+    {
+      provide: DASHBOARD_ADVICE_GENERATOR,
+      useClass: ClaudeDashboardAdviceGeneratorAdapter,
+    },
+    {
+      provide: DASHBOARD_ADVICE_REPOSITORY,
+      useClass: PrismaDashboardAdviceRepositoryAdapter,
+    },
     { provide: ACTIVITY_READER, useClass: GarminActivityReaderAdapter },
     {
       provide: PLANNED_SESSION_READER,

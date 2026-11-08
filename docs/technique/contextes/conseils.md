@@ -2,7 +2,22 @@
 
 Bounded Context des conseils : un commentaire par activité réalisée, qui compare l'activité à la séance rapprochée (issue #41), et un bilan par semaine ISO (issue #42). Code : `src/modules/conseils/`. Usage mono-utilisateur.
 
-Périmètre livré : génération et stockage du commentaire d'activité et du bilan hebdomadaire, lecture, régénération à la demande. Hors périmètre : affichage (dépôt front), bilan mensuel, conseil du tableau de bord (issue #54).
+Périmètre livré : génération et stockage du commentaire d'activité, du bilan hebdomadaire et du conseil du tableau de bord (issue #54), lecture, régénération à la demande. Hors périmètre : affichage (dépôt front), bilan mensuel.
+
+## Conseil du tableau de bord
+
+| Méthode | Chemin | Effet | Erreurs |
+|---|---|---|---|
+| `GET` | `/api/advice/dashboard` | Renvoie le conseil stocké de la semaine ISO courante, sans appel au modèle | 404 |
+| `POST` | `/api/advice/dashboard/regenerate` | Génère le conseil de la semaine courante, ou le remplace (201) | 502, 503 |
+
+- **Semaine** : ISO courante, calculée à partir de l'horloge du module (`IsoWeek.containing`). Une ligne par semaine, dans la table `dashboard_advices`.
+- **Données** : volumes de la semaine et de la précédente (`GetDashboardStatsUseCase.executeForWindow`, `training-stats`), récupération de la semaine (`GetRecoveryUseCase`) et zones cardiaques (`GetHeartRateZonesUseCase`), via l'ACL `DashboardAdviceDataReaderAdapter`. Seuls des indicateurs chiffrés sont transmis : ni `displayName`, ni clé, ni token.
+- **Données insuffisantes** : aucune activité dans la semaine → conseil `source: insuffisant`, `model: null`, sans appel au modèle.
+- **Au moins une activité** : un seul appel au modèle, texte libre d'une à 1000 caractères. Réponse tronquée, vide ou non textuelle → 502 `DASHBOARD_ADVICE_INVALID_OUTPUT`, rien n'est remplacé. Pas de clé configurée → 503 `DASHBOARD_ADVICE_UNAVAILABLE`.
+- **Stockage** : texte, source, modèle, date de génération et résumé envoyé au modèle (`source_summary`, JSONB).
+- **Hypothèse** : l'unité des zones cardiaques est supposée en secondes, non confirmée par la spec Garmin.
+- **Tests** : unitaires (use cases, value object, adapter Claude avec client factice) et `test/dashboard-advice.e2e-spec.ts`, qui remplace l'ACL de lecture et le générateur (pas de Garmin ni de modèle réels).
 
 ## Routes
 
