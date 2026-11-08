@@ -135,7 +135,9 @@ Couvert par `test/discipline-repository.e2e-spec.ts`.
 
 - `session_activity_links` : `session_id` (clé primaire, FK vers `sessions`, suppression en cascade), `activity_id` (UUID unique, sans clé étrangère vers `activities` : la donnée reste dans `garmin-sync`), `origin` (`automatique` ou `manuel`, contrôle SQL), `linked_at`.
 
-Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`, `20261112120000_create_activity_comments`.
+Migrations `20261108120000_create_sessions` et `20261110120000_create_session_activity_links`, `20261112120000_create_activity_comments`, `20261115120000_create_weekly_reviews`.
+
+- `weekly_reviews` : `week` (clé primaire, format `AAAA-Www`, contrôle SQL), `suivi`, `point_attention`, `conseil`, `source` (`ia` ou `generique`, contrôle SQL), `model` (NULL pour un bilan générique), `generated_at`. Un seul bilan par semaine, remplacé à la régénération. Règles dans [conseils](contextes/conseils.md#bilan-hebdomadaire).
 
 - `activity_comments` : `activity_id` (clé primaire UUID, sans clé étrangère : la donnée reste dans `garmin-sync`), `text`, `source` (`ia` ou `generique`, contrôle SQL), `model` (NULL pour un commentaire générique), `generated_at`. Un seul commentaire par activité, remplacé à la régénération. Règles dans [conseils](contextes/conseils.md). Couvert par `test/session-repository.e2e-spec.ts`. Règles métier dans [seances](contextes/seances.md).
 
