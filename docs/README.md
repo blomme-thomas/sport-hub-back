@@ -1,11 +1,11 @@
 # Documentation sport-hub-back
 
-État : socle technique livré (NestJS, configuration validée, Prisma avec les modèles `Activity`, `Slot`, `Goal` et `Discipline` et leurs migrations, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8), synchronisation planifiée (story #9) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12), le module `creneaux` : créneaux libres ou occupés, ponctuels ou hebdomadaires, et leurs occurrences par période (issue #35), le module `objectifs` : objectifs événement, volume ou régularité, avec filtre des objectifs à venir (issue #36), le module `disciplines` : référentiel des disciplines alimenté par la synchronisation Garmin, libellé modifiable (issue #45), et le contrat OpenAPI versionné dans `docs/api/openapi.json`, généré sans base et vérifié en CI (story #22). Les sections sans contenu vérifié sont marquées « à compléter ».
+État : socle technique livré (NestJS, configuration validée, Prisma avec les modèles `Activity`, `Slot`, `Goal`, `Discipline` et `Session` et leurs migrations, route de santé, erreurs au format Problem Details, CI, garde-fou d'architecture), plus le module `garmin-sync` : authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités (story #8), synchronisation planifiée (story #9) et consultation paginée de la liste (story #10), le module `training-stats` : statistiques de volume par semaine ou par mois (story #11), et le module `workout-generation` : génération de séance par Claude, sans persistance (story #12), le module `creneaux` : créneaux libres ou occupés, ponctuels ou hebdomadaires, et leurs occurrences par période (issue #35), le module `objectifs` : objectifs événement, volume ou régularité, avec filtre des objectifs à venir (issue #36), le module `disciplines` : référentiel des disciplines alimenté par la synchronisation Garmin, libellé modifiable (issue #45), le module `seances` : séances planifiées composées de modules ordonnés, modifiables et journalisées (issue #37), et le contrat OpenAPI versionné dans `docs/api/openapi.json`, généré sans base et vérifié en CI (story #22). Les sections sans contenu vérifié sont marquées « à compléter ».
 
 ## Technique
 - [Architecture](technique/architecture.md)
 - [Workflow Git](technique/workflow-git.md)
-- [Données](technique/donnees.md) (modèles `Activity`, `Slot`, `Goal` et `Discipline`, migrations, backfill des disciplines)
+- [Données](technique/donnees.md) (modèles `Activity`, `Slot`, `Goal`, `Discipline` et `Session`, migrations, backfill des disciplines)
 - [Développement](technique/developpement.md)
 - [Contrat OpenAPI](technique/openapi.md) (`docs/api/openapi.json`, génération, garde-fou CI, import dans Apidog)
 - [Erreurs de l'API](technique/erreurs-api.md) (RFC 9457, codes, correlation id)
@@ -18,6 +18,7 @@
   - [creneaux](technique/contextes/creneaux.md) (créneaux de disponibilité, récurrence hebdomadaire, occurrences par période, route `/api/slots`, heure murale locale)
   - [objectifs](technique/contextes/objectifs.md) (objectifs événement, volume ou régularité, règle « à venir », route `/api/goals`, bornes et erreurs)
   - [disciplines](technique/contextes/disciplines.md) (référentiel des disciplines, enregistrement par ACL depuis garmin-sync, routes `/api/disciplines`, libellé modifiable, bornes)
+  - [seances](technique/contextes/seances.md) (séances planifiées composées de modules ordonnés, modifiables et journalisées, routes `/api/sessions`, règles et erreurs)
 - Décisions (`technique/decisions/`) :
   - [0001 : table centralisée code vers statut HTTP](technique/decisions/0001-table-centralisee-code-statut.md)
   - [0002 : correlation id par middleware et AsyncLocalStorage](technique/decisions/0002-correlation-id-middleware-als.md)
