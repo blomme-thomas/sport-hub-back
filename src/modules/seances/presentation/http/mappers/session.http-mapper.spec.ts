@@ -52,6 +52,7 @@ function sessionDto(overrides: Partial<SessionDto> = {}): SessionDto {
         previousValue: '45',
       },
     ],
+    activity: null,
     ...overrides,
   };
 }
@@ -167,6 +168,7 @@ describe('SessionHttpMapper', () => {
             previousValue: '45',
           },
         ],
+        activity: null,
       });
     });
 

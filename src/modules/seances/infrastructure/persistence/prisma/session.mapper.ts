@@ -1,4 +1,7 @@
-import { Session } from '../../../domain/entities/session.entity.js';
+import {
+  type ActivityLinkOrigin,
+  Session,
+} from '../../../domain/entities/session.entity.js';
 import { SessionId } from '../../../domain/value-objects/session-id.vo.js';
 import {
   SessionModule,
@@ -21,6 +24,12 @@ export interface SessionChangeLogRecord {
   previousValue: string | null;
 }
 
+export interface SessionActivityLinkRecord {
+  activityId: string;
+  origin: string;
+  linkedAt: Date;
+}
+
 export interface SessionRecord {
   id: string;
   date: Date;
@@ -33,6 +42,7 @@ export interface SessionRecord {
   attentionPoints: string | null;
   modules: SessionModuleRecord[];
   changeLogs: SessionChangeLogRecord[];
+  activityLink?: SessionActivityLinkRecord | null;
 }
 
 export interface SessionPersistence {
@@ -46,6 +56,7 @@ export interface SessionPersistence {
   equipment: string | null;
   attentionPoints: string | null;
   modules: SessionModulePrimitives[];
+  activityLink: SessionActivityLinkRecord | null;
 }
 
 export class SessionMapper {
@@ -57,6 +68,13 @@ export class SessionMapper {
       durationMinutes: record.durationMinutes,
       status: record.status,
       modifiedManually: record.modifiedManually,
+      activityLink: record.activityLink
+        ? {
+            activityId: record.activityLink.activityId,
+            origin: record.activityLink.origin as ActivityLinkOrigin,
+            linkedAt: record.activityLink.linkedAt,
+          }
+        : null,
       description: record.description,
       equipment: record.equipment,
       attentionPoints: record.attentionPoints,
@@ -90,6 +108,7 @@ export class SessionMapper {
       equipment: session.equipment,
       attentionPoints: session.attentionPoints,
       modules: session.modules.map((module) => module.toPrimitives()),
+      activityLink: session.activityLink,
     };
   }
 }

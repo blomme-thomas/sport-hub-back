@@ -15,6 +15,9 @@ export interface ISessionRepository {
    */
   findByPeriod(period: SessionPeriod): Promise<Session[]>;
 
+  /** Renvoie les séances liées à l'une de ces activités, sans doublon. */
+  findByActivityIds(activityIds: string[]): Promise<Session[]>;
+
   /** Enregistre la séance : crée si elle est nouvelle, met à jour sinon, et ajoute uniquement ses entrées de journal en attente. */
   save(session: Session): Promise<void>;
 

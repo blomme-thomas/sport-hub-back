@@ -53,6 +53,14 @@ class FakeSessionRepository implements ISessionRepository {
     return Promise.resolve([...this.sessions.values()]);
   }
 
+  findByActivityIds(activityIds: string[]): Promise<Session[]> {
+    return Promise.resolve(
+      [...this.sessions.values()].filter((session) =>
+        activityIds.includes(session.activityLink?.activityId ?? ''),
+      ),
+    );
+  }
+
   save(session: Session): Promise<void> {
     this.saves += 1;
     this.sessions.set(session.id.toString(), session);

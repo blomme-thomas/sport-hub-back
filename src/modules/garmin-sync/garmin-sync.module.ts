@@ -33,6 +33,6 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
       useClass: PrismaActivityListReadModel,
     },
   ],
-  exports: [GarminPersonalApiTokenProvider],
+  exports: [GarminPersonalApiTokenProvider, ListActivitiesUseCase],
 })
 export class GarminSyncModule {}

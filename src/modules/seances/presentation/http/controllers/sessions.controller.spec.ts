@@ -3,10 +3,14 @@ import { plainToInstance } from 'class-transformer';
 import { CreateSessionUseCase } from '../../../application/use-cases/create-session.use-case.js';
 import { DeleteSessionUseCase } from '../../../application/use-cases/delete-session.use-case.js';
 import { GetSessionUseCase } from '../../../application/use-cases/get-session.use-case.js';
+import { LinkSessionActivityUseCase } from '../../../application/use-cases/link-session-activity.use-case.js';
 import { ListSessionsUseCase } from '../../../application/use-cases/list-sessions.use-case.js';
+import { ReconcileSessionsUseCase } from '../../../application/use-cases/reconcile-sessions.use-case.js';
 import { ReplaceSessionModulesUseCase } from '../../../application/use-cases/replace-session-modules.use-case.js';
+import { UnlinkSessionActivityUseCase } from '../../../application/use-cases/unlink-session-activity.use-case.js';
 import { UpdateSessionUseCase } from '../../../application/use-cases/update-session.use-case.js';
 import { CreateSessionRequestDto } from '../dtos/create-session.request.dto.js';
+import { LinkSessionActivityRequestDto } from '../dtos/link-session-activity.request.dto.js';
 import { ListSessionsRequestDto } from '../dtos/list-sessions.request.dto.js';
 import { ReplaceSessionModulesRequestDto } from '../dtos/replace-session-modules.request.dto.js';
 import { SessionIdParamDto } from '../dtos/session-id.param.dto.js';
@@ -27,6 +31,7 @@ const sessionDto = {
   attentionPoints: null,
   modules: [],
   changeLog: [],
+  activity: null,
 };
 
 describe('SessionsController', () => {
@@ -37,6 +42,9 @@ describe('SessionsController', () => {
   const updateExecute = vi.fn();
   const replaceExecute = vi.fn();
   const deleteExecute = vi.fn();
+  const reconcileExecute = vi.fn();
+  const linkExecute = vi.fn();
+  const unlinkExecute = vi.fn();
 
   beforeEach(async () => {
     createExecute.mockReset();
@@ -45,6 +53,9 @@ describe('SessionsController', () => {
     updateExecute.mockReset();
     replaceExecute.mockReset();
     deleteExecute.mockReset();
+    reconcileExecute.mockReset();
+    linkExecute.mockReset();
+    unlinkExecute.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [SessionsController],
       providers: [
@@ -57,6 +68,18 @@ describe('SessionsController', () => {
           useValue: { execute: replaceExecute },
         },
         { provide: DeleteSessionUseCase, useValue: { execute: deleteExecute } },
+        {
+          provide: ReconcileSessionsUseCase,
+          useValue: { execute: reconcileExecute },
+        },
+        {
+          provide: LinkSessionActivityUseCase,
+          useValue: { execute: linkExecute },
+        },
+        {
+          provide: UnlinkSessionActivityUseCase,
+          useValue: { execute: unlinkExecute },
+        },
       ],
     }).compile();
     controller = moduleRef.get(SessionsController);
@@ -167,6 +190,50 @@ describe('SessionsController', () => {
 
       await expect(controller.remove(params)).resolves.toBeUndefined();
       expect(deleteExecute).toHaveBeenCalledWith(SESSION_ID);
+    });
+  });
+
+  describe('rapprochement des activités', () => {
+    it('transmet le lien manuel au use case et renvoie la séance liée', async () => {
+      const ACTIVITY_ID = '6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10';
+      linkExecute.mockResolvedValue(sessionDto);
+      const params = plainToInstance(SessionIdParamDto, { id: SESSION_ID });
+      const body = plainToInstance(LinkSessionActivityRequestDto, {
+        activityId: ACTIVITY_ID,
+      });
+
+      await controller.linkActivity(params, body);
+
+      expect(linkExecute).toHaveBeenCalledWith({
+        sessionId: SESSION_ID,
+        activityId: ACTIVITY_ID,
+      });
+    });
+
+    it('transmet la dissociation au use case sans renvoyer de corps', async () => {
+      unlinkExecute.mockResolvedValue(undefined);
+      const params = plainToInstance(SessionIdParamDto, { id: SESSION_ID });
+
+      await expect(controller.unlinkActivity(params)).resolves.toBeUndefined();
+      expect(unlinkExecute).toHaveBeenCalledWith(SESSION_ID);
+    });
+
+    it('transmet la période au rapprochement et renvoie les couples liés sous items', async () => {
+      reconcileExecute.mockResolvedValue([
+        { sessionId: SESSION_ID, activityId: 'a1' },
+      ]);
+      const query = plainToInstance(ListSessionsRequestDto, {
+        from: '2026-11-01',
+        to: '2026-11-30',
+      });
+
+      await expect(controller.reconcile(query)).resolves.toEqual({
+        items: [{ sessionId: SESSION_ID, activityId: 'a1' }],
+      });
+      expect(reconcileExecute).toHaveBeenCalledWith({
+        from: '2026-11-01',
+        to: '2026-11-30',
+      });
     });
   });
 });

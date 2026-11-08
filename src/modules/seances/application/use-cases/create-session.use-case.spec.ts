@@ -71,6 +71,14 @@ class FakeSessionRepository implements ISessionRepository {
     );
   }
 
+  findByActivityIds(activityIds: string[]): Promise<Session[]> {
+    return Promise.resolve(
+      [...this.sessions.values()].filter((session) =>
+        activityIds.includes(session.activityLink?.activityId ?? ''),
+      ),
+    );
+  }
+
   save(session: Session): Promise<void> {
     this.sessions.set(session.id.toString(), session);
     return Promise.resolve();
@@ -132,6 +140,7 @@ describe('CreateSessionUseCase', () => {
         attentionPoints: null,
         modules: [],
         changeLog: [],
+        activity: null,
       });
     });
 

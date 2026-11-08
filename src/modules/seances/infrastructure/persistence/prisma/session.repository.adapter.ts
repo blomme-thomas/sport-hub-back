@@ -12,6 +12,7 @@ import { SessionMapper } from './session.mapper.js';
 const SESSION_INCLUDE = {
   modules: { orderBy: { position: 'asc' } },
   changeLogs: { orderBy: [{ changedAt: 'asc' }, { id: 'asc' }] },
+  activityLink: true,
 } satisfies Prisma.SessionInclude;
 
 @Injectable()
@@ -26,6 +27,18 @@ export class PrismaSessionRepositoryAdapter implements ISessionRepository {
     return record === null ? null : SessionMapper.toDomain(record);
   }
 
+  async findByActivityIds(activityIds: string[]): Promise<Session[]> {
+    if (activityIds.length === 0) {
+      return [];
+    }
+    const records = await this.prisma.session.findMany({
+      where: { activityLink: { activityId: { in: activityIds } } },
+      include: SESSION_INCLUDE,
+      orderBy: [{ date: 'asc' }, { id: 'asc' }],
+    });
+    return records.map((record) => SessionMapper.toDomain(record));
+  }
+
   async findByPeriod(period: SessionPeriod): Promise<Session[]> {
     const records = await this.prisma.session.findMany({
       where: { date: { gte: period.from, lte: period.to } },
@@ -36,7 +49,8 @@ export class PrismaSessionRepositoryAdapter implements ISessionRepository {
   }
 
   async save(session: Session): Promise<void> {
-    const { modules, ...scalars } = SessionMapper.toPersistence(session);
+    const { modules, activityLink, ...scalars } =
+      SessionMapper.toPersistence(session);
     const operations: Prisma.PrismaPromise<unknown>[] = [
       this.prisma.session.upsert({
         where: { id: scalars.id },
@@ -46,7 +60,22 @@ export class PrismaSessionRepositoryAdapter implements ISessionRepository {
       this.prisma.sessionModule.deleteMany({
         where: { sessionId: scalars.id },
       }),
+      this.prisma.sessionActivityLink.deleteMany({
+        where: { sessionId: scalars.id },
+      }),
     ];
+    if (activityLink !== null) {
+      operations.push(
+        this.prisma.sessionActivityLink.create({
+          data: {
+            sessionId: scalars.id,
+            activityId: activityLink.activityId,
+            origin: activityLink.origin,
+            linkedAt: activityLink.linkedAt,
+          },
+        }),
+      );
+    }
     if (modules.length > 0) {
       operations.push(
         this.prisma.sessionModule.createMany({
