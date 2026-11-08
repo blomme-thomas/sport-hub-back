@@ -9,6 +9,10 @@ import {
   type IGoalProvider,
 } from '../../domain/ports/outbound/goal-provider.port.js';
 import {
+  PAUSE_PROVIDER,
+  type IPauseProvider,
+} from '../../domain/ports/outbound/pause-provider.port.js';
+import {
   PLANNING_AI_GENERATOR,
   type IPlanningAiGenerator,
 } from '../../domain/ports/outbound/planning-ai-generator.port.js';
@@ -29,6 +33,7 @@ import {
   type ISlotOccurrencesProvider,
 } from '../../domain/ports/outbound/slot-occurrences.provider.port.js';
 import { computeFreeSlotCapacity } from '../../domain/services/free-slot-capacity.calculator.js';
+import { removePausedOccurrences } from '../../domain/services/paused-occurrences.filter.js';
 import { validatePlanning } from '../../domain/services/planning-validator.js';
 import type {
   GeneratePlanningQuery,
@@ -55,6 +60,8 @@ export class GeneratePlanningUseCase {
     private readonly generator: IPlanningAiGenerator,
     @Inject(PLANNING_SCHEDULER)
     private readonly scheduler: IPlanningScheduler,
+    @Inject(PAUSE_PROVIDER)
+    private readonly pauses: IPauseProvider,
   ) {}
 
   /**
@@ -92,11 +99,14 @@ export class GeneratePlanningUseCase {
     }
 
     const period = { from, to };
-    const [occurrences, sessions, disciplines] = await Promise.all([
-      this.slots.occurrencesIn(period),
-      this.sessions.sessionsIn(period),
-      this.disciplines.list(),
-    ]);
+    const [slotOccurrences, sessions, disciplines, pausedPeriods] =
+      await Promise.all([
+        this.slots.occurrencesIn(period),
+        this.sessions.sessionsIn(period),
+        this.disciplines.list(),
+        this.pauses.pausesIn(period),
+      ]);
+    const occurrences = removePausedOccurrences(slotOccurrences, pausedPeriods);
     const capacities = computeFreeSlotCapacity({
       today,
       occurrences,

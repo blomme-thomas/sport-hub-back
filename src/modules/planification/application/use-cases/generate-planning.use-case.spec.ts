@@ -14,6 +14,10 @@ import type {
   IPlanningScheduler,
   ScheduledSession,
 } from '../../domain/ports/outbound/planning-scheduler.port.js';
+import type {
+  IPauseProvider,
+  PausedPeriod,
+} from '../../domain/ports/outbound/pause-provider.port.js';
 import type { ISessionsProvider } from '../../domain/ports/outbound/sessions.provider.port.js';
 import type { ISlotOccurrencesProvider } from '../../domain/ports/outbound/slot-occurrences.provider.port.js';
 import type { PlannedSession } from '../../domain/value-objects/planned-session.vo.js';
@@ -40,6 +44,7 @@ function build(options: {
   sessions?: unknown[];
   planned?: PlannedSession[];
   goal?: PlanningGoal;
+  pauses?: PausedPeriod[];
 }): Harness {
   const slots: ISlotOccurrencesProvider = {
     occurrencesIn: vi.fn().mockResolvedValue(options.occurrences ?? [FREE_DAY]),
@@ -67,6 +72,9 @@ function build(options: {
     ),
   );
   const scheduler: IPlanningScheduler = { schedule };
+  const pauses: IPauseProvider = {
+    pausesIn: vi.fn().mockResolvedValue(options.pauses ?? []),
+  };
   const useCase = new GeneratePlanningUseCase(
     slots,
     sessions,
@@ -75,6 +83,7 @@ function build(options: {
     goals,
     generator,
     scheduler,
+    pauses,
   );
   return { useCase, generate, schedule, findGoal };
 }
