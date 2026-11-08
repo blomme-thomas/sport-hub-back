@@ -37,6 +37,6 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     { provide: ACTIVITY_CATALOG, useClass: GarminActivityCatalogAdapter },
     { provide: SEANCES_CLOCK, useValue: () => new Date() },
   ],
-  exports: [ListSessionsUseCase],
+  exports: [ListSessionsUseCase, CreateSessionUseCase],
 })
 export class SeancesModule {}

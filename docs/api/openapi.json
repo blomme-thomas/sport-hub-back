@@ -304,6 +304,31 @@
         ],
         "type": "object"
       },
+      "GeneratePlanningRequestDto": {
+        "properties": {
+          "from": {
+            "description": "Premier jour du planning (YYYY-MM-DD). Les jours passés sont écartés.",
+            "example": "2026-11-09",
+            "format": "date",
+            "type": "string"
+          },
+          "goalId": {
+            "description": "Objectif dont la date cible sert de dernier jour du planning",
+            "format": "uuid",
+            "type": "string"
+          },
+          "to": {
+            "description": "Dernier jour du planning (YYYY-MM-DD). Obligatoire sans objectif ; ignoré si goalId est fourni.",
+            "example": "2026-11-15",
+            "format": "date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "type": "object"
+      },
       "GenerateWorkoutRequestDto": {
         "properties": {
           "durationMinutes": {
@@ -333,6 +358,33 @@
             "type": "number"
           }
         },
+        "type": "object"
+      },
+      "GeneratedPlanningResponseDto": {
+        "properties": {
+          "from": {
+            "example": "2026-11-09",
+            "format": "date",
+            "type": "string"
+          },
+          "items": {
+            "description": "Séances créées par cette génération, triées comme proposées",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledSessionResponseDto"
+            },
+            "type": "array"
+          },
+          "to": {
+            "example": "2026-11-15",
+            "format": "date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "items"
+        ],
         "type": "object"
       },
       "GeneratedWorkoutResponseDto": {
@@ -647,7 +699,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -681,7 +733,11 @@
           "SESSION_NOT_FOUND",
           "SESSION_ALREADY_COMPLETED",
           "SESSION_ACTIVITY_NOT_FOUND",
-          "SESSION_ACTIVITY_ALREADY_LINKED"
+          "SESSION_ACTIVITY_ALREADY_LINKED",
+          "PLANNING_PERIOD_INVALID",
+          "PLANNING_INVALID_OUTPUT",
+          "PLANNING_GENERATION_UNAVAILABLE",
+          "PLANNING_GENERATION_ACCESS_DENIED"
         ],
         "type": "string"
       },
@@ -707,7 +763,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -798,6 +854,34 @@
         },
         "required": [
           "modules"
+        ],
+        "type": "object"
+      },
+      "ScheduledSessionResponseDto": {
+        "properties": {
+          "date": {
+            "example": "2026-11-10",
+            "format": "date",
+            "type": "string"
+          },
+          "disciplineTypeKey": {
+            "example": "swimming",
+            "type": "string"
+          },
+          "durationMinutes": {
+            "example": 60,
+            "type": "number"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "disciplineTypeKey",
+          "durationMinutes"
         ],
         "type": "object"
       },
@@ -2208,6 +2292,88 @@
         "summary": "Vérifie que le service tourne et que la base répond",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/planning/generate": {
+      "post": {
+        "operationId": "planningGenerate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePlanningRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedPlanningResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Génère le planning d'une période, ou jusqu'à la date cible d'un objectif, et crée les séances dans les créneaux libres",
+        "tags": [
+          "planning"
         ]
       }
     },

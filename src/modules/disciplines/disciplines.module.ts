@@ -21,6 +21,10 @@ import { DisciplinesController } from './presentation/http/controllers/disciplin
     },
     { provide: DISCIPLINES_CLOCK, useValue: () => new Date() },
   ],
-  exports: [RecordDisciplineAppearancesUseCase, DisciplineExistsUseCase],
+  exports: [
+    RecordDisciplineAppearancesUseCase,
+    DisciplineExistsUseCase,
+    ListDisciplinesUseCase,
+  ],
 })
 export class DisciplinesModule {}
