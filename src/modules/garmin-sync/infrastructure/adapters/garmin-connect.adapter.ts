@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { z } from 'zod';
 import {
   garminConfig,
   type GarminConfig,
@@ -15,6 +16,8 @@ import { GarminConnectExternalMapper } from '../mappers/garmin-connect.external-
 
 const TARGET = 'garmin-personal-api';
 const ACTIVITIES_PATH = '/activitylist-service/activities/search/activities';
+const SETTINGS_PATH = '/userprofile-service/userprofile/settings';
+const settingsSchema = z.object({ displayName: z.string().nullish() });
 const PAGE_SIZE = 99;
 const MAX_PAGES = 50;
 const DEFAULT_HISTORY_DAYS = 365;
@@ -64,17 +67,30 @@ export class GarminConnectAdapter implements IGarminConnectClient {
       excludeChildren: 'true',
     });
     const url = `${this.config.personalApiBaseUrl}${ACTIVITIES_PATH}?${query.toString()}`;
+    const data = await this.getJson(url);
+    if (!Array.isArray(data)) {
+      throw new GarminUnavailableError();
+    }
+    return data as unknown[];
+  }
 
+  async fetchDisplayName(): Promise<string | null> {
+    const url = `${this.config.personalApiBaseUrl}${SETTINGS_PATH}`;
+    const parsed = settingsSchema.safeParse(await this.getJson(url));
+    if (!parsed.success) {
+      throw new GarminUnavailableError();
+    }
+    return parsed.data.displayName?.trim() || null;
+  }
+
+  private async getJson(url: string): Promise<unknown> {
     for (let attempt = 0; ; attempt += 1) {
       const token = await this.accessToken();
       try {
         const response = await this.http.get<unknown>(TARGET, url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!Array.isArray(response.data)) {
-          throw new GarminUnavailableError();
-        }
-        return response.data as unknown[];
+        return response.data;
       } catch (error) {
         if (!(error instanceof ExternalServiceError)) {
           throw error;
