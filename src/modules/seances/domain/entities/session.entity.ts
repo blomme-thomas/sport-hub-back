@@ -7,6 +7,10 @@ import {
   isSessionRecurrence,
 } from '../value-objects/session-recurrence.vo.js';
 import {
+  assertTargetDistance,
+  assertTargetZones,
+} from '../value-objects/session-targets.vo.js';
+import {
   type SessionStatus,
   isSessionStatus,
 } from '../value-objects/session-status.vo.js';
@@ -42,6 +46,8 @@ export interface SessionProps {
   equipment?: string | null;
   attentionPoints?: string | null;
   modules?: SessionModule[];
+  targetDistanceMeters?: number | null;
+  targetHrZonePercentages?: number[] | null;
 }
 
 export interface SessionReconstitutionProps {
@@ -59,6 +65,8 @@ export interface SessionReconstitutionProps {
   modules: SessionModule[];
   changeLog: SessionChangeLogEntry[];
   activityLink?: SessionActivityLink | null;
+  targetDistanceMeters?: number | null;
+  targetHrZonePercentages?: number[] | null;
 }
 
 export interface SessionChanges {
@@ -71,6 +79,8 @@ export interface SessionChanges {
   description?: string | null;
   equipment?: string | null;
   attentionPoints?: string | null;
+  targetDistanceMeters?: number | null;
+  targetHrZonePercentages?: number[] | null;
 }
 
 interface SessionFieldsInput {
@@ -83,6 +93,8 @@ interface SessionFieldsInput {
   description: string | null;
   equipment: string | null;
   attentionPoints: string | null;
+  targetDistanceMeters: number | null;
+  targetHrZonePercentages: number[] | null;
 }
 
 interface SessionFields {
@@ -95,6 +107,8 @@ interface SessionFields {
   description: string | null;
   equipment: string | null;
   attentionPoints: string | null;
+  targetDistanceMeters: number | null;
+  targetHrZonePercentages: number[] | null;
 }
 
 interface SessionState extends SessionFields {
@@ -121,6 +135,8 @@ export class Session {
       durationMinutes: props.durationMinutes,
       startTime: props.startTime ?? null,
       recurrence: props.recurrence ?? 'aucune',
+      targetDistanceMeters: props.targetDistanceMeters ?? null,
+      targetHrZonePercentages: props.targetHrZonePercentages ?? null,
       status: 'planifiee',
       description: props.description ?? null,
       equipment: props.equipment ?? null,
@@ -149,6 +165,8 @@ export class Session {
       durationMinutes: props.durationMinutes,
       startTime: props.startTime ?? null,
       recurrence: props.recurrence ?? 'aucune',
+      targetDistanceMeters: props.targetDistanceMeters ?? null,
+      targetHrZonePercentages: props.targetHrZonePercentages ?? null,
       status: props.status,
       description: props.description,
       equipment: props.equipment,
@@ -187,6 +205,16 @@ export class Session {
 
   get recurrence(): SessionRecurrence {
     return this.state.recurrence;
+  }
+
+  get targetDistanceMeters(): number | null {
+    return this.state.targetDistanceMeters;
+  }
+
+  get targetHrZonePercentages(): number[] | null {
+    return this.state.targetHrZonePercentages === null
+      ? null
+      : [...this.state.targetHrZonePercentages];
   }
 
   get status(): SessionStatus {
@@ -242,6 +270,14 @@ export class Session {
       startTime:
         changes.startTime === undefined ? current.startTime : changes.startTime,
       recurrence: changes.recurrence ?? current.recurrence,
+      targetDistanceMeters:
+        changes.targetDistanceMeters === undefined
+          ? current.targetDistanceMeters
+          : changes.targetDistanceMeters,
+      targetHrZonePercentages:
+        changes.targetHrZonePercentages === undefined
+          ? current.targetHrZonePercentages
+          : changes.targetHrZonePercentages,
       status: changes.status ?? current.status,
       description:
         changes.description === undefined
@@ -365,6 +401,10 @@ function validateFields(input: SessionFieldsInput): SessionFields {
     durationMinutes: input.durationMinutes,
     startTime: normalizeStartTime(input.startTime),
     recurrence: input.recurrence,
+    targetDistanceMeters: normalizeTargetDistance(input.targetDistanceMeters),
+    targetHrZonePercentages: normalizeTargetZones(
+      input.targetHrZonePercentages,
+    ),
     status: input.status,
     description: normalizeText(
       input.description,
@@ -468,6 +508,29 @@ function changedEntries(
       previousValue: current.startTime,
     });
   }
+  if (next.targetDistanceMeters !== current.targetDistanceMeters) {
+    entries.push({
+      changedAt: now,
+      field: 'targetDistanceMeters',
+      previousValue:
+        current.targetDistanceMeters === null
+          ? null
+          : String(current.targetDistanceMeters),
+    });
+  }
+  if (
+    JSON.stringify(next.targetHrZonePercentages) !==
+    JSON.stringify(current.targetHrZonePercentages)
+  ) {
+    entries.push({
+      changedAt: now,
+      field: 'targetHrZonePercentages',
+      previousValue:
+        current.targetHrZonePercentages === null
+          ? null
+          : JSON.stringify(current.targetHrZonePercentages),
+    });
+  }
   if (next.recurrence !== current.recurrence) {
     entries.push({
       changedAt: now,
@@ -515,4 +578,20 @@ function changedEntries(
 
 function formatCalendarDate(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+function normalizeTargetDistance(value: number | null): number | null {
+  if (value === null) {
+    return null;
+  }
+  assertTargetDistance(value);
+  return value;
+}
+
+function normalizeTargetZones(value: number[] | null): number[] | null {
+  if (value === null) {
+    return null;
+  }
+  assertTargetZones(value);
+  return [...value];
 }

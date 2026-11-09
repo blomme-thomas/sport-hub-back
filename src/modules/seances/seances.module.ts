@@ -1,3 +1,5 @@
+import { SESSION_ACTIVITY_METRICS } from './domain/ports/outbound/session-activity-metrics.port.js';
+import { GarminSessionActivityMetricsAdapter } from './infrastructure/adapters/garmin-session-activity-metrics.adapter.js';
 import { Module } from '@nestjs/common';
 import { DisciplinesModule } from '../disciplines/index.js';
 import { GarminSyncModule } from '../garmin-sync/index.js';
@@ -52,6 +54,10 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     { provide: DISCIPLINE_CATALOG, useClass: DisciplinesCatalogAdapter },
     { provide: ACTIVITY_CATALOG, useClass: GarminActivityCatalogAdapter },
     { provide: SEANCES_CLOCK, useValue: () => new Date() },
+    {
+      provide: SESSION_ACTIVITY_METRICS,
+      useClass: GarminSessionActivityMetricsAdapter,
+    },
   ],
   exports: [
     ListSessionsUseCase,

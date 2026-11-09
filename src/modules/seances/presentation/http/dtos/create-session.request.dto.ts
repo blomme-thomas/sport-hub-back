@@ -2,7 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
+  IsNumber,
+  IsPositive,
   IsIn,
   IsInt,
   IsOptional,
@@ -18,10 +21,38 @@ import {
   SESSION_RECURRENCES,
   type SessionRecurrence,
 } from '../../../domain/value-objects/session-recurrence.vo.js';
-import { IsCalendarDate } from '../validators/session.validators.js';
+import { IsCalendarDate, SumsTo100 } from '../validators/session.validators.js';
 import { SessionModuleRequestDto } from './session-module.request.dto.js';
 
 export class CreateSessionRequestDto {
+  @ApiPropertyOptional({
+    type: Number,
+    minimum: 0.000001,
+    example: 10000,
+    description: 'Distance visée en mètres, facultative',
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  targetDistanceMeters?: number;
+
+  @ApiProperty({
+    type: [Number],
+    minItems: 5,
+    maxItems: 5,
+    example: [10, 20, 40, 20, 10],
+    description:
+      'Répartition cible du temps par zone de FC (Z1 à Z5), en pourcentages entiers qui totalisent 100',
+  })
+  @IsArray()
+  @ArrayMinSize(5)
+  @ArrayMaxSize(5)
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(100, { each: true })
+  @SumsTo100
+  targetHrZonePercentages!: number[];
+
   @ApiProperty({
     type: String,
     format: 'date',

@@ -63,6 +63,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     GarminPersonalApiTokenProvider,
     ListActivitiesUseCase,
     GetActivityUseCase,
+    GetActivityDetailUseCase,
     GetRecoveryUseCase,
     GetDailyCaloriesUseCase,
     GetHeartRateZonesUseCase,

@@ -1,5 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsNumber,
+  IsPositive,
   IsIn,
   IsInt,
   IsString,
@@ -15,7 +20,7 @@ import {
   type SessionRecurrence,
 } from '../../../domain/value-objects/session-recurrence.vo.js';
 import { SESSION_STATUSES } from '../../../domain/value-objects/session-status.vo.js';
-import { IsCalendarDate } from '../validators/session.validators.js';
+import { IsCalendarDate, SumsTo100 } from '../validators/session.validators.js';
 
 const isProvided = (_object: object, value: unknown): boolean =>
   value !== undefined;
@@ -24,6 +29,35 @@ const isTextProvided = (_object: object, value: unknown): boolean =>
   value !== undefined && value !== null;
 
 export class UpdateSessionRequestDto {
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    minimum: 0.000001,
+    example: 10000,
+    description: 'Nouvelle distance visée, absent = inchangée, null = effacée',
+  })
+  @ValidateIf(isTextProvided)
+  @IsNumber()
+  @IsPositive()
+  targetDistanceMeters?: number | null;
+
+  @ApiPropertyOptional({
+    type: [Number],
+    minItems: 5,
+    maxItems: 5,
+    example: [10, 20, 40, 20, 10],
+    description: 'Nouvelle répartition par zone, absent = inchangée',
+  })
+  @ValidateIf(isProvided)
+  @IsArray()
+  @ArrayMinSize(5)
+  @ArrayMaxSize(5)
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(100, { each: true })
+  @SumsTo100
+  targetHrZonePercentages?: number[];
+
   @ApiPropertyOptional({
     type: String,
     format: 'date',

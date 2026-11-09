@@ -54,7 +54,12 @@ describe('Rapprochement séances et activités (e2e)', () => {
   async function createSession(date = '2099-05-04'): Promise<string> {
     const res = await http()
       .post('/api/sessions')
-      .send({ date, disciplineTypeKey: 'running', durationMinutes: 45 })
+      .send({
+        targetHrZonePercentages: [10, 20, 40, 20, 10],
+        date,
+        disciplineTypeKey: 'running',
+        durationMinutes: 45,
+      })
       .expect(201);
     return res.body.id as string;
   }

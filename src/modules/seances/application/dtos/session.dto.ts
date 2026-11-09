@@ -1,3 +1,4 @@
+import type { SessionAchievement } from '../../domain/services/session-achievement.js';
 import type {
   Session,
   SessionChangeLogEntry,
@@ -16,6 +17,8 @@ export interface SessionModuleInput {
 }
 
 export interface CreateSessionCommand {
+  targetDistanceMeters?: number | null;
+  targetHrZonePercentages?: number[];
   date: string;
   disciplineTypeKey: string;
   durationMinutes: number;
@@ -29,6 +32,8 @@ export interface CreateSessionCommand {
 
 export interface UpdateSessionCommand {
   id: string;
+  targetDistanceMeters?: number | null;
+  targetHrZonePercentages?: number[];
   date?: string;
   disciplineTypeKey?: string;
   durationMinutes?: number;
@@ -95,9 +100,15 @@ export class SessionDto {
     readonly modules: SessionModuleDto[],
     readonly changeLog: ChangeLogEntryDto[],
     readonly activity: SessionActivityLinkDto | null,
+    readonly targetDistanceMeters: number | null,
+    readonly targetHrZonePercentages: number[] | null,
+    readonly achievement: SessionAchievement | null,
   ) {}
 
-  static fromDomain(session: Session): SessionDto {
+  static fromDomain(
+    session: Session,
+    achievement: SessionAchievement | null = null,
+  ): SessionDto {
     const link = session.activityLink;
     return new SessionDto(
       session.id.toString(),
@@ -116,6 +127,9 @@ export class SessionDto {
       link === null
         ? null
         : { id: link.activityId, origin: link.origin, linkedAt: link.linkedAt },
+      session.targetDistanceMeters,
+      session.targetHrZonePercentages,
+      achievement,
     );
   }
 }

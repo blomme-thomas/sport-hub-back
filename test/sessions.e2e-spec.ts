@@ -44,6 +44,7 @@ const SEANCE_NATATION = {
   disciplineTypeKey: 'swimming',
   durationMinutes: 60,
   description: 'Séance de fond',
+  targetHrZonePercentages: [10, 20, 40, 20, 10],
   modules: MODULES_NATATION,
 };
 
@@ -390,6 +391,70 @@ describe('Séances (e2e)', () => {
       await remove(id).expect(204);
 
       expect(await prisma.sessionOccurrenceException.count()).toBe(0);
+    });
+  });
+
+  describe('objectifs de séance et réalisation', () => {
+    it('refuse une création sans répartition par zone avec VALIDATION_FAILED', async () => {
+      const { targetHrZonePercentages: _omitted, ...withoutZones } =
+        SEANCE_NATATION;
+      const res = await create(withoutZones).expect(400);
+
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('refuse une répartition qui ne totalise pas 100', async () => {
+      const res = await create({
+        ...SEANCE_NATATION,
+        targetHrZonePercentages: [10, 10, 10, 10, 10],
+      }).expect(400);
+
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('renvoie les objectifs et, avec une activité liée, la réalisation', async () => {
+      const id = (
+        await create({ ...SEANCE_NATATION, targetDistanceMeters: 2000 }).expect(
+          201,
+        )
+      ).body.id as string;
+      const activity = await prisma.activity.create({
+        data: {
+          garminActivityId: '555',
+          type: 'swimming',
+          startedAt: new Date('2099-05-04T07:00:00.000Z'),
+          durationSeconds: 1800,
+          distanceMeters: 1500,
+          hrTimeInZone1: 0,
+          hrTimeInZone2: 0,
+          hrTimeInZone3: 900,
+          hrTimeInZone4: 900,
+          hrTimeInZone5: 0,
+          rawPayload: {},
+        },
+      });
+      await request(app.getHttpServer())
+        .put(`/api/sessions/${id}/activity`)
+        .send({ activityId: activity.id })
+        .expect(200);
+
+      const res = await get(id).expect(200);
+
+      expect(res.body.targetDistanceMeters).toBe(2000);
+      expect(res.body.targetHrZonePercentages).toEqual([10, 20, 40, 20, 10]);
+      expect(res.body.achievement).toEqual({
+        distanceRate: 75,
+        durationRate: 50,
+        zoneGapsPoints: [-10, -20, 10, 30, -10],
+      });
+    });
+
+    it("n'expose pas de réalisation sans activité liée", async () => {
+      const id = await createNatation();
+
+      const res = await get(id).expect(200);
+
+      expect(res.body.achievement).toBeNull();
     });
   });
 

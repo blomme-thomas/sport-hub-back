@@ -20,3 +20,17 @@ export const IsCalendarDate = ValidateBy({
       'doit être une date calendaire réelle au format YYYY-MM-DD',
   },
 });
+
+export const SumsTo100 = ValidateBy({
+  name: 'sumsTo100',
+  validator: {
+    validate: (value) =>
+      Array.isArray(value) &&
+      value.reduce(
+        (sum: number, item: unknown) =>
+          sum + (typeof item === 'number' ? item : 0),
+        0,
+      ) === 100,
+    defaultMessage: () => 'la répartition par zone doit totaliser 100 %',
+  },
+});

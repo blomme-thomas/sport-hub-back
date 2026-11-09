@@ -150,6 +150,7 @@ describe('Planning (e2e)', () => {
       const manual = await http()
         .post('/api/sessions')
         .send({
+          targetHrZonePercentages: [10, 20, 40, 20, 10],
           date: '2099-05-04',
           disciplineTypeKey: 'swimming',
           durationMinutes: 60,

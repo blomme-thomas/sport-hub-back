@@ -87,6 +87,7 @@ describe('Bilans hebdomadaires (e2e)', () => {
     await http()
       .post('/api/sessions')
       .send({
+        targetHrZonePercentages: [10, 20, 40, 20, 10],
         date: '2026-11-04',
         disciplineTypeKey: 'running',
         durationMinutes: 45,
