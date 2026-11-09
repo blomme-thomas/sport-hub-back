@@ -119,6 +119,7 @@ describe('GetTrainingStatsUseCase', () => {
       expect(result.periods[0]?.byType).toEqual([
         {
           type: 'running',
+          family: 'running',
           count: 2,
           durationSeconds: 5400,
           distanceMeters: 5000,

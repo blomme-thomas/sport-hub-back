@@ -127,6 +127,7 @@ describe('TrainingStatsContextAdapter', () => {
             [
               {
                 type: 'running',
+                family: 'running',
                 count: 3,
                 durationSeconds: 5400,
                 distanceMeters: 15432,

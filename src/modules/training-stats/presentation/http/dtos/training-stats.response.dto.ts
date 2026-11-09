@@ -1,4 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  SPORT_FAMILIES,
+  type SportFamily,
+} from '../../../domain/value-objects/sport-family.vo.js';
 
 export class VolumeResponseDto {
   @ApiProperty({ example: 3, description: 'Nombre de séances' })
@@ -18,6 +22,14 @@ export class VolumeResponseDto {
 export class TypeVolumeResponseDto extends VolumeResponseDto {
   @ApiProperty({ example: 'running', description: "Type d'activité" })
   type!: string;
+
+  @ApiProperty({
+    enum: SPORT_FAMILIES,
+    example: 'running',
+    description:
+      'Famille de sport du type : course, vélo, natation, ou autre (tout type non listé)',
+  })
+  family!: SportFamily;
 }
 
 export class MetricVariationResponseDto {
