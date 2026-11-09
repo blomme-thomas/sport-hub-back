@@ -70,6 +70,20 @@
             "example": "12345678901",
             "type": "string"
           },
+          "heartRateSeries": {
+            "description": "Série de fréquence cardiaque horodatée, décodée du fichier d’origine ; null tant qu’elle n’a pas été décodée",
+            "example": [
+              {
+                "bpm": 110,
+                "occurredAt": "2026-11-08T08:44:19.000Z"
+              }
+            ],
+            "items": {
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
+          },
           "hrTimeInZone": {
             "description": "Temps passé dans les zones 1 à 5 (unité supposée en secondes, non confirmée par la spécification Garmin) ; null pour une zone non renseignée",
             "example": [
@@ -117,7 +131,8 @@
           "elevationGainMeters",
           "averageHeartRate",
           "maxHeartRate",
-          "hrTimeInZone"
+          "hrTimeInZone",
+          "heartRateSeries"
         ],
         "type": "object"
       },
