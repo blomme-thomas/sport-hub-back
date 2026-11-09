@@ -27,10 +27,20 @@ model Activity {
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   heartRateSamples ActivityHeartRateSample[]
+  fitDocument      ActivityFitDocument?
 
   @@index([startedAt])
   @@index([type, startedAt])
   @@map("activities")
+}
+
+model ActivityFitDocument {
+  activityId    String   @id @map("activity_id") @db.Uuid
+  formatVersion Int      @map("format_version")
+  document      Json     @db.JsonB
+  activity      Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@map("activity_fit_documents")
 }
 
 model ActivityHeartRateSample {

@@ -1,3 +1,5 @@
+import type { ActivityFitDocument } from './activity-heart-rate.extractor.port.js';
+
 export interface ActivityListCriteria {
   page: number;
   pageSize: number;
@@ -43,6 +45,9 @@ export interface IActivityListReadModel {
 
   /** Renvoie le détail de l'activité portant cet identifiant, ou null si elle n'est pas enregistrée. */
   findDetailById(id: string): Promise<ActivityDetailItem | null>;
+
+  /** Renvoie le document FIT compact de l'activité, ou null si aucun n'a été enregistré. */
+  findFitDocument(id: string): Promise<ActivityFitDocument | null>;
 }
 
 export const ACTIVITY_LIST_READ_MODEL = Symbol('ACTIVITY_LIST_READ_MODEL');

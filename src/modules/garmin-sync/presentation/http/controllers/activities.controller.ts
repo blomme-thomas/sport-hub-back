@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponses } from '../../../../../core/filters/api-problem-responses.decorator.js';
 import { GetActivityDetailUseCase } from '../../../application/use-cases/get-activity-detail.use-case.js';
+import { GetActivityFitDocumentUseCase } from '../../../application/use-cases/get-activity-fit-document.use-case.js';
 import { ListActivitiesUseCase } from '../../../application/use-cases/list-activities.use-case.js';
 import { ActivityDetailResponseDto } from '../dtos/activity-detail.response.dto.js';
 import { ActivityIdParamDto } from '../dtos/activity-id.param.dto.js';
@@ -15,6 +16,7 @@ export class ActivitiesController {
   constructor(
     private readonly listActivities: ListActivitiesUseCase,
     private readonly getActivityDetail: GetActivityDetailUseCase,
+    private readonly getActivityFitDocument: GetActivityFitDocumentUseCase,
   ) {}
 
   @Get()
@@ -47,5 +49,19 @@ export class ActivitiesController {
     @Param() params: ActivityIdParamDto,
   ): Promise<ActivityDetailResponseDto> {
     return this.getActivityDetail.execute(params.id);
+  }
+
+  @Get(':id/fit')
+  @ApiProblemResponses(400, 404)
+  @ApiOperation({
+    summary:
+      "Document FIT compact d'une activité : sessions, tours, temps dans les zones et échantillons de fréquence cardiaque (lu en base, sans appel à Garmin)",
+  })
+  @ApiOkResponse({
+    description: 'Document FIT compact de l’activité',
+    schema: { type: 'object' },
+  })
+  async fit(@Param() params: ActivityIdParamDto): Promise<object> {
+    return this.getActivityFitDocument.execute(params.id);
   }
 }

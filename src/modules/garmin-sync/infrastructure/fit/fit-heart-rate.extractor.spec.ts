@@ -36,6 +36,8 @@ function zipWith(name: string, content: Uint8Array): Uint8Array {
 
 describe('FitHeartRateExtractor', () => {
   const extractor = new FitHeartRateExtractor();
+  const samplesOf = (zip: Uint8Array) =>
+    extractor.extract(zip).heartRateSamples;
 
   it('extrait la fréquence cardiaque horodatée de chaque échantillon du FIT', () => {
     const zip = zipWith(
@@ -47,7 +49,7 @@ describe('FitHeartRateExtractor', () => {
       ]),
     );
 
-    expect(extractor.extract(zip)).toEqual([
+    expect(samplesOf(zip)).toEqual([
       { occurredAt: START, bpm: 110 },
       { occurredAt: new Date(START.getTime() + 1000), bpm: 112 },
       { occurredAt: new Date(START.getTime() + 2000), bpm: 115 },
@@ -64,15 +66,13 @@ describe('FitHeartRateExtractor', () => {
       ]),
     );
 
-    expect(extractor.extract(zip).map((sample) => sample.bpm)).toEqual([
-      110, 118,
-    ]);
+    expect(samplesOf(zip).map((sample) => sample.bpm)).toEqual([110, 118]);
   });
 
   it('renvoie une liste vide quand le FIT ne contient aucune fréquence cardiaque', () => {
     const zip = zipWith('activite_ACTIVITY.fit', fitBytes([{ seconds: 0 }]));
 
-    expect(extractor.extract(zip)).toEqual([]);
+    expect(samplesOf(zip)).toEqual([]);
   });
 
   it('lève GarminActivityFileInvalidError quand l’archive ne contient pas de FIT', () => {

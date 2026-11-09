@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { Test } from '@nestjs/testing';
+import { GetActivityFitDocumentUseCase } from '../../../application/use-cases/get-activity-fit-document.use-case.js';
 import { GetActivityDetailUseCase } from '../../../application/use-cases/get-activity-detail.use-case.js';
 import { ListActivitiesUseCase } from '../../../application/use-cases/list-activities.use-case.js';
 import { ListActivitiesRequestDto } from '../dtos/list-activities.request.dto.js';
@@ -30,6 +31,10 @@ describe('ActivitiesController', () => {
       providers: [
         { provide: ListActivitiesUseCase, useValue: { execute } },
         { provide: GetActivityDetailUseCase, useValue: { execute: vi.fn() } },
+        {
+          provide: GetActivityFitDocumentUseCase,
+          useValue: { execute: vi.fn() },
+        },
       ],
     }).compile();
     controller = moduleRef.get(ActivitiesController);

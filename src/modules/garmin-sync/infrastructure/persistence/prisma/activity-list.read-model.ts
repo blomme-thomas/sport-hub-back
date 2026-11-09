@@ -8,6 +8,7 @@ import type {
   ActivityListPage,
   IActivityListReadModel,
 } from '../../../domain/ports/outbound/activity-list.read-model.port.js';
+import type { ActivityFitDocument } from '../../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
 import { maxHeartRateOf } from './activity-detail.mapper.js';
 
 const LIST_SELECT = {
@@ -92,6 +93,16 @@ export class PrismaActivityListReadModel implements IActivityListReadModel {
       ],
       heartRateSeries: samples.length === 0 ? null : samples,
     };
+  }
+
+  async findFitDocument(id: string): Promise<ActivityFitDocument | null> {
+    const record = await this.prisma.activityFitDocument.findUnique({
+      where: { activityId: id },
+      select: { document: true },
+    });
+    return record === null
+      ? null
+      : (record.document as unknown as ActivityFitDocument);
   }
 
   private static toWhere(
