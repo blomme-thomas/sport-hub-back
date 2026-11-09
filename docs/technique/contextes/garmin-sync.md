@@ -104,7 +104,9 @@ Détail des codes et du format des erreurs : [Erreurs de l'API](../erreurs-api.m
 - Les échantillons de fréquence cardiaque (message `record`, champ `heartRate`) sont stockés dans `activity_heart_rate_samples` ; une activité sans échantillon valide n'a aucune ligne.
 - Échec isolé : un téléchargement, une archive ou un FIT illisible est journalisé (sans donnée personnelle) et ne fait pas échouer la synchronisation. L'activité reste sans série.
 - Le décodage est strict : toute erreur signalée par le SDK rejette le fichier entier.
-- Non décodé à ce jour : autres canaux de capteurs (vitesse, distance, puissance), messages `session`, `lap`, `timeInZone`. Ils sont présents dans le fichier et seront ajoutés plus tard.
+- Document compact (issue #83) : pour chaque activité nouvelle, un document JSONB `activity_fit_documents` est stocké avec le format `formatVersion` : `session`, `laps`, `timeInZone` (liste blanche de champs utiles, valeurs « non renseigné » et chaînes vides retirées) et `records` en couples `[secondes Unix, bpm]`. Les données de profil de l'athlète ne sont pas stockées.
+- `GET /api/activities/:id/fit` renvoie ce document, lu en base sans appel à Garmin ; 404 `ACTIVITY_FIT_DATA_NOT_FOUND` si aucun document n'a été enregistré.
+- Non stocké : le fichier FIT brut, les autres canaux de capteurs (vitesse, distance, puissance, cadence) tant qu'ils ne figurent pas dans la liste blanche, et les messages de profil.
 - Hypothèse : l'activité téléchargée reste une archive « format original » (FIT) ; le contenu n'est pas décrit par la spécification et a été vérifié sur une seule activité réelle.
 
 ## Synchronisation planifiée
