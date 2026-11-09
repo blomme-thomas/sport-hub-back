@@ -83,6 +83,22 @@ describe('buildActivityFitDocument', () => {
     expect(document.laps).toEqual([]);
   });
 
+  it('ignore une FC à zéro, qui signifie l’absence de capteur', () => {
+    const document = buildActivityFitDocument({
+      sessionMesgs: [],
+      lapMesgs: [],
+      timeInZoneMesgs: [],
+      recordMesgs: [
+        { timestamp: START, heartRate: 0 },
+        { timestamp: new Date(START.getTime() + 1000), heartRate: 120 },
+      ],
+    });
+
+    expect(document.records).toEqual([
+      [Math.floor(START.getTime() / 1000) + 1, 120],
+    ]);
+  });
+
   it('représente chaque échantillon avec FC par un couple [secondes Unix, bpm] et ignore ceux sans FC', () => {
     const document = buildActivityFitDocument({
       sessionMesgs: [],
