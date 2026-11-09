@@ -267,6 +267,15 @@
             "maxItems": 30,
             "type": "array"
           },
+          "recurrence": {
+            "description": "Récurrence de la séance, aucune par défaut",
+            "enum": [
+              "aucune",
+              "hebdomadaire"
+            ],
+            "example": "hebdomadaire",
+            "type": "string"
+          },
           "startTime": {
             "description": "Heure de début (HH:MM), facultative",
             "example": "18:00",
@@ -1444,21 +1453,6 @@
         ],
         "type": "object"
       },
-      "SessionListResponseDto": {
-        "properties": {
-          "items": {
-            "description": "Séances de la période, triées par date croissante",
-            "items": {
-              "$ref": "#/components/schemas/SessionResponseDto"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "items"
-        ],
-        "type": "object"
-      },
       "SessionModuleRequestDto": {
         "properties": {
           "durationMinutes": {
@@ -1563,6 +1557,76 @@
         ],
         "type": "object"
       },
+      "SessionOccurrenceListResponseDto": {
+        "properties": {
+          "items": {
+            "description": "Occurrences de la période, triées par date, heure puis identifiant de séance",
+            "items": {
+              "$ref": "#/components/schemas/SessionOccurrenceResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "SessionOccurrenceResponseDto": {
+        "properties": {
+          "date": {
+            "example": "2026-11-23",
+            "format": "date",
+            "type": "string"
+          },
+          "disciplineTypeKey": {
+            "example": "swimming",
+            "type": "string"
+          },
+          "durationMinutes": {
+            "example": 60,
+            "type": "number"
+          },
+          "recurrence": {
+            "enum": [
+              "aucune",
+              "hebdomadaire"
+            ],
+            "example": "hebdomadaire",
+            "type": "string"
+          },
+          "sessionId": {
+            "description": "Identifiant de la séance à laquelle appartient l’occurrence",
+            "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
+            "format": "uuid",
+            "type": "string"
+          },
+          "startTime": {
+            "example": "18:00",
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "planifiee",
+              "realisee",
+              "manquee"
+            ],
+            "example": "planifiee",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "date",
+          "startTime",
+          "durationMinutes",
+          "disciplineTypeKey",
+          "recurrence",
+          "status"
+        ],
+        "type": "object"
+      },
       "SessionResponseDto": {
         "properties": {
           "activity": {
@@ -1627,6 +1691,14 @@
             },
             "type": "array"
           },
+          "recurrence": {
+            "enum": [
+              "aucune",
+              "hebdomadaire"
+            ],
+            "example": "aucune",
+            "type": "string"
+          },
           "startTime": {
             "description": "Heure de début (HH:MM), absente si la séance n’a pas d’heure",
             "example": "18:00",
@@ -1649,6 +1721,7 @@
           "disciplineTypeKey",
           "durationMinutes",
           "startTime",
+          "recurrence",
           "status",
           "modifiedManually",
           "description",
@@ -2079,6 +2152,15 @@
             "example": "Palmes",
             "maxLength": 1000,
             "nullable": true,
+            "type": "string"
+          },
+          "recurrence": {
+            "description": "Nouvelle récurrence, absent = inchangée ; s’applique à toute la série",
+            "enum": [
+              "aucune",
+              "hebdomadaire"
+            ],
+            "example": "hebdomadaire",
             "type": "string"
           },
           "startTime": {
@@ -3766,7 +3848,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SessionListResponseDto"
+                  "$ref": "#/components/schemas/SessionOccurrenceListResponseDto"
                 }
               }
             },
@@ -3793,7 +3875,7 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Liste les séances dont la date est comprise entre from et to (bornes incluses, 366 jours au plus)",
+        "summary": "Liste les occurrences des séances entre from et to (bornes incluses, 366 jours au plus), triées par date, heure puis identifiant",
         "tags": [
           "seances"
         ]
