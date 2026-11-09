@@ -79,6 +79,7 @@ model Session {
   disciplineTypeKey String               @map("discipline_type_key")
   durationMinutes   Int                  @map("duration_minutes")
   startTime         String?              @map("start_time") @db.VarChar(5)
+  recurrence        String               @default("aucune") @db.VarChar(20)
   status            String               @default("planifiee")
   modifiedManually  Boolean              @default(false) @map("modified_manually")
   description       String?

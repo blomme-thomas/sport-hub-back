@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SESSION_RECURRENCES } from '../../../domain/value-objects/session-recurrence.vo.js';
 import { SESSION_STATUSES } from '../../../domain/value-objects/session-status.vo.js';
 import { MODULE_TYPES } from '../../../domain/value-objects/module-type.vo.js';
 
@@ -104,6 +105,9 @@ export class SessionResponseDto {
     description: 'Heure de début (HH:MM), absente si la séance n’a pas d’heure',
   })
   startTime!: string | null;
+
+  @ApiProperty({ enum: SESSION_RECURRENCES, example: 'aucune' })
+  recurrence!: string;
 
   @ApiProperty({ enum: SESSION_STATUSES, example: 'planifiee' })
   status!: string;

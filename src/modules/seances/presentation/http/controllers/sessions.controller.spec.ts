@@ -4,7 +4,7 @@ import { CreateSessionUseCase } from '../../../application/use-cases/create-sess
 import { DeleteSessionUseCase } from '../../../application/use-cases/delete-session.use-case.js';
 import { GetSessionUseCase } from '../../../application/use-cases/get-session.use-case.js';
 import { LinkSessionActivityUseCase } from '../../../application/use-cases/link-session-activity.use-case.js';
-import { ListSessionsUseCase } from '../../../application/use-cases/list-sessions.use-case.js';
+import { ListSessionOccurrencesUseCase } from '../../../application/use-cases/list-session-occurrences.use-case.js';
 import { ReconcileSessionsUseCase } from '../../../application/use-cases/reconcile-sessions.use-case.js';
 import { ReplaceSessionModulesUseCase } from '../../../application/use-cases/replace-session-modules.use-case.js';
 import { UnlinkSessionActivityUseCase } from '../../../application/use-cases/unlink-session-activity.use-case.js';
@@ -38,6 +38,7 @@ describe('SessionsController', () => {
   let controller: SessionsController;
   const createExecute = vi.fn();
   const listExecute = vi.fn();
+  const listOccurrencesExecute = vi.fn();
   const getExecute = vi.fn();
   const updateExecute = vi.fn();
   const replaceExecute = vi.fn();
@@ -49,6 +50,7 @@ describe('SessionsController', () => {
   beforeEach(async () => {
     createExecute.mockReset();
     listExecute.mockReset();
+    listOccurrencesExecute.mockReset();
     getExecute.mockReset();
     updateExecute.mockReset();
     replaceExecute.mockReset();
@@ -60,7 +62,10 @@ describe('SessionsController', () => {
       controllers: [SessionsController],
       providers: [
         { provide: CreateSessionUseCase, useValue: { execute: createExecute } },
-        { provide: ListSessionsUseCase, useValue: { execute: listExecute } },
+        {
+          provide: ListSessionOccurrencesUseCase,
+          useValue: { execute: listOccurrencesExecute },
+        },
         { provide: GetSessionUseCase, useValue: { execute: getExecute } },
         { provide: UpdateSessionUseCase, useValue: { execute: updateExecute } },
         {
@@ -108,8 +113,17 @@ describe('SessionsController', () => {
   });
 
   describe('lecture par période', () => {
-    it('transmet la période et renvoie les séances sous la clé items', async () => {
-      listExecute.mockResolvedValue([sessionDto]);
+    it('transmet la période et renvoie les occurrences sous la clé items', async () => {
+      const occurrence = {
+        sessionId: SESSION_ID,
+        date: '2026-05-04',
+        startTime: null,
+        durationMinutes: 60,
+        disciplineTypeKey: 'swimming',
+        recurrence: 'aucune' as const,
+        status: 'planifiee' as const,
+      };
+      listOccurrencesExecute.mockResolvedValue([occurrence]);
       const request = plainToInstance(ListSessionsRequestDto, {
         from: '2026-05-01',
         to: '2026-05-31',
@@ -117,11 +131,11 @@ describe('SessionsController', () => {
 
       const response = await controller.list(request);
 
-      expect(listExecute).toHaveBeenCalledWith({
+      expect(listOccurrencesExecute).toHaveBeenCalledWith({
         from: '2026-05-01',
         to: '2026-05-31',
       });
-      expect(response).toEqual({ items: [sessionDto] });
+      expect(response).toEqual({ items: [occurrence] });
     });
   });
 

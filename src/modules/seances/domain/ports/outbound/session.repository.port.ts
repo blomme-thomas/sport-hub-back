@@ -15,6 +15,11 @@ export interface ISessionRepository {
    */
   findByPeriod(period: SessionPeriod): Promise<Session[]>;
 
+  /**
+   * Renvoie les séances susceptibles d'avoir une occurrence dans la période : celles dont la date est antérieure ou égale à `to`, et qui sont soit datées dans la période, soit hebdomadaires.
+   */
+  findOccurrenceCandidates(period: SessionPeriod): Promise<Session[]>;
+
   /** Renvoie les séances liées à l'une de ces activités, sans doublon. */
   findByActivityIds(activityIds: string[]): Promise<Session[]>;
 

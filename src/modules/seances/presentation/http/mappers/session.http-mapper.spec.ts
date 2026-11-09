@@ -23,6 +23,7 @@ function sessionDto(overrides: Partial<SessionDto> = {}): SessionDto {
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
     startTime: null,
+    recurrence: 'aucune',
     status: 'planifiee',
     modifiedManually: true,
     description: 'Endurance',
@@ -140,6 +141,7 @@ describe('SessionHttpMapper', () => {
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
         startTime: null,
+        recurrence: 'aucune',
         status: 'planifiee',
         modifiedManually: true,
         description: 'Endurance',
@@ -180,22 +182,38 @@ describe('SessionHttpMapper', () => {
       expect(entry.changedAt).toBe('2026-11-08T10:00:00.000Z');
     });
 
-    it('restitue la liste des séances sous la clé items', () => {
+    it('restitue les occurrences sous la clé items, sans modules ni journal', () => {
       expect(
-        SessionHttpMapper.toListResponse([
-          sessionDto(),
-          sessionDto({ id: 'autre' }),
+        SessionHttpMapper.toOccurrenceListResponse([
+          {
+            sessionId: SESSION_ID,
+            date: '2026-05-04',
+            startTime: '18:00',
+            durationMinutes: 60,
+            disciplineTypeKey: 'swimming',
+            recurrence: 'hebdomadaire',
+            status: 'planifiee',
+          },
         ]),
       ).toEqual({
         items: [
-          expect.objectContaining({ id: SESSION_ID, date: '2026-05-04' }),
-          expect.objectContaining({ id: 'autre' }),
+          {
+            sessionId: SESSION_ID,
+            date: '2026-05-04',
+            startTime: '18:00',
+            durationMinutes: 60,
+            disciplineTypeKey: 'swimming',
+            recurrence: 'hebdomadaire',
+            status: 'planifiee',
+          },
         ],
       });
     });
 
     it('restitue une liste vide sous la clé items', () => {
-      expect(SessionHttpMapper.toListResponse([])).toEqual({ items: [] });
+      expect(SessionHttpMapper.toOccurrenceListResponse([])).toEqual({
+        items: [],
+      });
     });
   });
 });

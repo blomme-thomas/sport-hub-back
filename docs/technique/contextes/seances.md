@@ -2,7 +2,7 @@
 
 Bounded Context des séances planifiées : une séance a une date, une discipline, une durée totale et une liste ordonnée de modules (échauffement, éducatifs, séries, retour au calme, autre). Elle peut être créée à la main et modifiée librement ; chaque modification faite par l'utilisateur est journalisée. Code : `src/modules/seances/`. Usage mono-utilisateur. Issue #37.
 
-Périmètre livré : création, consultation, liste par période, modification, remplacement ordonné des modules, suppression, et rapprochement avec les activités Garmin réalisées (issue #40). Hors périmètre : génération de séances par l'IA (epic planning-ia), affichage côte à côte (dépôt front) et commentaire sur l'activité (epic conseils-bilans).
+Périmètre livré : création, consultation, liste par période, séances hebdomadaires et liste des occurrences (issue #75), modification, remplacement ordonné des modules, suppression, et rapprochement avec les activités Garmin réalisées (issue #40). Hors périmètre : génération de séances par l'IA (epic planning-ia), affichage côte à côte (dépôt front) et commentaire sur l'activité (epic conseils-bilans).
 
 ## Rôle
 
@@ -37,7 +37,7 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 | Méthode | Chemin | Effet | Erreurs |
 |---|---|---|---|
 | `POST` | `/api/sessions` | Crée une séance, éventuellement avec ses modules (201) | 400 |
-| `GET` | `/api/sessions?from&to` | Liste les séances dont la date est dans la période, triées par date croissante | 400 |
+| `GET` | `/api/sessions?from&to` | Liste les **occurrences** des séances dans la période (bornes incluses), triées par date, heure puis identifiant (voir [Récurrence](#récurrence)) | 400 |
 | `GET` | `/api/sessions/:id` | Renvoie la séance avec ses modules et son journal | 400, 404 |
 | `PATCH` | `/api/sessions/:id` | Modifie les champs fournis ; `null` efface description, matériel ou points d'attention | 400, 404, 409 |
 | `PUT` | `/api/sessions/:id/modules` | Remplace la liste ordonnée des modules et renumérote les positions de 1 à n | 400, 404, 409 |
@@ -45,6 +45,14 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 | `POST` | `/api/sessions/reconcile?from&to` | Rapproche automatiquement les séances planifiées de la période avec les activités du même jour et de la même discipline ; renvoie les couples créés (`items`) | 400 |
 | `PUT` | `/api/sessions/:id/activity` | Associe manuellement une activité du même jour, en remplaçant le lien précédent | 400, 404, 409 |
 | `DELETE` | `/api/sessions/:id/activity` | Dissocie l'activité liée (204) ; sans effet s'il n'y a pas de lien | 400, 404 |
+
+## Récurrence
+
+- Une séance a une récurrence : `aucune` (défaut) ou `hebdomadaire` (issue #75). Elle se choisit à la création (`POST /api/sessions`) et se modifie par `PATCH` ; une modification vaut pour toute la série.
+- Une séance hebdomadaire se répète chaque semaine, à la même heure, sans date de fin.
+- `GET /api/sessions?from&to` renvoie les occurrences : chacune porte `sessionId`, `date`, `startTime`, `durationMinutes`, `disciplineTypeKey`, `recurrence` et `status`. Une occurrence reprend le statut de la série.
+- Le calcul est un service de domaine pur (`session-occurrences.ts`) ; le repository renvoie les séances candidates (datées avant `to` et dans la période, ou hebdomadaires).
+- Hors périmètre à ce jour : les autres routes de lecture (`GET /api/sessions/:id`, calendrier, planification, conseils et réconciliation) ne voient que la date de base de la série. Déplacer ou annuler une occurrence isolée relève de la story suivante (#76).
 
 Le journal est renvoyé avec la séance (`changeLog`) : chaque entrée porte `changedAt`, `field` et `previousValue`. L'activité liée est renvoyée dans `activity` (`id`, `origin`, `linkedAt`), ou `null`.
 
@@ -61,11 +69,11 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 
 ## Règles
 
-- **Champs** : date calendaire `YYYY-MM-DD` ; discipline de 1 à 100 caractères, présente dans le référentiel ; durée entière de 1 à 1440 minutes ; description 2000 caractères au plus, matériel et points d'attention 1000 au plus. Un texte vide après retrait des espaces devient `null`.
+- **Champs** : date calendaire `YYYY-MM-DD` ; récurrence `aucune` ou `hebdomadaire` ; discipline de 1 à 100 caractères, présente dans le référentiel ; durée entière de 1 à 1440 minutes ; description 2000 caractères au plus, matériel et points d'attention 1000 au plus. Un texte vide après retrait des espaces devient `null`.
 - **Modules** : 30 au plus par séance. Les positions sont données par l'ordre de la liste (1 à n) ; aucune position n'est saisie par le client. Une durée de module suit les mêmes bornes que la séance.
 - **Statut** : une séance est créée `planifiee`. Le statut peut être changé par `PATCH` vers `realisee` ou `manquee`.
 - **Modification manuelle** : toute modification réelle (champ ou liste de modules différente) positionne `modifiedManually` à vrai et ajoute une entrée au journal. Une valeur identique ne journalise rien. Le journal est en ajout seul.
-- **Journal** : les champs journalisés sont `date`, `disciplineTypeKey`, `durationMinutes`, `status`, `description`, `equipment`, `attentionPoints` et `modules`. Pour `modules`, `previousValue` contient la liste précédente sérialisée en JSON.
+- **Journal** : les champs journalisés sont `date`, `disciplineTypeKey`, `durationMinutes`, `recurrence`, `status`, `description`, `equipment`, `attentionPoints` et `modules`. Pour `modules`, `previousValue` contient la liste précédente sérialisée en JSON.
 - **Séance réalisée** : elle ne peut plus être modifiée ni recevoir un nouveau remplacement de modules (409 `SESSION_ALREADY_COMPLETED`). Elle reste supprimable.
 - **Période** : `from` et `to` sont inclus ; la période compte au plus 366 jours.
 

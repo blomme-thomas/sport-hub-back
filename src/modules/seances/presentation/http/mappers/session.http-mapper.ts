@@ -5,12 +5,13 @@ import type {
   ReplaceSessionModulesCommand,
   SessionDto,
   SessionModuleDto,
+  SessionOccurrenceDto,
   UpdateSessionCommand,
 } from '../../../application/dtos/session.dto.js';
 import type { CreateSessionRequestDto } from '../dtos/create-session.request.dto.js';
 import type { ListSessionsRequestDto } from '../dtos/list-sessions.request.dto.js';
 import type { ReplaceSessionModulesRequestDto } from '../dtos/replace-session-modules.request.dto.js';
-import type { SessionListResponseDto } from '../dtos/session-list.response.dto.js';
+import type { SessionOccurrenceListResponseDto } from '../dtos/session-list.response.dto.js';
 import type {
   ChangeLogEntryResponseDto,
   SessionModuleResponseDto,
@@ -27,6 +28,7 @@ export class SessionHttpMapper {
       disciplineTypeKey: request.disciplineTypeKey,
       durationMinutes: request.durationMinutes,
       startTime: request.startTime,
+      recurrence: request.recurrence,
       description: request.description,
       equipment: request.equipment,
       attentionPoints: request.attentionPoints,
@@ -44,6 +46,7 @@ export class SessionHttpMapper {
       disciplineTypeKey: request.disciplineTypeKey,
       durationMinutes: request.durationMinutes,
       startTime: request.startTime,
+      recurrence: request.recurrence,
       status: request.status,
       description: request.description,
       equipment: request.equipment,
@@ -69,6 +72,7 @@ export class SessionHttpMapper {
       disciplineTypeKey: dto.disciplineTypeKey,
       durationMinutes: dto.durationMinutes,
       startTime: dto.startTime,
+      recurrence: dto.recurrence,
       status: dto.status,
       modifiedManually: dto.modifiedManually,
       description: dto.description,
@@ -90,8 +94,20 @@ export class SessionHttpMapper {
     };
   }
 
-  static toListResponse(dtos: SessionDto[]): SessionListResponseDto {
-    return { items: dtos.map((dto) => SessionHttpMapper.toResponse(dto)) };
+  static toOccurrenceListResponse(
+    occurrences: SessionOccurrenceDto[],
+  ): SessionOccurrenceListResponseDto {
+    return {
+      items: occurrences.map((occurrence) => ({
+        sessionId: occurrence.sessionId,
+        date: occurrence.date,
+        startTime: occurrence.startTime,
+        durationMinutes: occurrence.durationMinutes,
+        disciplineTypeKey: occurrence.disciplineTypeKey,
+        recurrence: occurrence.recurrence,
+        status: occurrence.status,
+      })),
+    };
   }
 
   private static toModuleResponse(

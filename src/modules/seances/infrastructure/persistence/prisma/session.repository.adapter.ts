@@ -48,6 +48,18 @@ export class PrismaSessionRepositoryAdapter implements ISessionRepository {
     return records.map((record) => SessionMapper.toDomain(record));
   }
 
+  async findOccurrenceCandidates(period: SessionPeriod): Promise<Session[]> {
+    const records = await this.prisma.session.findMany({
+      where: {
+        date: { lte: period.to },
+        OR: [{ date: { gte: period.from } }, { recurrence: 'hebdomadaire' }],
+      },
+      include: SESSION_INCLUDE,
+      orderBy: [{ date: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    });
+    return records.map((record) => SessionMapper.toDomain(record));
+  }
+
   async save(session: Session): Promise<void> {
     const { modules, activityLink, ...scalars } =
       SessionMapper.toPersistence(session);

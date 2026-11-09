@@ -3,6 +3,7 @@ import type {
   SessionChangeLogEntry,
 } from '../../domain/entities/session.entity.js';
 import type { ModuleType } from '../../domain/value-objects/module-type.vo.js';
+import type { SessionRecurrence } from '../../domain/value-objects/session-recurrence.vo.js';
 import type { SessionStatus } from '../../domain/value-objects/session-status.vo.js';
 import type { TargetZonesInput } from '../../domain/value-objects/target-zones.vo.js';
 
@@ -19,6 +20,7 @@ export interface CreateSessionCommand {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime?: string | null;
+  recurrence?: SessionRecurrence;
   description?: string | null;
   equipment?: string | null;
   attentionPoints?: string | null;
@@ -31,6 +33,7 @@ export interface UpdateSessionCommand {
   disciplineTypeKey?: string;
   durationMinutes?: number;
   startTime?: string | null;
+  recurrence?: SessionRecurrence;
   status?: string;
   description?: string | null;
   equipment?: string | null;
@@ -58,6 +61,8 @@ export interface SessionModuleDto {
 
 export type ChangeLogEntryDto = SessionChangeLogEntry;
 
+export type { SessionOccurrence as SessionOccurrenceDto } from '../../domain/services/session-occurrences.js';
+
 export interface SessionActivityLinkDto {
   id: string;
   origin: string;
@@ -81,6 +86,7 @@ export class SessionDto {
     readonly disciplineTypeKey: string,
     readonly durationMinutes: number,
     readonly startTime: string | null,
+    readonly recurrence: SessionRecurrence,
     readonly status: SessionStatus,
     readonly modifiedManually: boolean,
     readonly description: string | null,
@@ -99,6 +105,7 @@ export class SessionDto {
       session.disciplineTypeKey,
       session.durationMinutes,
       session.startTime,
+      session.recurrence,
       session.status,
       session.modifiedManually,
       session.description,

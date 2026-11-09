@@ -170,6 +170,102 @@ describe('Séances (e2e)', () => {
     });
   });
 
+  describe('récurrence hebdomadaire', () => {
+    it('crée une séance hebdomadaire et la liste à chaque semaine de la période', async () => {
+      const res = await create({
+        ...SEANCE_NATATION,
+        date: '2099-05-04',
+        startTime: '18:00',
+        recurrence: 'hebdomadaire',
+      }).expect(201);
+      expect(res.body.recurrence).toBe('hebdomadaire');
+
+      const occurrences = await list({
+        from: '2099-05-01',
+        to: '2099-05-31',
+      }).expect(200);
+
+      expect(
+        occurrences.body.items.map(
+          (item: { date: string; recurrence: string }) => [
+            item.date,
+            item.recurrence,
+          ],
+        ),
+      ).toEqual([
+        ['2099-05-04', 'hebdomadaire'],
+        ['2099-05-11', 'hebdomadaire'],
+        ['2099-05-18', 'hebdomadaire'],
+        ['2099-05-25', 'hebdomadaire'],
+      ]);
+      expect(occurrences.body.items[0]).toMatchObject({
+        startTime: '18:00',
+        durationMinutes: 60,
+        disciplineTypeKey: 'swimming',
+        status: 'planifiee',
+      });
+    });
+
+    it('ne liste une séance non récurrente qu’à sa date', async () => {
+      await create({ ...SEANCE_NATATION, date: '2099-05-04' }).expect(201);
+
+      const res = await list({ from: '2099-05-01', to: '2099-05-31' }).expect(
+        200,
+      );
+
+      expect(res.body.items.map((item: { date: string }) => item.date)).toEqual(
+        ['2099-05-04'],
+      );
+      expect(res.body.items[0].recurrence).toBe('aucune');
+    });
+
+    it('modifie toute la série quand on modifie la durée d’une séance hebdomadaire', async () => {
+      const id = (
+        await create({
+          ...SEANCE_NATATION,
+          date: '2099-05-04',
+          recurrence: 'hebdomadaire',
+        }).expect(201)
+      ).body.id as string;
+
+      await patch(id, { durationMinutes: 45 }).expect(200);
+
+      const res = await list({ from: '2099-05-01', to: '2099-05-14' }).expect(
+        200,
+      );
+      expect(
+        res.body.items.map(
+          (item: { durationMinutes: number }) => item.durationMinutes,
+        ),
+      ).toEqual([45, 45]);
+    });
+
+    it('passe une séance de non récurrente à hebdomadaire par modification', async () => {
+      const id = await createNatation();
+
+      const res = await patch(id, { recurrence: 'hebdomadaire' }).expect(200);
+
+      expect(res.body.recurrence).toBe('hebdomadaire');
+      expect(
+        res.body.changeLog.map((entry: { field: string }) => entry.field),
+      ).toContain('recurrence');
+    });
+
+    it('refuse une récurrence inconnue avec VALIDATION_FAILED', async () => {
+      const res = await create({
+        ...SEANCE_NATATION,
+        recurrence: 'mensuelle',
+      }).expect(400);
+
+      expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('refuse une période de plus de 366 jours avec 400', async () => {
+      await list({ from: '2099-01-01', to: '2100-01-03' }).expect(400);
+    });
+  });
+
   describe('PATCH /api/sessions/:id', () => {
     it('modifie la date, la durée et la description, puis journalise les changements', async () => {
       const id = await createNatation();

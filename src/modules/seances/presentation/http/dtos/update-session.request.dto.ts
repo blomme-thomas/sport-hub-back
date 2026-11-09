@@ -10,6 +10,10 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
+import {
+  SESSION_RECURRENCES,
+  type SessionRecurrence,
+} from '../../../domain/value-objects/session-recurrence.vo.js';
 import { SESSION_STATUSES } from '../../../domain/value-objects/session-status.vo.js';
 import { IsCalendarDate } from '../validators/session.validators.js';
 
@@ -65,6 +69,16 @@ export class UpdateSessionRequestDto {
   @ValidateIf(isTextProvided)
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   startTime?: string | null;
+
+  @ApiPropertyOptional({
+    enum: SESSION_RECURRENCES,
+    example: 'hebdomadaire',
+    description:
+      'Nouvelle récurrence, absent = inchangée ; s’applique à toute la série',
+  })
+  @ValidateIf(isProvided)
+  @IsIn(SESSION_RECURRENCES)
+  recurrence?: SessionRecurrence;
 
   @ApiPropertyOptional({
     enum: SESSION_STATUSES,

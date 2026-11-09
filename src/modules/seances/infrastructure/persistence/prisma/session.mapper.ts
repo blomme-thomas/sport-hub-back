@@ -3,6 +3,7 @@ import {
   Session,
 } from '../../../domain/entities/session.entity.js';
 import { SessionId } from '../../../domain/value-objects/session-id.vo.js';
+import type { SessionRecurrence } from '../../../domain/value-objects/session-recurrence.vo.js';
 import {
   SessionModule,
   type SessionModulePrimitives,
@@ -36,6 +37,7 @@ export interface SessionRecord {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime?: string | null;
+  recurrence: string;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -52,6 +54,7 @@ export interface SessionPersistence {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime?: string | null;
+  recurrence: string;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -69,6 +72,7 @@ export class SessionMapper {
       disciplineTypeKey: record.disciplineTypeKey,
       durationMinutes: record.durationMinutes,
       startTime: record.startTime,
+      recurrence: record.recurrence as SessionRecurrence,
       status: record.status,
       modifiedManually: record.modifiedManually,
       activityLink: record.activityLink
@@ -106,6 +110,7 @@ export class SessionMapper {
       disciplineTypeKey: session.disciplineTypeKey,
       durationMinutes: session.durationMinutes,
       startTime: session.startTime,
+      recurrence: session.recurrence,
       status: session.status,
       modifiedManually: session.modifiedManually,
       description: session.description,
