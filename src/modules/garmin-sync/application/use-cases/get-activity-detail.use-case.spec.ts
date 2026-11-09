@@ -18,6 +18,7 @@ const DETAIL: ActivityDetailItem = {
   averageHeartRate: 145,
   maxHeartRate: 172,
   hrTimeInZone: [600, 1200, 1500, 300, null],
+  heartRateSeries: null,
 };
 
 function readModel(

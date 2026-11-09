@@ -13,6 +13,7 @@ import {
   type IGarminConnectClient,
   type RecoveryDay,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
+import { ACTIVITY_HEART_RATE_EXTRACTOR } from '../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
 import {
   DISCIPLINE_REGISTRY,
   type IDisciplineRegistry,
@@ -53,6 +54,16 @@ class InMemoryActivityRepository implements IActivityRepository {
     );
   }
 
+  readonly samples = new Map<string, unknown[]>();
+
+  saveHeartRateSamples(
+    garminActivityId: string,
+    samples: unknown[],
+  ): Promise<void> {
+    this.samples.set(garminActivityId, samples);
+    return Promise.resolve();
+  }
+
   save(activities: Activity[]): Promise<void> {
     this.saveCalls.push(activities);
     for (const a of activities) {
@@ -90,6 +101,10 @@ class FakeGarminClient implements IGarminConnectClient {
   fetchDailyCalories(): Promise<DailyCaloriesDay[]> {
     return Promise.resolve([]);
   }
+
+  fetchActivityFile(garminActivityId: string): Promise<Uint8Array> {
+    return Promise.resolve(new TextEncoder().encode(garminActivityId));
+  }
 }
 
 class FakeDisciplineRegistry implements IDisciplineRegistry {
@@ -121,6 +136,10 @@ describe('SyncGarminActivitiesUseCase', () => {
         { provide: ACTIVITY_REPOSITORY, useValue: repository },
         { provide: GARMIN_CONNECT_CLIENT, useValue: garmin },
         { provide: DISCIPLINE_REGISTRY, useValue: registry },
+        {
+          provide: ACTIVITY_HEART_RATE_EXTRACTOR,
+          useValue: { extract: () => [] },
+        },
       ],
     }).compile();
     useCase = moduleRef.get(SyncGarminActivitiesUseCase);

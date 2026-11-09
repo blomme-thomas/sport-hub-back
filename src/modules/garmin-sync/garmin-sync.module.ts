@@ -3,6 +3,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { HttpClientModule } from '../../core/http/http-client.module.js';
 import { DisciplinesModule } from '../disciplines/index.js';
 import { GetActivityUseCase } from './application/use-cases/get-activity.use-case.js';
+import { FitHeartRateExtractor } from './infrastructure/fit/fit-heart-rate.extractor.js';
+import { ACTIVITY_HEART_RATE_EXTRACTOR } from './domain/ports/outbound/activity-heart-rate.extractor.port.js';
 import { GetActivityDetailUseCase } from './application/use-cases/get-activity-detail.use-case.js';
 import { GetGarminProfileUseCase } from './application/use-cases/get-garmin-profile.use-case.js';
 import { GetHeartRateZonesUseCase } from './application/use-cases/get-heart-rate-zones.use-case.js';
@@ -47,6 +49,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     GarminSyncScheduler,
     GarminPersonalApiTokenProvider,
     { provide: GARMIN_CONNECT_CLIENT, useClass: GarminConnectAdapter },
+    { provide: ACTIVITY_HEART_RATE_EXTRACTOR, useClass: FitHeartRateExtractor },
     { provide: DISCIPLINE_REGISTRY, useClass: DisciplinesRegistryAdapter },
     { provide: ACTIVITY_REPOSITORY, useClass: PrismaActivityRepositoryAdapter },
     {

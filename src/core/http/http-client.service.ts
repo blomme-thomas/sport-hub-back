@@ -94,6 +94,7 @@ export class HttpClientService {
           url: request.url,
           data: request.data,
           headers: request.headers,
+          responseType: request.responseType ?? 'json',
           timeout: request.timeoutMs ?? this.defaults.timeoutMs,
           maxRedirects: 0,
           validateStatus: () => true,

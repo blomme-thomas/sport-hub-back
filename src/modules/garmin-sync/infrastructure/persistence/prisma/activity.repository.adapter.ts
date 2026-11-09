@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../core/prisma/prisma.service.js';
 import type { Activity } from '../../../domain/entities/activity.entity.js';
 import type { IActivityRepository } from '../../../domain/ports/outbound/activity.repository.port.js';
+import type { HeartRateSample } from '../../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
 import type { GarminActivityId } from '../../../domain/value-objects/garmin-activity-id.vo.js';
 import { ActivityMapper } from './activity.mapper.js';
 
@@ -25,6 +26,31 @@ export class PrismaActivityRepositoryAdapter implements IActivityRepository {
       where: { garminActivityId: { in: ids.map((id) => id.toString()) } },
     });
     return records.map((record) => ActivityMapper.toDomain(record));
+  }
+
+  async saveHeartRateSamples(
+    garminActivityId: string,
+    samples: HeartRateSample[],
+  ): Promise<void> {
+    const activity = await this.prisma.activity.findUnique({
+      where: { garminActivityId },
+      select: { id: true },
+    });
+    if (activity === null) {
+      return;
+    }
+    await this.prisma.$transaction([
+      this.prisma.activityHeartRateSample.deleteMany({
+        where: { activityId: activity.id },
+      }),
+      this.prisma.activityHeartRateSample.createMany({
+        data: samples.map((sample) => ({
+          activityId: activity.id,
+          occurredAt: sample.occurredAt,
+          bpm: sample.bpm,
+        })),
+      }),
+    ]);
   }
 
   async save(activities: Activity[]): Promise<void> {

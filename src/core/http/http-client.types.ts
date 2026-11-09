@@ -10,6 +10,8 @@ export interface HttpClientOptions {
 export interface HttpRequestOptions {
   headers?: Record<string, string>;
   timeoutMs?: number;
+  /** Corps binaire : 'arraybuffer' renvoie un Buffer ; 'json' (défaut) renvoie le JSON décodé. */
+  responseType?: 'json' | 'arraybuffer';
 }
 
 export interface HttpRequest extends HttpRequestOptions {

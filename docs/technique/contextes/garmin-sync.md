@@ -96,7 +96,16 @@ Détail des codes et du format des erreurs : [Erreurs de l'API](../erreurs-api.m
 
 - `GET /api/activities` : chaque élément porte `averageHeartRate` (FC moyenne, `null` si Garmin ne la fournit pas).
 - `GET /api/activities/:id` : métriques complètes de l'activité, lues en base sans appel à Garmin : type, date de début, durée, distance, calories, dénivelé, FC moyenne, FC maximale (lue dans la réponse Garmin enregistrée, `maxHR`), temps dans les zones 1 à 5. Une métrique absente vaut `null`. 404 `ACTIVITY_NOT_FOUND` si l'activité n'est pas enregistrée ; 400 si l'identifiant n'est pas un UUID.
-- Non réalisé : la série de FC pendant l'activité. La spécification Garmin utilisée ici ne décrit aucun endpoint d'échantillons de fréquence cardiaque (E01 ne renvoie que des résumés et `splitSummaries`). Le stockage à la synchronisation reste à décider : endpoint non documenté, ou série dérivée d'un autre champ.
+- Série de fréquence cardiaque (issue #81) : `GET /api/activities/:id` renvoie `heartRateSeries`, la série horodatée `{ occurredAt, bpm }`, ou `null` tant qu'elle n'a pas été décodée.
+
+## Fichier d'origine et série de fréquence cardiaque (issue #81)
+
+- À la synchronisation, chaque activité **nouvellement créée** voit son fichier d'origine téléchargé (`GET /download-service/files/activity/{activityId}`, E04). L'archive zip contient un fichier FIT, décodé avec le SDK officiel `@garmin/fitsdk`. Les activités déjà connues ne sont pas retéléchargées.
+- Les échantillons de fréquence cardiaque (message `record`, champ `heartRate`) sont stockés dans `activity_heart_rate_samples` ; une activité sans échantillon valide n'a aucune ligne.
+- Échec isolé : un téléchargement, une archive ou un FIT illisible est journalisé (sans donnée personnelle) et ne fait pas échouer la synchronisation. L'activité reste sans série.
+- Le décodage est strict : toute erreur signalée par le SDK rejette le fichier entier.
+- Non décodé à ce jour : autres canaux de capteurs (vitesse, distance, puissance), messages `session`, `lap`, `timeInZone`. Ils sont présents dans le fichier et seront ajoutés plus tard.
+- Hypothèse : l'activité téléchargée reste une archive « format original » (FIT) ; le contenu n'est pas décrit par la spécification et a été vérifié sur une seule activité réelle.
 
 ## Synchronisation planifiée
 

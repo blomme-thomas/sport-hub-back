@@ -26,9 +26,21 @@ model Activity {
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  heartRateSamples ActivityHeartRateSample[]
+
   @@index([startedAt])
   @@index([type, startedAt])
   @@map("activities")
+}
+
+model ActivityHeartRateSample {
+  activityId String   @map("activity_id") @db.Uuid
+  occurredAt DateTime @map("occurred_at") @db.Timestamptz(3)
+  bpm        Int
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@id([activityId, occurredAt])
+  @@map("activity_heart_rate_samples")
 }
 
 model Slot {

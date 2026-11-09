@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { Activity } from '../../domain/entities/activity.entity.js';
 import {
   ACTIVITY_REPOSITORY,
@@ -9,6 +9,10 @@ import {
   type IDisciplineRegistry,
 } from '../../domain/ports/outbound/discipline-registry.port.js';
 import {
+  ACTIVITY_HEART_RATE_EXTRACTOR,
+  type IActivityHeartRateExtractor,
+} from '../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
+import {
   GARMIN_CONNECT_CLIENT,
   type IGarminConnectClient,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
@@ -17,6 +21,8 @@ import type { SyncGarminActivitiesResultDto } from '../dtos/sync-garmin-activiti
 
 @Injectable()
 export class SyncGarminActivitiesUseCase {
+  private readonly logger = new Logger(SyncGarminActivitiesUseCase.name);
+
   constructor(
     @Inject(ACTIVITY_REPOSITORY)
     private readonly activities: IActivityRepository,
@@ -24,6 +30,8 @@ export class SyncGarminActivitiesUseCase {
     private readonly garmin: IGarminConnectClient,
     @Inject(DISCIPLINE_REGISTRY)
     private readonly disciplines: IDisciplineRegistry,
+    @Inject(ACTIVITY_HEART_RATE_EXTRACTOR)
+    private readonly heartRateExtractor: IActivityHeartRateExtractor,
   ) {}
 
   /**
@@ -75,6 +83,27 @@ export class SyncGarminActivitiesUseCase {
     if (toSave.length > 0) {
       await this.activities.save(toSave);
     }
+    for (const activity of toSave.filter(
+      (item) => !knownById.has(item.garminActivityId.toString()),
+    )) {
+      await this.storeHeartRateSeries(activity.garminActivityId.toString());
+    }
     return { created, updated, ignored };
+  }
+
+  /**
+   * Télécharge le fichier d'origine d'une activité nouvelle et enregistre sa série de fréquence cardiaque.
+   * Un échec (téléchargement, fichier illisible) est journalisé sans interrompre la synchronisation.
+   */
+  private async storeHeartRateSeries(garminActivityId: string): Promise<void> {
+    try {
+      const file = await this.garmin.fetchActivityFile(garminActivityId);
+      const samples = this.heartRateExtractor.extract(file);
+      await this.activities.saveHeartRateSamples(garminActivityId, samples);
+    } catch (error) {
+      this.logger.warn(
+        `Série de fréquence cardiaque non enregistrée (${error instanceof Error ? error.name : 'erreur inconnue'})`,
+      );
+    }
   }
 }
