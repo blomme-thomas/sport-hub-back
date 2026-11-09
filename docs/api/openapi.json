@@ -2225,6 +2225,17 @@
             "example": 9000.5,
             "type": "number"
           },
+          "family": {
+            "description": "Famille de sport du type : course, vélo, natation, ou autre (tout type non listé)",
+            "enum": [
+              "running",
+              "cycling",
+              "swimming",
+              "other"
+            ],
+            "example": "running",
+            "type": "string"
+          },
           "type": {
             "description": "Type d'activité",
             "example": "running",
@@ -2235,7 +2246,8 @@
           "count",
           "durationSeconds",
           "distanceMeters",
-          "type"
+          "type",
+          "family"
         ],
         "type": "object"
       },
