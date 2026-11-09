@@ -9,6 +9,7 @@ import {
   type PreviousPeriodStats,
 } from '../../domain/services/training-stats-calculator.service.js';
 import type { ActivityVolume } from '../../domain/value-objects/activity-volume.vo.js';
+import { sportFamilyOf } from '../../domain/value-objects/sport-family.vo.js';
 import type {
   MetricVariation,
   VolumeVariation,
@@ -70,6 +71,7 @@ export class GetTrainingStatsUseCase {
       totals: GetTrainingStatsUseCase.toVolumeDto(stats.totals),
       byType: stats.byType.map((entry) => ({
         type: entry.type,
+        family: sportFamilyOf(entry.type),
         ...GetTrainingStatsUseCase.toVolumeDto(entry.volume),
       })),
       previous: GetTrainingStatsUseCase.toPreviousDto(stats.previous),
@@ -92,6 +94,7 @@ export class GetTrainingStatsUseCase {
       totals: GetTrainingStatsUseCase.toVolumeDto(previous.totals),
       byType: previous.byType.map((entry) => ({
         type: entry.type,
+        family: sportFamilyOf(entry.type),
         ...GetTrainingStatsUseCase.toVolumeDto(entry.volume),
       })),
     };

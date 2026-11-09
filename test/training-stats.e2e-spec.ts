@@ -138,6 +138,7 @@ describe('Statistiques d’entraînement (e2e)', () => {
       byType: [
         {
           type: 'running',
+          family: 'running',
           count: 1,
           durationSeconds: 1800,
           distanceMeters: 5000,
@@ -173,6 +174,7 @@ describe('Statistiques d’entraînement (e2e)', () => {
       byType: [
         {
           type: 'cycling',
+          family: 'cycling',
           count: 1,
           durationSeconds: 5400,
           distanceMeters: 40000,

@@ -1,3 +1,4 @@
+import type { SportFamily } from '../../domain/value-objects/sport-family.vo.js';
 import type { StatsGranularity } from '../../domain/value-objects/stats-granularity.vo.js';
 
 export interface TrainingStatsQuery {
@@ -15,6 +16,7 @@ export interface VolumeDto {
 
 export interface TypeVolumeDto extends VolumeDto {
   type: string;
+  family: SportFamily;
 }
 
 export interface MetricVariationDto {
