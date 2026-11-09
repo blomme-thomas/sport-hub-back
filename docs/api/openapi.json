@@ -377,7 +377,8 @@
       "DashboardDayResponseDto": {
         "properties": {
           "calories": {
-            "example": 600,
+            "description": "Calories journalières Garmin du jour (total de la journée, repos inclus) ; null sans donnée Garmin pour ce jour, jamais 0. Le jour en cours peut être partiel",
+            "example": 2350,
             "nullable": true,
             "type": "number"
           },
@@ -510,7 +511,7 @@
       "DashboardTotalsResponseDto": {
         "properties": {
           "calories": {
-            "description": "Somme des calories des séances qui les renseignent ; null si aucune ne les renseigne",
+            "description": "Somme des calories journalières Garmin (total de la journée, repos inclus) des jours de la période qui en ont une ; null si aucun jour n’en a. Ne reprend pas les calories des séances. Le jour en cours peut être partiel",
             "example": 2100,
             "nullable": true,
             "type": "number"
@@ -4722,6 +4723,26 @@
               }
             },
             "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Service Unavailable"
           }
         },
         "summary": "Indicateurs agrégés du tableau de bord pour une période glissante (7 j, 30 j, 3 mois, 1 an) : totaux, FC moyenne, zones cardiaques, répartition par sport, série journalière et variation",
