@@ -96,6 +96,7 @@ describe('Commentaires d’activités (e2e)', () => {
     await http()
       .post('/api/sessions')
       .send({
+        targetHrZonePercentages: [10, 20, 40, 20, 10],
         date: '2099-05-04',
         disciplineTypeKey: 'running',
         durationMinutes: 45,

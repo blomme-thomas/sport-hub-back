@@ -102,6 +102,12 @@ model Session {
   durationMinutes      Int                          @map("duration_minutes")
   startTime            String?                      @map("start_time") @db.VarChar(5)
   recurrence           String                       @default("aucune") @db.VarChar(20)
+  targetDistanceMeters Float?                       @map("target_distance_meters")
+  targetHrZone1        Int?                         @map("target_hr_zone_1")
+  targetHrZone2        Int?                         @map("target_hr_zone_2")
+  targetHrZone3        Int?                         @map("target_hr_zone_3")
+  targetHrZone4        Int?                         @map("target_hr_zone_4")
+  targetHrZone5        Int?                         @map("target_hr_zone_5")
   status               String                       @default("planifiee")
   modifiedManually     Boolean                      @default(false) @map("modified_manually")
   description          String?

@@ -35,6 +35,8 @@ export class CreateSessionUseCase {
       durationMinutes: command.durationMinutes,
       startTime: command.startTime,
       recurrence: command.recurrence,
+      targetDistanceMeters: command.targetDistanceMeters ?? null,
+      targetHrZonePercentages: command.targetHrZonePercentages ?? null,
       description: command.description,
       equipment: command.equipment,
       attentionPoints: command.attentionPoints,

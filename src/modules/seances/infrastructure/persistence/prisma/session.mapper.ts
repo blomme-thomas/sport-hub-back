@@ -38,6 +38,12 @@ export interface SessionRecord {
   durationMinutes: number;
   startTime?: string | null;
   recurrence: string;
+  targetDistanceMeters?: number | null;
+  targetHrZone1?: number | null;
+  targetHrZone2?: number | null;
+  targetHrZone3?: number | null;
+  targetHrZone4?: number | null;
+  targetHrZone5?: number | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -55,6 +61,12 @@ export interface SessionPersistence {
   durationMinutes: number;
   startTime?: string | null;
   recurrence: string;
+  targetDistanceMeters: number | null;
+  targetHrZone1: number | null;
+  targetHrZone2: number | null;
+  targetHrZone3: number | null;
+  targetHrZone4: number | null;
+  targetHrZone5: number | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -73,6 +85,8 @@ export class SessionMapper {
       durationMinutes: record.durationMinutes,
       startTime: record.startTime,
       recurrence: record.recurrence as SessionRecurrence,
+      targetDistanceMeters: record.targetDistanceMeters ?? null,
+      targetHrZonePercentages: zonesOf(record),
       status: record.status,
       modifiedManually: record.modifiedManually,
       activityLink: record.activityLink
@@ -111,6 +125,8 @@ export class SessionMapper {
       durationMinutes: session.durationMinutes,
       startTime: session.startTime,
       recurrence: session.recurrence,
+      targetDistanceMeters: session.targetDistanceMeters,
+      ...zoneColumnsOf(session.targetHrZonePercentages),
       status: session.status,
       modifiedManually: session.modifiedManually,
       description: session.description,
@@ -120,4 +136,27 @@ export class SessionMapper {
       activityLink: session.activityLink,
     };
   }
+}
+
+function zonesOf(record: SessionRecord): number[] | null {
+  const zones = [
+    record.targetHrZone1,
+    record.targetHrZone2,
+    record.targetHrZone3,
+    record.targetHrZone4,
+    record.targetHrZone5,
+  ];
+  return zones.every((value) => typeof value === 'number')
+    ? (zones as number[])
+    : null;
+}
+
+function zoneColumnsOf(zones: number[] | null) {
+  return {
+    targetHrZone1: zones?.[0] ?? null,
+    targetHrZone2: zones?.[1] ?? null,
+    targetHrZone3: zones?.[2] ?? null,
+    targetHrZone4: zones?.[3] ?? null,
+    targetHrZone5: zones?.[4] ?? null,
+  };
 }

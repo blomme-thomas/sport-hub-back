@@ -5,6 +5,7 @@ import {
   SESSION_REPOSITORY,
   type ISessionRepository,
 } from '../../domain/ports/outbound/session.repository.port.js';
+import { SESSION_ACTIVITY_METRICS } from '../../domain/ports/outbound/session-activity-metrics.port.js';
 import { SessionId } from '../../domain/value-objects/session-id.vo.js';
 import { SessionModule } from '../../domain/value-objects/session-module.vo.js';
 import { GetSessionUseCase } from './get-session.use-case.js';
@@ -56,6 +57,9 @@ describe('GetSessionUseCase', () => {
       durationMinutes: 45,
       startTime: null,
       recurrence: 'aucune',
+      targetDistanceMeters: null,
+      targetHrZonePercentages: null,
+      achievement: null,
       status: 'planifiee',
       modifiedManually: true,
       description: 'Endurance',
@@ -90,6 +94,10 @@ describe('GetSessionUseCase', () => {
       providers: [
         GetSessionUseCase,
         { provide: SESSION_REPOSITORY, useValue: repository },
+        {
+          provide: SESSION_ACTIVITY_METRICS,
+          useValue: { findByActivityId: async () => null },
+        },
       ],
     }).compile();
     useCase = moduleRef.get(GetSessionUseCase);
@@ -103,6 +111,9 @@ describe('GetSessionUseCase', () => {
       durationMinutes: 45,
       startTime: null,
       recurrence: 'aucune',
+      targetDistanceMeters: null,
+      targetHrZonePercentages: null,
+      achievement: null,
       status: 'planifiee',
       modifiedManually: true,
       description: 'Endurance',

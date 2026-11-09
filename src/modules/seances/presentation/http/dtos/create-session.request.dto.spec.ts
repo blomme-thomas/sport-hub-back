@@ -6,6 +6,7 @@ const VALID = {
   date: '2026-05-04',
   disciplineTypeKey: 'swimming',
   durationMinutes: 60,
+  targetHrZonePercentages: [10, 20, 40, 20, 10],
 };
 
 const MODULE = {
@@ -22,6 +23,28 @@ async function failedProperties(plain: Record<string, unknown>) {
 }
 
 describe('CreateSessionRequestDto', () => {
+  it('refuse une création sans répartition par zone', async () => {
+    const { targetHrZonePercentages: _omitted, ...withoutZones } = VALID;
+    await expect(failedProperties(withoutZones)).resolves.toContain(
+      'targetHrZonePercentages',
+    );
+  });
+
+  it('refuse une répartition qui ne totalise pas 100', async () => {
+    await expect(
+      failedProperties({
+        ...VALID,
+        targetHrZonePercentages: [10, 10, 10, 10, 10],
+      }),
+    ).resolves.toContain('targetHrZonePercentages');
+  });
+
+  it('refuse une distance visée nulle', async () => {
+    await expect(
+      failedProperties({ ...VALID, targetDistanceMeters: 0 }),
+    ).resolves.toContain('targetDistanceMeters');
+  });
+
   it('accepte une création minimale', async () => {
     await expect(failedProperties(VALID)).resolves.toEqual([]);
   });

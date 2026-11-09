@@ -52,7 +52,12 @@ describe('Export calendrier ICS (e2e)', () => {
   ): Promise<string> {
     const res = await http()
       .post('/api/sessions')
-      .send({ date, disciplineTypeKey: 'swimming', durationMinutes })
+      .send({
+        targetHrZonePercentages: [10, 20, 40, 20, 10],
+        date,
+        disciplineTypeKey: 'swimming',
+        durationMinutes,
+      })
       .expect(201);
     return res.body.id as string;
   }

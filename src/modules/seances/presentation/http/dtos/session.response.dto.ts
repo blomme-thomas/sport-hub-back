@@ -81,7 +81,38 @@ export class SessionActivityResponseDto {
   linkedAt!: string;
 }
 
+export class SessionAchievementResponseDto {
+  @ApiProperty({ type: Number, nullable: true, example: 80 })
+  distanceRate!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true, example: 83.3 })
+  durationRate!: number | null;
+
+  @ApiProperty({
+    type: [Number],
+    nullable: true,
+    example: [0, -5, 10, 0, -5],
+    description:
+      'Écart réel − visé par zone Z1 à Z5, en points de pourcentage, signé',
+  })
+  zoneGapsPoints!: number[] | null;
+}
+
 export class SessionResponseDto {
+  @ApiProperty({ type: Number, nullable: true, example: 10000 })
+  targetDistanceMeters!: number | null;
+
+  @ApiProperty({
+    type: [Number],
+    nullable: true,
+    example: [10, 20, 40, 20, 10],
+    description: 'Répartition cible du temps par zone de FC (Z1 à Z5)',
+  })
+  targetHrZonePercentages!: number[] | null;
+
+  @ApiProperty({ type: SessionAchievementResponseDto, nullable: true })
+  achievement!: SessionAchievementResponseDto | null;
+
   @ApiProperty({
     type: String,
     format: 'uuid',

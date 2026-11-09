@@ -1,5 +1,7 @@
 export { GarminSyncModule } from './garmin-sync.module.js';
 export { GetActivityUseCase } from './application/use-cases/get-activity.use-case.js';
+export { GetActivityDetailUseCase } from './application/use-cases/get-activity-detail.use-case.js';
+export { ActivityNotFoundError } from './domain/errors/activity-not-found.error.js';
 export { ListActivitiesUseCase } from './application/use-cases/list-activities.use-case.js';
 export type { ActivitySummaryDto } from './application/dtos/activity-list.dto.js';
 export { GetRecoveryUseCase } from './application/use-cases/get-recovery.use-case.js';

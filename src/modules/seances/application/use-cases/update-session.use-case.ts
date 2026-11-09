@@ -45,6 +45,8 @@ export class UpdateSessionUseCase {
         durationMinutes: command.durationMinutes,
         startTime: command.startTime,
         recurrence: command.recurrence,
+        targetDistanceMeters: command.targetDistanceMeters,
+        targetHrZonePercentages: command.targetHrZonePercentages,
         status: command.status,
         description: command.description,
         equipment: command.equipment,
