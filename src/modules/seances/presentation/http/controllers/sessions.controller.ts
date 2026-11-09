@@ -22,7 +22,10 @@ import { CreateSessionUseCase } from '../../../application/use-cases/create-sess
 import { DeleteSessionUseCase } from '../../../application/use-cases/delete-session.use-case.js';
 import { GetSessionUseCase } from '../../../application/use-cases/get-session.use-case.js';
 import { LinkSessionActivityUseCase } from '../../../application/use-cases/link-session-activity.use-case.js';
+import { CancelSessionOccurrenceUseCase } from '../../../application/use-cases/cancel-session-occurrence.use-case.js';
 import { ListSessionOccurrencesUseCase } from '../../../application/use-cases/list-session-occurrences.use-case.js';
+import { MoveSessionOccurrenceUseCase } from '../../../application/use-cases/move-session-occurrence.use-case.js';
+import { RestoreSessionOccurrenceUseCase } from '../../../application/use-cases/restore-session-occurrence.use-case.js';
 import { ReconcileSessionsUseCase } from '../../../application/use-cases/reconcile-sessions.use-case.js';
 import { ReplaceSessionModulesUseCase } from '../../../application/use-cases/replace-session-modules.use-case.js';
 import { UnlinkSessionActivityUseCase } from '../../../application/use-cases/unlink-session-activity.use-case.js';
@@ -33,7 +36,12 @@ import { ListSessionsRequestDto } from '../dtos/list-sessions.request.dto.js';
 import { ReconcileSessionsResponseDto } from '../dtos/reconcile-sessions.response.dto.js';
 import { ReplaceSessionModulesRequestDto } from '../dtos/replace-session-modules.request.dto.js';
 import { SessionIdParamDto } from '../dtos/session-id.param.dto.js';
-import { SessionOccurrenceListResponseDto } from '../dtos/session-list.response.dto.js';
+import { MoveSessionOccurrenceRequestDto } from '../dtos/move-session-occurrence.request.dto.js';
+import { SessionOccurrenceParamDto } from '../dtos/session-occurrence.param.dto.js';
+import {
+  SessionOccurrenceListResponseDto,
+  SessionOccurrenceResponseDto,
+} from '../dtos/session-list.response.dto.js';
 import { SessionResponseDto } from '../dtos/session.response.dto.js';
 import { UpdateSessionRequestDto } from '../dtos/update-session.request.dto.js';
 import { SessionHttpMapper } from '../mappers/session.http-mapper.js';
@@ -51,6 +59,9 @@ export class SessionsController {
     private readonly reconcileSessions: ReconcileSessionsUseCase,
     private readonly linkSessionActivity: LinkSessionActivityUseCase,
     private readonly unlinkSessionActivity: UnlinkSessionActivityUseCase,
+    private readonly moveSessionOccurrence: MoveSessionOccurrenceUseCase,
+    private readonly cancelSessionOccurrence: CancelSessionOccurrenceUseCase,
+    private readonly restoreSessionOccurrence: RestoreSessionOccurrenceUseCase,
   ) {}
 
   @Post('reconcile')
@@ -180,6 +191,61 @@ export class SessionsController {
       SessionHttpMapper.toReplaceModulesCommand(params.id, request),
     );
     return SessionHttpMapper.toResponse(dto);
+  }
+
+  @Put(':id/occurrences/:date')
+  @ApiOperation({
+    summary:
+      'Déplace une occurrence d’une série vers une autre date (et heure facultative), sans toucher aux autres semaines',
+  })
+  @ApiOkResponse({ type: SessionOccurrenceResponseDto })
+  @ApiProblemResponses(400, 404)
+  async moveOccurrence(
+    @Param() params: SessionOccurrenceParamDto,
+    @Body() request: MoveSessionOccurrenceRequestDto,
+  ): Promise<SessionOccurrenceResponseDto> {
+    const occurrence = await this.moveSessionOccurrence.execute({
+      sessionId: params.id,
+      occurrenceDate: params.date,
+      date: request.date,
+      startTime: request.startTime,
+    });
+    return SessionHttpMapper.toOccurrenceResponse(occurrence);
+  }
+
+  @Post(':id/occurrences/:date/cancel')
+  @HttpCode(200)
+  @ApiOperation({
+    summary:
+      'Annule une occurrence ; elle reste listée avec le statut annulee pour pouvoir être restaurée',
+  })
+  @ApiOkResponse({ type: SessionOccurrenceResponseDto })
+  @ApiProblemResponses(400, 404)
+  async cancelOccurrence(
+    @Param() params: SessionOccurrenceParamDto,
+  ): Promise<SessionOccurrenceResponseDto> {
+    const occurrence = await this.cancelSessionOccurrence.execute({
+      sessionId: params.id,
+      occurrenceDate: params.date,
+    });
+    return SessionHttpMapper.toOccurrenceResponse(occurrence);
+  }
+
+  @Delete(':id/occurrences/:date/exception')
+  @HttpCode(204)
+  @ApiOperation({
+    summary:
+      'Restaure une occurrence à sa programmation initiale ; sans effet si elle n’a pas été modifiée',
+  })
+  @ApiNoContentResponse({ description: 'Occurrence restaurée' })
+  @ApiProblemResponses(400, 404)
+  async restoreOccurrence(
+    @Param() params: SessionOccurrenceParamDto,
+  ): Promise<void> {
+    await this.restoreSessionOccurrence.execute({
+      sessionId: params.id,
+      occurrenceDate: params.date,
+    });
   }
 
   @Delete(':id')
