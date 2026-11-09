@@ -11,7 +11,10 @@ import type {
 import type { CreateSessionRequestDto } from '../dtos/create-session.request.dto.js';
 import type { ListSessionsRequestDto } from '../dtos/list-sessions.request.dto.js';
 import type { ReplaceSessionModulesRequestDto } from '../dtos/replace-session-modules.request.dto.js';
-import type { SessionOccurrenceListResponseDto } from '../dtos/session-list.response.dto.js';
+import type {
+  SessionOccurrenceListResponseDto,
+  SessionOccurrenceResponseDto,
+} from '../dtos/session-list.response.dto.js';
 import type {
   ChangeLogEntryResponseDto,
   SessionModuleResponseDto,
@@ -91,6 +94,20 @@ export class SessionHttpMapper {
             linkedAt: dto.activity.linkedAt.toISOString(),
           }
         : null,
+    };
+  }
+
+  static toOccurrenceResponse(
+    occurrence: SessionOccurrenceDto,
+  ): SessionOccurrenceResponseDto {
+    return {
+      sessionId: occurrence.sessionId,
+      date: occurrence.date,
+      startTime: occurrence.startTime,
+      durationMinutes: occurrence.durationMinutes,
+      disciplineTypeKey: occurrence.disciplineTypeKey,
+      recurrence: occurrence.recurrence,
+      status: occurrence.status,
     };
   }
 

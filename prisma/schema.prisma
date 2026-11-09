@@ -8,23 +8,23 @@ datasource db {
 }
 
 model Activity {
-  id               String   @id @default(uuid()) @db.Uuid
-  garminActivityId String   @unique @map("garmin_activity_id")
-  type             String
-  startedAt        DateTime @map("started_at") @db.Timestamptz(3)
-  durationSeconds  Float    @map("duration_seconds")
-  distanceMeters   Float?   @map("distance_meters")
-  calories         Float?
-  elevationGainMeters Float? @map("elevation_gain_meters")
-  averageHeartRate Float?   @map("average_heart_rate")
-  hrTimeInZone1    Float?   @map("hr_time_in_zone_1")
-  hrTimeInZone2    Float?   @map("hr_time_in_zone_2")
-  hrTimeInZone3    Float?   @map("hr_time_in_zone_3")
-  hrTimeInZone4    Float?   @map("hr_time_in_zone_4")
-  hrTimeInZone5    Float?   @map("hr_time_in_zone_5")
-  rawPayload       Json     @map("raw_payload") @db.JsonB
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                  String   @id @default(uuid()) @db.Uuid
+  garminActivityId    String   @unique @map("garmin_activity_id")
+  type                String
+  startedAt           DateTime @map("started_at") @db.Timestamptz(3)
+  durationSeconds     Float    @map("duration_seconds")
+  distanceMeters      Float?   @map("distance_meters")
+  calories            Float?
+  elevationGainMeters Float?   @map("elevation_gain_meters")
+  averageHeartRate    Float?   @map("average_heart_rate")
+  hrTimeInZone1       Float?   @map("hr_time_in_zone_1")
+  hrTimeInZone2       Float?   @map("hr_time_in_zone_2")
+  hrTimeInZone3       Float?   @map("hr_time_in_zone_3")
+  hrTimeInZone4       Float?   @map("hr_time_in_zone_4")
+  hrTimeInZone5       Float?   @map("hr_time_in_zone_5")
+  rawPayload          Json     @map("raw_payload") @db.JsonB
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([startedAt])
   @@index([type, startedAt])
@@ -74,22 +74,23 @@ model Discipline {
 }
 
 model Session {
-  id                String               @id @default(uuid()) @db.Uuid
-  date              DateTime             @db.Date
-  disciplineTypeKey String               @map("discipline_type_key")
-  durationMinutes   Int                  @map("duration_minutes")
-  startTime         String?              @map("start_time") @db.VarChar(5)
-  recurrence        String               @default("aucune") @db.VarChar(20)
-  status            String               @default("planifiee")
-  modifiedManually  Boolean              @default(false) @map("modified_manually")
-  description       String?
-  equipment         String?
-  attentionPoints   String?              @map("attention_points")
-  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
-  modules           SessionModule[]
-  changeLogs        SessionChangeLog[]
-  activityLink      SessionActivityLink?
+  id                   String                       @id @default(uuid()) @db.Uuid
+  date                 DateTime                     @db.Date
+  disciplineTypeKey    String                       @map("discipline_type_key")
+  durationMinutes      Int                          @map("duration_minutes")
+  startTime            String?                      @map("start_time") @db.VarChar(5)
+  recurrence           String                       @default("aucune") @db.VarChar(20)
+  status               String                       @default("planifiee")
+  modifiedManually     Boolean                      @default(false) @map("modified_manually")
+  description          String?
+  equipment            String?
+  attentionPoints      String?                      @map("attention_points")
+  createdAt            DateTime                     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  modules              SessionModule[]
+  changeLogs           SessionChangeLog[]
+  activityLink         SessionActivityLink?
+  occurrenceExceptions SessionOccurrenceException[]
 
   @@index([date])
   @@index([status, date])
@@ -131,6 +132,19 @@ model SessionActivityLink {
   session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("session_activity_links")
+}
+
+model SessionOccurrenceException {
+  id             String    @id @default(uuid()) @db.Uuid
+  sessionId      String    @map("session_id") @db.Uuid
+  occurrenceDate DateTime  @map("occurrence_date") @db.Date
+  movedDate      DateTime? @map("moved_date") @db.Date
+  movedStartTime String?   @map("moved_start_time") @db.VarChar(5)
+  cancelled      Boolean   @default(false)
+  session        Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, occurrenceDate])
+  @@map("session_occurrence_exceptions")
 }
 
 model ActivityComment {

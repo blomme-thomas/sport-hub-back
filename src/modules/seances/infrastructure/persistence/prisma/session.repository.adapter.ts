@@ -51,8 +51,20 @@ export class PrismaSessionRepositoryAdapter implements ISessionRepository {
   async findOccurrenceCandidates(period: SessionPeriod): Promise<Session[]> {
     const records = await this.prisma.session.findMany({
       where: {
-        date: { lte: period.to },
-        OR: [{ date: { gte: period.from } }, { recurrence: 'hebdomadaire' }],
+        OR: [
+          {
+            date: { lte: period.to },
+            OR: [
+              { date: { gte: period.from } },
+              { recurrence: 'hebdomadaire' },
+            ],
+          },
+          {
+            occurrenceExceptions: {
+              some: { movedDate: { gte: period.from, lte: period.to } },
+            },
+          },
+        ],
       },
       include: SESSION_INCLUDE,
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],

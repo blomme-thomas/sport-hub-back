@@ -266,6 +266,133 @@ describe('Séances (e2e)', () => {
     });
   });
 
+  describe('occurrences déplacées, annulées et restaurées', () => {
+    function move(
+      id: string,
+      occurrenceDate: string,
+      body: Record<string, unknown>,
+    ) {
+      return request(app.getHttpServer())
+        .put(`/api/sessions/${id}/occurrences/${occurrenceDate}`)
+        .send(body);
+    }
+
+    function cancel(id: string, occurrenceDate: string) {
+      return request(app.getHttpServer()).post(
+        `/api/sessions/${id}/occurrences/${occurrenceDate}/cancel`,
+      );
+    }
+
+    function restore(id: string, occurrenceDate: string) {
+      return request(app.getHttpServer()).delete(
+        `/api/sessions/${id}/occurrences/${occurrenceDate}/exception`,
+      );
+    }
+
+    async function createWeekly(): Promise<string> {
+      const res = await create({
+        ...SEANCE_NATATION,
+        date: '2099-05-04',
+        startTime: '18:00',
+        recurrence: 'hebdomadaire',
+      }).expect(201);
+      return res.body.id as string;
+    }
+
+    it('déplace une occurrence : elle quitte sa date et apparaît à la nouvelle, les autres semaines ne bougent pas', async () => {
+      const id = await createWeekly();
+
+      await move(id, '2099-05-11', {
+        date: '2099-05-12',
+        startTime: '07:00',
+      }).expect(200);
+
+      const res = await list({ from: '2099-05-01', to: '2099-05-31' }).expect(
+        200,
+      );
+      expect(
+        res.body.items.map((item: { date: string; startTime: string }) => [
+          item.date,
+          item.startTime,
+        ]),
+      ).toEqual([
+        ['2099-05-04', '18:00'],
+        ['2099-05-12', '07:00'],
+        ['2099-05-18', '18:00'],
+        ['2099-05-25', '18:00'],
+      ]);
+    });
+
+    it('renvoie 404 SESSION_OCCURRENCE_NOT_FOUND pour une date qui n’est pas une occurrence de la série', async () => {
+      const id = await createWeekly();
+
+      const res = await move(id, '2099-05-05', { date: '2099-05-06' }).expect(
+        404,
+      );
+
+      expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+      expect(res.body.code).toBe('SESSION_OCCURRENCE_NOT_FOUND');
+    });
+
+    it('annule une occurrence, qui reste listée avec le statut annulee, puis la restaure', async () => {
+      const id = await createWeekly();
+
+      await cancel(id, '2099-05-11').expect(200);
+      const cancelled = await list({
+        from: '2099-05-10',
+        to: '2099-05-12',
+      }).expect(200);
+      expect(cancelled.body.items).toEqual([
+        expect.objectContaining({ date: '2099-05-11', status: 'annulee' }),
+      ]);
+
+      await restore(id, '2099-05-11').expect(204);
+      const restored = await list({
+        from: '2099-05-10',
+        to: '2099-05-12',
+      }).expect(200);
+      expect(restored.body.items).toEqual([
+        expect.objectContaining({ date: '2099-05-11', status: 'planifiee' }),
+      ]);
+    });
+
+    it('garde les exceptions quand on modifie la série', async () => {
+      const id = await createWeekly();
+      await move(id, '2099-05-11', { date: '2099-05-12' }).expect(200);
+
+      await patch(id, { durationMinutes: 45 }).expect(200);
+
+      const res = await list({ from: '2099-05-10', to: '2099-05-12' }).expect(
+        200,
+      );
+      expect(res.body.items).toEqual([
+        expect.objectContaining({ date: '2099-05-12', durationMinutes: 45 }),
+      ]);
+    });
+
+    it('fait apparaître une occurrence déplacée depuis hors de la période', async () => {
+      const id = await createWeekly();
+      await move(id, '2099-05-04', { date: '2099-06-02' }).expect(200);
+
+      const res = await list({ from: '2099-05-31', to: '2099-06-07' }).expect(
+        200,
+      );
+
+      expect(res.body.items.map((item: { date: string }) => item.date)).toEqual(
+        ['2099-06-01', '2099-06-02'],
+      );
+    });
+
+    it('supprime les exceptions avec la série', async () => {
+      const id = await createWeekly();
+      await move(id, '2099-05-11', { date: '2099-05-12' }).expect(200);
+
+      await remove(id).expect(204);
+
+      expect(await prisma.sessionOccurrenceException.count()).toBe(0);
+    });
+  });
+
   describe('PATCH /api/sessions/:id', () => {
     it('modifie la date, la durée et la description, puis journalise les changements', async () => {
       const id = await createNatation();

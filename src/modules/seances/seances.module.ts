@@ -8,6 +8,11 @@ import { GetSessionForActivityUseCase } from './application/use-cases/get-sessio
 import { LinkSessionActivityUseCase } from './application/use-cases/link-session-activity.use-case.js';
 import { ListSessionsUseCase } from './application/use-cases/list-sessions.use-case.js';
 import { ListSessionOccurrencesUseCase } from './application/use-cases/list-session-occurrences.use-case.js';
+import { MoveSessionOccurrenceUseCase } from './application/use-cases/move-session-occurrence.use-case.js';
+import { CancelSessionOccurrenceUseCase } from './application/use-cases/cancel-session-occurrence.use-case.js';
+import { RestoreSessionOccurrenceUseCase } from './application/use-cases/restore-session-occurrence.use-case.js';
+import { SESSION_OCCURRENCE_EXCEPTION_REPOSITORY } from './domain/ports/outbound/session-occurrence-exception.repository.port.js';
+import { PrismaSessionOccurrenceExceptionRepositoryAdapter } from './infrastructure/persistence/prisma/session-occurrence-exception.repository.adapter.js';
 import { ReconcileSessionsUseCase } from './application/use-cases/reconcile-sessions.use-case.js';
 import { ReplaceSessionModulesUseCase } from './application/use-cases/replace-session-modules.use-case.js';
 import { UnlinkSessionActivityUseCase } from './application/use-cases/unlink-session-activity.use-case.js';
@@ -28,6 +33,9 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     CreateSessionUseCase,
     ListSessionsUseCase,
     ListSessionOccurrencesUseCase,
+    MoveSessionOccurrenceUseCase,
+    CancelSessionOccurrenceUseCase,
+    RestoreSessionOccurrenceUseCase,
     GetSessionUseCase,
     GetSessionForActivityUseCase,
     UpdateSessionUseCase,
@@ -37,6 +45,10 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     LinkSessionActivityUseCase,
     UnlinkSessionActivityUseCase,
     { provide: SESSION_REPOSITORY, useClass: PrismaSessionRepositoryAdapter },
+    {
+      provide: SESSION_OCCURRENCE_EXCEPTION_REPOSITORY,
+      useClass: PrismaSessionOccurrenceExceptionRepositoryAdapter,
+    },
     { provide: DISCIPLINE_CATALOG, useClass: DisciplinesCatalogAdapter },
     { provide: ACTIVITY_CATALOG, useClass: GarminActivityCatalogAdapter },
     { provide: SEANCES_CLOCK, useValue: () => new Date() },
