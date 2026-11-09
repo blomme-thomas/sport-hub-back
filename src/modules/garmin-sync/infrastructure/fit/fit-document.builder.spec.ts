@@ -94,7 +94,9 @@ describe('buildActivityFitDocument', () => {
       ],
     });
 
-    expect(document.records).toEqual([[Math.floor(START.getTime() / 1000) + 1, 120]]);
+    expect(document.records).toEqual([
+      [Math.floor(START.getTime() / 1000) + 1, 120],
+    ]);
   });
 
   it('représente chaque échantillon avec FC par un couple [secondes Unix, bpm] et ignore ceux sans FC', () => {
