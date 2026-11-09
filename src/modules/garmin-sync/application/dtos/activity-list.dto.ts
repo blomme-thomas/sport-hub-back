@@ -5,6 +5,7 @@ export interface ActivitySummaryDto {
   startedAt: Date;
   durationSeconds: number;
   distanceMeters: number | null;
+  averageHeartRate: number | null;
 }
 
 export interface ActivityListQuery {

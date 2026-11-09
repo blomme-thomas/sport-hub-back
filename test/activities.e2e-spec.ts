@@ -8,6 +8,7 @@ import { PrismaService } from './../src/core/prisma/prisma.service.js';
 
 const PROBLEM_JSON = /application\/problem\+json/;
 const SUMMARY_KEYS = [
+  'averageHeartRate',
   'distanceMeters',
   'durationSeconds',
   'garminActivityId',

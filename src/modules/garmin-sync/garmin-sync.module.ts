@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { HttpClientModule } from '../../core/http/http-client.module.js';
 import { DisciplinesModule } from '../disciplines/index.js';
 import { GetActivityUseCase } from './application/use-cases/get-activity.use-case.js';
+import { GetActivityDetailUseCase } from './application/use-cases/get-activity-detail.use-case.js';
 import { GetGarminProfileUseCase } from './application/use-cases/get-garmin-profile.use-case.js';
 import { GetHeartRateZonesUseCase } from './application/use-cases/get-heart-rate-zones.use-case.js';
 import { GetRecoveryUseCase } from './application/use-cases/get-recovery.use-case.js';
@@ -38,6 +39,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     SyncGarminActivitiesUseCase,
     ListActivitiesUseCase,
     GetActivityUseCase,
+    GetActivityDetailUseCase,
     GetGarminProfileUseCase,
     GetHeartRateZonesUseCase,
     GetRecoveryUseCase,

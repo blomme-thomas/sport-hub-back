@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { Test } from '@nestjs/testing';
+import { GetActivityDetailUseCase } from '../../../application/use-cases/get-activity-detail.use-case.js';
 import { ListActivitiesUseCase } from '../../../application/use-cases/list-activities.use-case.js';
 import { ListActivitiesRequestDto } from '../dtos/list-activities.request.dto.js';
 import { ActivityListResponseDto } from '../dtos/activity-list.response.dto.js';
@@ -26,7 +27,10 @@ describe('ActivitiesController', () => {
     execute.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [ActivitiesController],
-      providers: [{ provide: ListActivitiesUseCase, useValue: { execute } }],
+      providers: [
+        { provide: ListActivitiesUseCase, useValue: { execute } },
+        { provide: GetActivityDetailUseCase, useValue: { execute: vi.fn() } },
+      ],
     }).compile();
     controller = moduleRef.get(ActivitiesController);
   });
