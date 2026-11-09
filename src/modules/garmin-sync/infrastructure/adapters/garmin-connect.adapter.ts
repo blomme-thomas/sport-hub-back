@@ -10,11 +10,13 @@ import type { Activity } from '../../domain/entities/activity.entity.js';
 import { GarminAccessDeniedError } from '../../domain/errors/garmin-access-denied.error.js';
 import { GarminUnavailableError } from '../../domain/errors/garmin-unavailable.error.js';
 import type {
+  DailyCaloriesDay,
   HeartRateZonesConfig,
   IGarminConnectClient,
   RecoveryDay,
   RecoveryRange,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
+import { GarminDailyCaloriesExternalMapper } from '../mappers/garmin-daily-calories.external-mapper.js';
 import {
   GarminRecoveryExternalMapper,
   enumerateDays,
@@ -32,6 +34,7 @@ const HRV_RANGE_PATH = '/hrv-service/hrv/daily';
 const BODY_BATTERY_REPORT_PATH =
   '/wellness-service/wellness/bodyBattery/reports/daily';
 const DAILY_HEART_RATE_PATH = '/wellness-service/wellness/dailyHeartRate';
+const DAILY_SUMMARIES_PATH = '/usersummary-service/v2/dailysummaries';
 const settingsSchema = z.object({ displayName: z.string().nullish() });
 const heartRateZonesSchema = z.array(
   z.object({
@@ -49,6 +52,7 @@ const heartRateZonesSchema = z.array(
 const PAGE_SIZE = 99;
 const MAX_PAGES = 50;
 const DEFAULT_HISTORY_DAYS = 365;
+const DAILY_SUMMARIES_CHUNK_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
@@ -164,6 +168,39 @@ export class GarminConnectAdapter implements IGarminConnectClient {
       bodyBattery,
       restingHeartRateByDate,
     });
+  }
+
+  async fetchDailyCalories(range: RecoveryRange): Promise<DailyCaloriesDay[]> {
+    const days: DailyCaloriesDay[] = [];
+    for (const chunk of this.dailySummaryChunks(range)) {
+      const query = new URLSearchParams({
+        startDate: chunk.from,
+        endDate: chunk.to,
+      });
+      const payload = await this.getJson(
+        `${this.config.personalApiBaseUrl}${DAILY_SUMMARIES_PATH}?${query.toString()}`,
+      );
+      days.push(...GarminDailyCaloriesExternalMapper.combine(chunk, payload));
+    }
+    return days;
+  }
+
+  private dailySummaryChunks(range: RecoveryRange): RecoveryRange[] {
+    const chunks: RecoveryRange[] = [];
+    const last = Date.parse(`${range.to}T00:00:00.000Z`);
+    const step = DAILY_SUMMARIES_CHUNK_DAYS * DAY_MS;
+    for (
+      let start = Date.parse(`${range.from}T00:00:00.000Z`);
+      start <= last;
+      start += step
+    ) {
+      const end = Math.min(start + step - DAY_MS, last);
+      chunks.push({
+        from: this.formatDate(new Date(start)),
+        to: this.formatDate(new Date(end)),
+      });
+    }
+    return chunks;
   }
 
   private async getJson(url: string): Promise<unknown> {

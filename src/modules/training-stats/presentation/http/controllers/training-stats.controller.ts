@@ -19,7 +19,7 @@ export class TrainingStatsController {
   ) {}
 
   @Get('dashboard')
-  @ApiProblemResponses(400)
+  @ApiProblemResponses(400, 502, 503)
   @ApiOperation({
     summary:
       'Indicateurs agrégés du tableau de bord pour une période glissante (7 j, 30 j, 3 mois, 1 an) : totaux, FC moyenne, zones cardiaques, répartition par sport, série journalière et variation',

@@ -6,6 +6,7 @@ import { GetActivityUseCase } from './application/use-cases/get-activity.use-cas
 import { GetGarminProfileUseCase } from './application/use-cases/get-garmin-profile.use-case.js';
 import { GetHeartRateZonesUseCase } from './application/use-cases/get-heart-rate-zones.use-case.js';
 import { GetRecoveryUseCase } from './application/use-cases/get-recovery.use-case.js';
+import { GetDailyCaloriesUseCase } from './application/use-cases/get-daily-calories.use-case.js';
 import { HeartRateZonesController } from './presentation/http/controllers/heart-rate-zones.controller.js';
 import { RecoveryController } from './presentation/http/controllers/recovery.controller.js';
 import { ProfileController } from './presentation/http/controllers/profile.controller.js';
@@ -40,6 +41,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     GetGarminProfileUseCase,
     GetHeartRateZonesUseCase,
     GetRecoveryUseCase,
+    GetDailyCaloriesUseCase,
     GarminSyncScheduler,
     GarminPersonalApiTokenProvider,
     { provide: GARMIN_CONNECT_CLIENT, useClass: GarminConnectAdapter },
@@ -55,6 +57,7 @@ import { GarminSyncController } from './presentation/http/controllers/garmin-syn
     ListActivitiesUseCase,
     GetActivityUseCase,
     GetRecoveryUseCase,
+    GetDailyCaloriesUseCase,
     GetHeartRateZonesUseCase,
   ],
 })

@@ -5,8 +5,50 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/core/prisma/prisma.service.js';
+import { GarminAccessDeniedError } from './../src/modules/garmin-sync/domain/errors/garmin-access-denied.error.js';
+import { GarminUnavailableError } from './../src/modules/garmin-sync/domain/errors/garmin-unavailable.error.js';
+import {
+  DAILY_CALORIES_PROVIDER,
+  type DailyCalories,
+  type DailyCaloriesWindow,
+  type IDailyCaloriesProvider,
+} from './../src/modules/training-stats/domain/ports/outbound/daily-calories.provider.port.js';
 
 const PROBLEM_JSON = /application\/problem\+json/;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function utcDay(offset: number): string {
+  const now = new Date();
+  const midnight = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+  );
+  return new Date(midnight + offset * DAY_MS).toISOString().slice(0, 10);
+}
+
+class FakeDailyCaloriesProvider implements IDailyCaloriesProvider {
+  readonly values = new Map<string, number | null>();
+  readonly windows: DailyCaloriesWindow[] = [];
+  failure?: Error;
+
+  findDailyCalories(window: DailyCaloriesWindow): Promise<DailyCalories[]> {
+    this.windows.push(window);
+    if (this.failure) {
+      return Promise.reject(this.failure);
+    }
+    const days: DailyCalories[] = [];
+    for (
+      let time = window.from.getTime();
+      time < window.toExclusive.getTime();
+      time += DAY_MS
+    ) {
+      const date = new Date(time).toISOString().slice(0, 10);
+      days.push({ date, calories: this.values.get(date) ?? null });
+    }
+    return Promise.resolve(days);
+  }
+}
 
 function activity(
   garminActivityId: string,
@@ -439,5 +481,124 @@ describe('Statistiques d’entraînement (e2e)', () => {
 
     expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
     expect(res.body.code).toBe('STATS_RANGE_TOO_LARGE');
+  });
+});
+
+describe('Tableau de bord des statistiques (e2e)', () => {
+  let app: INestApplication<App>;
+  let prisma: PrismaService;
+  let garmin: FakeDailyCaloriesProvider;
+
+  beforeEach(async () => {
+    garmin = new FakeDailyCaloriesProvider();
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(DAILY_CALORIES_PROVIDER)
+      .useValue(garmin)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    configureApp(app);
+    await app.init();
+
+    prisma = app.get(PrismaService);
+    await prisma.activity.deleteMany();
+  });
+
+  afterEach(async () => {
+    await prisma.activity.deleteMany();
+    await app.close();
+  });
+
+  function dashboard(period: string) {
+    return request(app.getHttpServer())
+      .get('/api/stats/dashboard')
+      .query({ period });
+  }
+
+  it('renvoie_les_calories_Garmin_de_chaque_jour_y_compris_sans_seance_et_leur_somme', async () => {
+    garmin.values.set(utcDay(-1), 2350);
+    garmin.values.set(utcDay(-3), 2100);
+    await prisma.activity.create({
+      data: {
+        ...activity('30', 'running', `${utcDay(-1)}T07:00:00.000Z`, 1800, 5000),
+        calories: 500,
+      },
+    });
+
+    const res = await dashboard('7d').expect(200);
+
+    expect(res.body.daily).toHaveLength(7);
+    expect(res.body.totals.calories).toBe(4450);
+    expect(
+      res.body.daily.find((day: { date: string }) => day.date === utcDay(-1)),
+    ).toMatchObject({
+      count: 1,
+      durationSeconds: 1800,
+      calories: 2350,
+    });
+    expect(
+      res.body.daily.find((day: { date: string }) => day.date === utcDay(-3)),
+    ).toMatchObject({
+      count: 0,
+      durationSeconds: 0,
+      calories: 2100,
+    });
+    expect(
+      res.body.daily.filter(
+        (day: { calories: number | null }) => day.calories === null,
+      ),
+    ).toHaveLength(5);
+  });
+
+  it('renvoie_null_sans_repli_sur_les_activites_quand_Garmin_ne_renseigne_aucun_jour', async () => {
+    await prisma.activity.create({
+      data: {
+        ...activity('31', 'running', `${utcDay(-1)}T07:00:00.000Z`, 1800, 5000),
+        calories: 500,
+      },
+    });
+
+    const res = await dashboard('7d').expect(200);
+
+    expect(res.body.totals.calories).toBeNull();
+    expect(
+      res.body.daily.every(
+        (day: { calories: number | null }) => day.calories === null,
+      ),
+    ).toBe(true);
+  });
+
+  it('renvoie_503_GARMIN_UNAVAILABLE_sans_repli_sur_les_activites', async () => {
+    garmin.failure = new GarminUnavailableError();
+    await prisma.activity.create({
+      data: {
+        ...activity('32', 'running', `${utcDay(-1)}T07:00:00.000Z`, 1800, 5000),
+        calories: 500,
+      },
+    });
+
+    const res = await dashboard('7d').expect(503);
+
+    expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+    expect(res.body).toMatchObject({ code: 'GARMIN_UNAVAILABLE' });
+    expect(res.body.totals).toBeUndefined();
+  });
+
+  it('renvoie_502_GARMIN_ACCESS_DENIED_quand_Garmin_refuse_la_cle', async () => {
+    garmin.failure = new GarminAccessDeniedError();
+
+    const res = await dashboard('30d').expect(502);
+
+    expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+    expect(res.body).toMatchObject({ code: 'GARMIN_ACCESS_DENIED' });
+  });
+
+  it('renvoie_400_VALIDATION_FAILED_pour_une_periode_inconnue', async () => {
+    const res = await dashboard('2y').expect(400);
+
+    expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+    expect(res.body.code).toBe('VALIDATION_FAILED');
   });
 });

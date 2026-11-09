@@ -8,7 +8,10 @@ import {
 } from '../../domain/ports/outbound/activity.repository.port.js';
 import {
   GARMIN_CONNECT_CLIENT,
+  type DailyCaloriesDay,
+  type HeartRateZonesConfig,
   type IGarminConnectClient,
+  type RecoveryDay,
 } from '../../domain/ports/outbound/garmin-connect-client.port.js';
 import {
   DISCIPLINE_REGISTRY,
@@ -70,6 +73,22 @@ class FakeGarminClient implements IGarminConnectClient {
       return Promise.reject(this.failure);
     }
     return Promise.resolve(this.remote);
+  }
+
+  fetchDisplayName(): Promise<string | null> {
+    return Promise.resolve(null);
+  }
+
+  fetchHeartRateZones(): Promise<HeartRateZonesConfig | null> {
+    return Promise.resolve(null);
+  }
+
+  fetchRecoveryDays(): Promise<RecoveryDay[]> {
+    return Promise.resolve([]);
+  }
+
+  fetchDailyCalories(): Promise<DailyCaloriesDay[]> {
+    return Promise.resolve([]);
   }
 }
 
