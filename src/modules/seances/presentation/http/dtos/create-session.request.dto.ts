@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   Matches,
@@ -13,6 +14,10 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import {
+  SESSION_RECURRENCES,
+  type SessionRecurrence,
+} from '../../../domain/value-objects/session-recurrence.vo.js';
 import { IsCalendarDate } from '../validators/session.validators.js';
 import { SessionModuleRequestDto } from './session-module.request.dto.js';
 
@@ -58,6 +63,15 @@ export class CreateSessionRequestDto {
   @IsOptional()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   startTime?: string | null;
+
+  @ApiPropertyOptional({
+    enum: SESSION_RECURRENCES,
+    example: 'hebdomadaire',
+    description: 'Récurrence de la séance, aucune par défaut',
+  })
+  @IsOptional()
+  @IsIn(SESSION_RECURRENCES)
+  recurrence?: SessionRecurrence;
 
   @ApiPropertyOptional({
     type: String,

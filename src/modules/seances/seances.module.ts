@@ -7,6 +7,7 @@ import { GetSessionUseCase } from './application/use-cases/get-session.use-case.
 import { GetSessionForActivityUseCase } from './application/use-cases/get-session-for-activity.use-case.js';
 import { LinkSessionActivityUseCase } from './application/use-cases/link-session-activity.use-case.js';
 import { ListSessionsUseCase } from './application/use-cases/list-sessions.use-case.js';
+import { ListSessionOccurrencesUseCase } from './application/use-cases/list-session-occurrences.use-case.js';
 import { ReconcileSessionsUseCase } from './application/use-cases/reconcile-sessions.use-case.js';
 import { ReplaceSessionModulesUseCase } from './application/use-cases/replace-session-modules.use-case.js';
 import { UnlinkSessionActivityUseCase } from './application/use-cases/unlink-session-activity.use-case.js';
@@ -26,6 +27,7 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
   providers: [
     CreateSessionUseCase,
     ListSessionsUseCase,
+    ListSessionOccurrencesUseCase,
     GetSessionUseCase,
     GetSessionForActivityUseCase,
     UpdateSessionUseCase,

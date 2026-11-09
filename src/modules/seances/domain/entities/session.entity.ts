@@ -3,6 +3,10 @@ import { SessionAlreadyCompletedError } from '../errors/session-already-complete
 import { SessionId } from '../value-objects/session-id.vo.js';
 import { SessionModule } from '../value-objects/session-module.vo.js';
 import {
+  type SessionRecurrence,
+  isSessionRecurrence,
+} from '../value-objects/session-recurrence.vo.js';
+import {
   type SessionStatus,
   isSessionStatus,
 } from '../value-objects/session-status.vo.js';
@@ -33,6 +37,7 @@ export interface SessionProps {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime?: string | null;
+  recurrence?: SessionRecurrence;
   description?: string | null;
   equipment?: string | null;
   attentionPoints?: string | null;
@@ -45,6 +50,7 @@ export interface SessionReconstitutionProps {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime?: string | null;
+  recurrence?: SessionRecurrence;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -60,6 +66,7 @@ export interface SessionChanges {
   disciplineTypeKey?: string;
   durationMinutes?: number;
   startTime?: string | null;
+  recurrence?: SessionRecurrence;
   status?: string;
   description?: string | null;
   equipment?: string | null;
@@ -71,6 +78,7 @@ interface SessionFieldsInput {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime: string | null;
+  recurrence: string;
   status: string;
   description: string | null;
   equipment: string | null;
@@ -82,6 +90,7 @@ interface SessionFields {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime: string | null;
+  recurrence: SessionRecurrence;
   status: SessionStatus;
   description: string | null;
   equipment: string | null;
@@ -111,6 +120,7 @@ export class Session {
       disciplineTypeKey: props.disciplineTypeKey,
       durationMinutes: props.durationMinutes,
       startTime: props.startTime ?? null,
+      recurrence: props.recurrence ?? 'aucune',
       status: 'planifiee',
       description: props.description ?? null,
       equipment: props.equipment ?? null,
@@ -138,6 +148,7 @@ export class Session {
       disciplineTypeKey: props.disciplineTypeKey,
       durationMinutes: props.durationMinutes,
       startTime: props.startTime ?? null,
+      recurrence: props.recurrence ?? 'aucune',
       status: props.status,
       description: props.description,
       equipment: props.equipment,
@@ -172,6 +183,10 @@ export class Session {
 
   get startTime(): string | null {
     return this.state.startTime;
+  }
+
+  get recurrence(): SessionRecurrence {
+    return this.state.recurrence;
   }
 
   get status(): SessionStatus {
@@ -226,6 +241,7 @@ export class Session {
       durationMinutes: changes.durationMinutes ?? current.durationMinutes,
       startTime:
         changes.startTime === undefined ? current.startTime : changes.startTime,
+      recurrence: changes.recurrence ?? current.recurrence,
       status: changes.status ?? current.status,
       description:
         changes.description === undefined
@@ -333,6 +349,11 @@ function validateFields(input: SessionFieldsInput): SessionFields {
       `la durée doit être un nombre entier de minutes de 1 à ${DURATION_MAX_MINUTES}`,
     );
   }
+  if (!isSessionRecurrence(input.recurrence)) {
+    throw new InvalidSessionError(
+      'la récurrence doit être aucune ou hebdomadaire',
+    );
+  }
   if (!isSessionStatus(input.status)) {
     throw new InvalidSessionError(
       'le statut doit être planifiee, realisee ou manquee',
@@ -343,6 +364,7 @@ function validateFields(input: SessionFieldsInput): SessionFields {
     disciplineTypeKey,
     durationMinutes: input.durationMinutes,
     startTime: normalizeStartTime(input.startTime),
+    recurrence: input.recurrence,
     status: input.status,
     description: normalizeText(
       input.description,
@@ -444,6 +466,13 @@ function changedEntries(
       changedAt: now,
       field: 'startTime',
       previousValue: current.startTime,
+    });
+  }
+  if (next.recurrence !== current.recurrence) {
+    entries.push({
+      changedAt: now,
+      field: 'recurrence',
+      previousValue: current.recurrence,
     });
   }
   if (next.durationMinutes !== current.durationMinutes) {

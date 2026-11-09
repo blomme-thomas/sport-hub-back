@@ -44,6 +44,7 @@ export class UpdateSessionUseCase {
         disciplineTypeKey: command.disciplineTypeKey,
         durationMinutes: command.durationMinutes,
         startTime: command.startTime,
+        recurrence: command.recurrence,
         status: command.status,
         description: command.description,
         equipment: command.equipment,

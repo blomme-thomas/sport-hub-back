@@ -34,6 +34,7 @@ export class CreateSessionUseCase {
       disciplineTypeKey: command.disciplineTypeKey,
       durationMinutes: command.durationMinutes,
       startTime: command.startTime,
+      recurrence: command.recurrence,
       description: command.description,
       equipment: command.equipment,
       attentionPoints: command.attentionPoints,

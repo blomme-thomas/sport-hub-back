@@ -22,7 +22,7 @@ import { CreateSessionUseCase } from '../../../application/use-cases/create-sess
 import { DeleteSessionUseCase } from '../../../application/use-cases/delete-session.use-case.js';
 import { GetSessionUseCase } from '../../../application/use-cases/get-session.use-case.js';
 import { LinkSessionActivityUseCase } from '../../../application/use-cases/link-session-activity.use-case.js';
-import { ListSessionsUseCase } from '../../../application/use-cases/list-sessions.use-case.js';
+import { ListSessionOccurrencesUseCase } from '../../../application/use-cases/list-session-occurrences.use-case.js';
 import { ReconcileSessionsUseCase } from '../../../application/use-cases/reconcile-sessions.use-case.js';
 import { ReplaceSessionModulesUseCase } from '../../../application/use-cases/replace-session-modules.use-case.js';
 import { UnlinkSessionActivityUseCase } from '../../../application/use-cases/unlink-session-activity.use-case.js';
@@ -33,7 +33,7 @@ import { ListSessionsRequestDto } from '../dtos/list-sessions.request.dto.js';
 import { ReconcileSessionsResponseDto } from '../dtos/reconcile-sessions.response.dto.js';
 import { ReplaceSessionModulesRequestDto } from '../dtos/replace-session-modules.request.dto.js';
 import { SessionIdParamDto } from '../dtos/session-id.param.dto.js';
-import { SessionListResponseDto } from '../dtos/session-list.response.dto.js';
+import { SessionOccurrenceListResponseDto } from '../dtos/session-list.response.dto.js';
 import { SessionResponseDto } from '../dtos/session.response.dto.js';
 import { UpdateSessionRequestDto } from '../dtos/update-session.request.dto.js';
 import { SessionHttpMapper } from '../mappers/session.http-mapper.js';
@@ -43,7 +43,7 @@ import { SessionHttpMapper } from '../mappers/session.http-mapper.js';
 export class SessionsController {
   constructor(
     private readonly createSession: CreateSessionUseCase,
-    private readonly listSessions: ListSessionsUseCase,
+    private readonly listSessionOccurrences: ListSessionOccurrencesUseCase,
     private readonly getSession: GetSessionUseCase,
     private readonly updateSession: UpdateSessionUseCase,
     private readonly replaceSessionModules: ReplaceSessionModulesUseCase,
@@ -124,17 +124,17 @@ export class SessionsController {
   @Get()
   @ApiOperation({
     summary:
-      'Liste les séances dont la date est comprise entre from et to (bornes incluses, 366 jours au plus)',
+      'Liste les occurrences des séances entre from et to (bornes incluses, 366 jours au plus), triées par date, heure puis identifiant',
   })
-  @ApiOkResponse({ type: SessionListResponseDto })
+  @ApiOkResponse({ type: SessionOccurrenceListResponseDto })
   @ApiProblemResponses(400)
   async list(
     @Query() request: ListSessionsRequestDto,
-  ): Promise<SessionListResponseDto> {
-    const dtos = await this.listSessions.execute(
+  ): Promise<SessionOccurrenceListResponseDto> {
+    const occurrences = await this.listSessionOccurrences.execute(
       SessionHttpMapper.toListQuery(request),
     );
-    return SessionHttpMapper.toListResponse(dtos);
+    return SessionHttpMapper.toOccurrenceListResponse(occurrences);
   }
 
   @Get(':id')

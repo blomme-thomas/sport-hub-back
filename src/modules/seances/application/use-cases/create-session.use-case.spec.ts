@@ -134,6 +134,7 @@ describe('CreateSessionUseCase', () => {
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
         startTime: null,
+        recurrence: 'aucune',
         status: 'planifiee',
         modifiedManually: false,
         description: null,
