@@ -102,6 +102,15 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 - Persistance : `session.mapper.spec.ts` (unitaire) et `test/session-repository.e2e-spec.ts` (aller-retour Prisma, remplacement des modules, journal, suppression en cascade).
 - HTTP : `test/sessions.e2e-spec.ts` (création, liste, modification, réordonnancement, 409, 404, suppression).
 
+## Objectifs et réalisation (issue #86)
+
+- Une séance porte une **répartition cible par zone de FC** (`targetHrZonePercentages`, Z1 à Z5, entiers de 0 à 100 qui totalisent 100), obligatoire à la création (400 `VALIDATION_FAILED`), modifiable par `PATCH`. Les séances existantes gardent `null`.
+- Une **distance visée** (`targetDistanceMeters`, strictement positive) est facultative ; `null` l'efface à la modification.
+- La durée visée est `durationMinutes`, déjà obligatoire : la règle « distance ou durée » est donc toujours satisfaite.
+- `GET /api/sessions/:id` renvoie `achievement` si la séance a un objectif et une activité liée : `distanceRate` (distance réelle / visée, plafonné à 100), `durationRate` (durée réelle / visée, plafonné à 100) et `zoneGapsPoints` (écart réel − visé par zone, en points, signé, non plafonné). Les valeurs sont lues en base via l'ACL `GarminSessionActivityMetricsAdapter`, sans appel à Garmin.
+- `hrTimeInZone` est supposé en secondes (non confirmé par la spécification).
+- Non réalisé : la réalisation dans la liste des occurrences. Une série n'a qu'une seule activité liée ; la réalisation par occurrence reste à décider.
+
 ## Heure de début (issue #44)
 
 - Une séance peut porter une heure de début `startTime` au format `HH:MM` (00:00 à 23:59), facultative. `null` ou absente : la séance n'a pas d'heure.

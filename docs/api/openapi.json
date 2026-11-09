@@ -385,9 +385,32 @@
             "example": "18:00",
             "nullable": true,
             "type": "string"
+          },
+          "targetDistanceMeters": {
+            "description": "Distance visée en mètres, facultative",
+            "example": 10000,
+            "minimum": 0.000001,
+            "type": "number"
+          },
+          "targetHrZonePercentages": {
+            "description": "Répartition cible du temps par zone de FC (Z1 à Z5), en pourcentages entiers qui totalisent 100",
+            "example": [
+              10,
+              20,
+              40,
+              20,
+              10
+            ],
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 5,
+            "minItems": 5,
+            "type": "array"
           }
         },
         "required": [
+          "targetHrZonePercentages",
           "date",
           "disciplineTypeKey",
           "durationMinutes"
@@ -1550,6 +1573,41 @@
         ],
         "type": "object"
       },
+      "SessionAchievementResponseDto": {
+        "properties": {
+          "distanceRate": {
+            "example": 80,
+            "nullable": true,
+            "type": "number"
+          },
+          "durationRate": {
+            "example": 83.3,
+            "nullable": true,
+            "type": "number"
+          },
+          "zoneGapsPoints": {
+            "description": "Écart réel − visé par zone Z1 à Z5, en points de pourcentage, signé",
+            "example": [
+              0,
+              -5,
+              10,
+              0,
+              -5
+            ],
+            "items": {
+              "type": "number"
+            },
+            "nullable": true,
+            "type": "array"
+          }
+        },
+        "required": [
+          "distanceRate",
+          "durationRate",
+          "zoneGapsPoints"
+        ],
+        "type": "object"
+      },
       "SessionActivityResponseDto": {
         "properties": {
           "id": {
@@ -1755,6 +1813,15 @@
       },
       "SessionResponseDto": {
         "properties": {
+          "achievement": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SessionAchievementResponseDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
           "activity": {
             "allOf": [
               {
@@ -1839,9 +1906,32 @@
             ],
             "example": "planifiee",
             "type": "string"
+          },
+          "targetDistanceMeters": {
+            "example": 10000,
+            "nullable": true,
+            "type": "number"
+          },
+          "targetHrZonePercentages": {
+            "description": "Répartition cible du temps par zone de FC (Z1 à Z5)",
+            "example": [
+              10,
+              20,
+              40,
+              20,
+              10
+            ],
+            "items": {
+              "type": "number"
+            },
+            "nullable": true,
+            "type": "array"
           }
         },
         "required": [
+          "targetDistanceMeters",
+          "targetHrZonePercentages",
+          "achievement",
           "id",
           "date",
           "disciplineTypeKey",
@@ -2304,6 +2394,29 @@
             ],
             "example": "manquee",
             "type": "string"
+          },
+          "targetDistanceMeters": {
+            "description": "Nouvelle distance visée, absent = inchangée, null = effacée",
+            "example": 10000,
+            "minimum": 0.000001,
+            "nullable": true,
+            "type": "number"
+          },
+          "targetHrZonePercentages": {
+            "description": "Nouvelle répartition par zone, absent = inchangée",
+            "example": [
+              10,
+              20,
+              40,
+              20,
+              10
+            ],
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 5,
+            "minItems": 5,
+            "type": "array"
           }
         },
         "type": "object"
