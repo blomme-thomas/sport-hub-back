@@ -92,6 +92,12 @@ Route `GET /api/activities` : voir [Consulter les activités](../../fonctionnel/
 
 Détail des codes et du format des erreurs : [Erreurs de l'API](../erreurs-api.md#codes-du-module-garmin-sync) et [ADR 0004](decisions/0004-erreurs-techniques-garmin-en-domain-error.md).
 
+## Détail d'une activité (issue #79)
+
+- `GET /api/activities` : chaque élément porte `averageHeartRate` (FC moyenne, `null` si Garmin ne la fournit pas).
+- `GET /api/activities/:id` : métriques complètes de l'activité, lues en base sans appel à Garmin : type, date de début, durée, distance, calories, dénivelé, FC moyenne, FC maximale (lue dans la réponse Garmin enregistrée, `maxHR`), temps dans les zones 1 à 5. Une métrique absente vaut `null`. 404 `ACTIVITY_NOT_FOUND` si l'activité n'est pas enregistrée ; 400 si l'identifiant n'est pas un UUID.
+- Non réalisé : la série de FC pendant l'activité. La spécification Garmin utilisée ici ne décrit aucun endpoint d'échantillons de fréquence cardiaque (E01 ne renvoie que des résumés et `splitSummaries`). Le stockage à la synchronisation reste à décider : endpoint non documenté, ou série dérivée d'un autre champ.
+
 ## Synchronisation planifiée
 
 `GarminSyncScheduler` (Inbound Adapter, `infrastructure/scheduler/garmin-sync.scheduler.ts`) déclenche `SyncGarminActivitiesUseCase.execute()` selon une expression cron. Il ne contient aucune logique métier. Choix d'implémentation : `SchedulerRegistry` et `CronJob` (bibliothèque `cron` 4.4.0, dépendance directe) plutôt que `@Cron`, parce que `@Cron` est figé à la compilation alors que la fréquence est configurable (voir [ADR 0007](decisions/0007-planification-cronjob-via-scheduler-registry.md)).
