@@ -13,6 +13,15 @@ export interface ActivityListItem {
   startedAt: Date;
   durationSeconds: number;
   distanceMeters: number | null;
+  averageHeartRate: number | null;
+}
+
+export interface ActivityDetailItem extends ActivityListItem {
+  calories: number | null;
+  elevationGainMeters: number | null;
+  maxHeartRate: number | null;
+  /** Cinq zones cardiaques, de la zone 1 à la zone 5. */
+  hrTimeInZone: (number | null)[];
 }
 
 export interface ActivityListPage {
@@ -29,6 +38,9 @@ export interface IActivityListReadModel {
 
   /** Renvoie l'activité portant cet identifiant, ou null si elle n'est pas enregistrée. */
   findById(id: string): Promise<ActivityListItem | null>;
+
+  /** Renvoie le détail de l'activité portant cet identifiant, ou null si elle n'est pas enregistrée. */
+  findDetailById(id: string): Promise<ActivityDetailItem | null>;
 }
 
 export const ACTIVITY_LIST_READ_MODEL = Symbol('ACTIVITY_LIST_READ_MODEL');

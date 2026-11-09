@@ -151,6 +151,7 @@ describe('OpenAPI (e2e)', () => {
       'ActivitySummaryResponseDto'
     ] as { properties: Record<string, unknown> };
     expect(Object.keys(summary.properties).sort()).toEqual([
+      'averageHeartRate',
       'distanceMeters',
       'durationSeconds',
       'garminActivityId',

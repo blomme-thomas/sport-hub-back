@@ -37,6 +37,14 @@ export class ActivitySummaryResponseDto {
     description: 'Distance en mètres, null si Garmin ne la fournit pas',
   })
   distanceMeters!: number | null;
+
+  @ApiProperty({
+    example: 145,
+    nullable: true,
+    type: Number,
+    description: 'FC moyenne, null si Garmin ne la fournit pas',
+  })
+  averageHeartRate!: number | null;
 }
 
 export class ActivityListResponseDto {

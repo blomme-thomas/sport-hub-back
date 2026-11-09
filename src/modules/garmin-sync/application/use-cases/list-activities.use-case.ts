@@ -35,6 +35,7 @@ export class ListActivitiesUseCase {
         startedAt: item.startedAt,
         durationSeconds: item.durationSeconds,
         distanceMeters: item.distanceMeters,
+        averageHeartRate: item.averageHeartRate,
       })),
       page: query.page,
       pageSize: query.pageSize,
