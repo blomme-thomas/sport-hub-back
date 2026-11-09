@@ -51,4 +51,13 @@ export class ActivityDetailResponseDto {
       'Temps passé dans les zones 1 à 5 (unité supposée en secondes, non confirmée par la spécification Garmin) ; null pour une zone non renseignée',
   })
   hrTimeInZone!: (number | null)[];
+
+  @ApiProperty({
+    nullable: true,
+    type: [Object],
+    example: [{ occurredAt: '2026-11-08T08:44:19.000Z', bpm: 110 }],
+    description:
+      'Série de fréquence cardiaque horodatée, décodée du fichier d’origine ; null tant qu’elle n’a pas été décodée',
+  })
+  heartRateSeries!: { occurredAt: Date; bpm: number }[] | null;
 }

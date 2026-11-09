@@ -72,6 +72,7 @@ describe('Détail d’une activité (e2e)', () => {
       averageHeartRate: 145,
       maxHeartRate: 172,
       hrTimeInZone: [600, 1200, 1500, 300, null],
+      heartRateSeries: null,
     });
     expect(JSON.stringify(res.body)).not.toContain('charge-brute');
   });
@@ -102,6 +103,33 @@ describe('Détail d’une activité (e2e)', () => {
       maxHeartRate: null,
       hrTimeInZone: [null, null, null, null, null],
     });
+  });
+
+  it('renvoie la série de fréquence cardiaque horodatée quand elle a été décodée', async () => {
+    const id = await seed();
+    await prisma.activityHeartRateSample.createMany({
+      data: [
+        {
+          activityId: id,
+          occurredAt: new Date('2026-11-08T08:44:20.000Z'),
+          bpm: 112,
+        },
+        {
+          activityId: id,
+          occurredAt: new Date('2026-11-08T08:44:19.000Z'),
+          bpm: 110,
+        },
+      ],
+    });
+
+    const res = await request(app.getHttpServer())
+      .get(`/api/activities/${id}`)
+      .expect(200);
+
+    expect(res.body.heartRateSeries).toEqual([
+      { occurredAt: '2026-11-08T08:44:19.000Z', bpm: 110 },
+      { occurredAt: '2026-11-08T08:44:20.000Z', bpm: 112 },
+    ]);
   });
 
   it('renvoie 404 ACTIVITY_NOT_FOUND pour une activité inconnue', async () => {

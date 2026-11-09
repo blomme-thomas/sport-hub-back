@@ -22,6 +22,8 @@ export interface ActivityDetailItem extends ActivityListItem {
   maxHeartRate: number | null;
   /** Cinq zones cardiaques, de la zone 1 à la zone 5. */
   hrTimeInZone: (number | null)[];
+  /** Série de fréquence cardiaque décodée du fichier d'origine, null si elle n'a pas été décodée. */
+  heartRateSeries: { occurredAt: Date; bpm: number }[] | null;
 }
 
 export interface ActivityListPage {

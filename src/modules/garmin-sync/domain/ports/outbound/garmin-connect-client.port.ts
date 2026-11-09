@@ -36,6 +36,14 @@ export interface IGarminConnectClient {
   fetchRecoveryDays(range: RecoveryRange): Promise<RecoveryDay[]>;
 
   /**
+   * Télécharge le fichier d'origine d'une activité (archive zip contenant un fichier FIT).
+   *
+   * @throws GarminAccessDeniedError si Garmin refuse la clé ou le jeton.
+   * @throws GarminUnavailableError si Garmin est en panne ou répond de façon inattendue.
+   */
+  fetchActivityFile(garminActivityId: string): Promise<Uint8Array>;
+
+  /**
    * Renvoie les calories journalières de chaque jour de la plage (dates incluses), dans l'ordre chronologique, jours sans séance compris.
    * La valeur est le total de la journée Garmin (`burnedTotal`, repos inclus). Un jour sans donnée a `calories` à null, jamais à zéro.
    *

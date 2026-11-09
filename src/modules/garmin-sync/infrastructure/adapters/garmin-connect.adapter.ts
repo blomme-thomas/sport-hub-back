@@ -35,6 +35,7 @@ const BODY_BATTERY_REPORT_PATH =
   '/wellness-service/wellness/bodyBattery/reports/daily';
 const DAILY_HEART_RATE_PATH = '/wellness-service/wellness/dailyHeartRate';
 const DAILY_SUMMARIES_PATH = '/usersummary-service/v2/dailysummaries';
+const ACTIVITY_FILE_PATH = '/download-service/files/activity';
 const settingsSchema = z.object({ displayName: z.string().nullish() });
 const heartRateZonesSchema = z.array(
   z.object({
@@ -170,6 +171,14 @@ export class GarminConnectAdapter implements IGarminConnectClient {
     });
   }
 
+  async fetchActivityFile(garminActivityId: string): Promise<Uint8Array> {
+    const data = await this.getResource<ArrayBuffer | Uint8Array>(
+      `${this.config.personalApiBaseUrl}${ACTIVITY_FILE_PATH}/${encodeURIComponent(garminActivityId)}`,
+      'arraybuffer',
+    );
+    return new Uint8Array(data);
+  }
+
   async fetchDailyCalories(range: RecoveryRange): Promise<DailyCaloriesDay[]> {
     const days: DailyCaloriesDay[] = [];
     for (const chunk of this.dailySummaryChunks(range)) {
@@ -204,11 +213,19 @@ export class GarminConnectAdapter implements IGarminConnectClient {
   }
 
   private async getJson(url: string): Promise<unknown> {
+    return this.getResource<unknown>(url, 'json');
+  }
+
+  private async getResource<T>(
+    url: string,
+    responseType: 'json' | 'arraybuffer',
+  ): Promise<T> {
     for (let attempt = 0; ; attempt += 1) {
       const token = await this.accessToken();
       try {
-        const response = await this.http.get<unknown>(TARGET, url, {
+        const response = await this.http.get<T>(TARGET, url, {
           headers: { Authorization: `Bearer ${token}` },
+          responseType,
         });
         return response.data;
       } catch (error) {

@@ -67,6 +67,11 @@ export class PrismaActivityListReadModel implements IActivityListReadModel {
     if (record === null) {
       return null;
     }
+    const samples = await this.prisma.activityHeartRateSample.findMany({
+      where: { activityId: id },
+      orderBy: { occurredAt: 'asc' },
+      select: { occurredAt: true, bpm: true },
+    });
     return {
       id: record.id,
       garminActivityId: record.garminActivityId,
@@ -85,6 +90,7 @@ export class PrismaActivityListReadModel implements IActivityListReadModel {
         record.hrTimeInZone4,
         record.hrTimeInZone5,
       ],
+      heartRateSeries: samples.length === 0 ? null : samples,
     };
   }
 
