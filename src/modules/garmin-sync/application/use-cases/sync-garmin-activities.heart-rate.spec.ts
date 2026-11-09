@@ -50,8 +50,11 @@ describe('SyncGarminActivitiesUseCase : série de fréquence cardiaque', () => {
           ids.some((id) => id.toString() === a.garminActivityId.toString()),
         ),
       save: async () => undefined,
-      saveHeartRateSamples: async (id: string, samples: HeartRateSample[]) => {
-        stored.set(id, samples);
+      saveFitExtraction: async (
+        id: string,
+        extraction: { heartRateSamples: HeartRateSample[] },
+      ) => {
+        stored.set(id, extraction.heartRateSamples);
       },
     };
     const garmin = {
@@ -65,12 +68,24 @@ describe('SyncGarminActivitiesUseCase : série de fréquence cardiaque', () => {
       },
     };
     const extractor = {
-      extract: (file: Uint8Array): HeartRateSample[] => {
+      extract: (file: Uint8Array) => {
         const id = new TextDecoder().decode(file);
         if (corruptFiles.has(id)) {
           throw new GarminActivityFileInvalidError();
         }
-        return samplesById.get(id) ?? [{ occurredAt: T0, bpm: 110 }];
+        const heartRateSamples = samplesById.get(id) ?? [
+          { occurredAt: T0, bpm: 110 },
+        ];
+        return {
+          heartRateSamples,
+          document: {
+            formatVersion: 1,
+            session: null,
+            laps: [],
+            timeInZone: [],
+            records: [],
+          },
+        };
       },
     };
     const moduleRef = await Test.createTestingModule({

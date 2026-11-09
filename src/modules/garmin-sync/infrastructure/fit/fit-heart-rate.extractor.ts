@@ -3,13 +3,17 @@ import { Decoder, Stream } from '@garmin/fitsdk';
 import { unzipSync } from 'fflate';
 import { GarminActivityFileInvalidError } from '../../domain/errors/garmin-activity-file-invalid.error.js';
 import type {
-  HeartRateSample,
+  ActivityFitExtraction,
   IActivityHeartRateExtractor,
 } from '../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
+import {
+  buildActivityFitDocument,
+  heartRateSamplesOf,
+} from './fit-document.builder.js';
 
 @Injectable()
 export class FitHeartRateExtractor implements IActivityHeartRateExtractor {
-  extract(file: Uint8Array): HeartRateSample[] {
+  extract(file: Uint8Array): ActivityFitExtraction {
     const fit = fitEntryOf(file);
     const decoder = new Decoder(Stream.fromByteArray([...fit]));
     if (!decoder.isFIT()) {
@@ -23,16 +27,8 @@ export class FitHeartRateExtractor implements IActivityHeartRateExtractor {
     if (errors.length > 0) {
       throw new GarminActivityFileInvalidError();
     }
-    return (messages.recordMesgs ?? [])
-      .filter(
-        (record) =>
-          typeof record.heartRate === 'number' &&
-          record.timestamp instanceof Date,
-      )
-      .map((record) => ({
-        occurredAt: record.timestamp as Date,
-        bpm: record.heartRate as number,
-      }));
+    const document = buildActivityFitDocument(messages);
+    return { heartRateSamples: heartRateSamplesOf(document), document };
   }
 }
 

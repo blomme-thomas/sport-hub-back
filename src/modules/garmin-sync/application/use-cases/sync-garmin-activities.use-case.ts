@@ -98,8 +98,8 @@ export class SyncGarminActivitiesUseCase {
   private async storeHeartRateSeries(garminActivityId: string): Promise<void> {
     try {
       const file = await this.garmin.fetchActivityFile(garminActivityId);
-      const samples = this.heartRateExtractor.extract(file);
-      await this.activities.saveHeartRateSamples(garminActivityId, samples);
+      const extraction = this.heartRateExtractor.extract(file);
+      await this.activities.saveFitExtraction(garminActivityId, extraction);
     } catch (error) {
       this.logger.warn(
         `Série de fréquence cardiaque non enregistrée (${error instanceof Error ? error.name : 'erreur inconnue'})`,

@@ -56,11 +56,11 @@ class InMemoryActivityRepository implements IActivityRepository {
 
   readonly samples = new Map<string, unknown[]>();
 
-  saveHeartRateSamples(
+  saveFitExtraction(
     garminActivityId: string,
-    samples: unknown[],
+    extraction: { heartRateSamples: unknown[] },
   ): Promise<void> {
-    this.samples.set(garminActivityId, samples);
+    this.samples.set(garminActivityId, extraction.heartRateSamples);
     return Promise.resolve();
   }
 
@@ -138,7 +138,18 @@ describe('SyncGarminActivitiesUseCase', () => {
         { provide: DISCIPLINE_REGISTRY, useValue: registry },
         {
           provide: ACTIVITY_HEART_RATE_EXTRACTOR,
-          useValue: { extract: () => [] },
+          useValue: {
+            extract: () => ({
+              heartRateSamples: [],
+              document: {
+                formatVersion: 1,
+                session: null,
+                laps: [],
+                timeInZone: [],
+                records: [],
+              },
+            }),
+          },
         },
       ],
     }).compile();
