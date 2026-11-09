@@ -2,7 +2,7 @@
 
 Bounded Context des séances planifiées : une séance a une date, une discipline, une durée totale et une liste ordonnée de modules (échauffement, éducatifs, séries, retour au calme, autre). Elle peut être créée à la main et modifiée librement ; chaque modification faite par l'utilisateur est journalisée. Code : `src/modules/seances/`. Usage mono-utilisateur. Issue #37.
 
-Périmètre livré : création, consultation, liste par période, séances hebdomadaires et liste des occurrences (issue #75), modification, remplacement ordonné des modules, suppression, et rapprochement avec les activités Garmin réalisées (issue #40). Hors périmètre : génération de séances par l'IA (epic planning-ia), affichage côte à côte (dépôt front) et commentaire sur l'activité (epic conseils-bilans).
+Périmètre livré : création, consultation, liste par période, séances hebdomadaires et liste des occurrences (issue #75), déplacement, annulation et restauration d'une occurrence (issue #76), modification, remplacement ordonné des modules, suppression, et rapprochement avec les activités Garmin réalisées (issue #40). Hors périmètre : génération de séances par l'IA (epic planning-ia), affichage côte à côte (dépôt front) et commentaire sur l'activité (epic conseils-bilans).
 
 ## Rôle
 
@@ -45,6 +45,9 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 | `POST` | `/api/sessions/reconcile?from&to` | Rapproche automatiquement les séances planifiées de la période avec les activités du même jour et de la même discipline ; renvoie les couples créés (`items`) | 400 |
 | `PUT` | `/api/sessions/:id/activity` | Associe manuellement une activité du même jour, en remplaçant le lien précédent | 400, 404, 409 |
 | `DELETE` | `/api/sessions/:id/activity` | Dissocie l'activité liée (204) ; sans effet s'il n'y a pas de lien | 400, 404 |
+| `PUT` | `/api/sessions/:id/occurrences/:date` | Déplace une occurrence vers une autre date, heure facultative (voir [Occurrences](#occurrences-déplacées-annulées-et-restaurées)) | 400, 404 |
+| `POST` | `/api/sessions/:id/occurrences/:date/cancel` | Annule une occurrence, qui reste listée avec le statut `annulee` | 400, 404 |
+| `DELETE` | `/api/sessions/:id/occurrences/:date/exception` | Restaure une occurrence à sa programmation initiale (204) ; sans effet si non modifiée | 400, 404 |
 
 ## Récurrence
 
@@ -52,7 +55,16 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 - Une séance hebdomadaire se répète chaque semaine, à la même heure, sans date de fin.
 - `GET /api/sessions?from&to` renvoie les occurrences : chacune porte `sessionId`, `date`, `startTime`, `durationMinutes`, `disciplineTypeKey`, `recurrence` et `status`. Une occurrence reprend le statut de la série.
 - Le calcul est un service de domaine pur (`session-occurrences.ts`) ; le repository renvoie les séances candidates (datées avant `to` et dans la période, ou hebdomadaires).
-- Hors périmètre à ce jour : les autres routes de lecture (`GET /api/sessions/:id`, calendrier, planification, conseils et réconciliation) ne voient que la date de base de la série. Déplacer ou annuler une occurrence isolée relève de la story suivante (#76).
+- Hors périmètre à ce jour : les autres routes de lecture (`GET /api/sessions/:id`, calendrier, planification, conseils et réconciliation) ne voient que la date de base de la série.
+
+## Occurrences déplacées, annulées et restaurées
+
+- `:date` est la date de programmation de l'occurrence dans la série, avant tout déplacement. Une date qui n'en est pas une renvoie 404 `SESSION_OCCURRENCE_NOT_FOUND`.
+- Une exception (table `session_occurrence_exceptions`, une par occurrence, supprimée avec la série) porte la nouvelle date, une heure facultative et l'annulation. Elle est séparée de la séance : les modifications de la série la gardent.
+- Déplacer : `PUT` avec `date` et `startTime` facultatif (absent = heure de la série). Aucune règle de chevauchement. Déplacer une occurrence annulée la réactive (hypothèse).
+- Annuler : `POST …/cancel`. L'occurrence reste listée avec le statut `annulee`, à sa date ou à sa date déplacée.
+- Restaurer : `DELETE …/exception` supprime l'exception (204).
+- La liste applique les exceptions : une occurrence déplacée apparaît à sa nouvelle date, même si la date de programmation est hors période, et disparaît de l'ancienne.
 
 Le journal est renvoyé avec la séance (`changeLog`) : chaque entrée porte `changedAt`, `field` et `previousValue`. L'activité liée est renvoyée dans `activity` (`id`, `origin`, `linkedAt`), ou `null`.
 
