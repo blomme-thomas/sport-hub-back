@@ -221,6 +221,7 @@ Catalogue des 26 opérations de la spécification officielle, avec leur utilité
 | Scope | non précisé par la spécification |
 | Utilité | oui (#11) |
 | Justification | Résumé quotidien sur un an (pas, calories, stress, Body Battery) : base la plus large pour les statistiques. L'enveloppe `data` doit être prise en compte. |
+| Utilisation (#72) | `calories` de chaque `UserDailySummaryV2DTO` est un objet `CaloriesV2DTO` : `burnedResting` (BMR), `burnedActive`, `burnedTotal` (total de la journée). `GetDailyCaloriesUseCase` lit `burnedTotal` : sens établi par la spécification, non vérifié sur une réponse réelle. Requêtes de 90 jours au plus. |
 
 #### E16 : `GET /wellness-service/wellness/bodyBattery/reports/daily`
 
@@ -442,7 +443,7 @@ Les 26 opérations de `garmin/swagger.json` (`paths.*.get`).
 | E12 | GET | `/usersummary-service/stats/steps/daily/{startDate}/{endDate}` | Récupération et forme | peut-être | #11 |
 | E13 | GET | `/usersummary-service/stats/stress/daily/{startDate}/{endDate}` | Récupération et forme | peut-être | #12 |
 | E14 | GET | `/usersummary-service/usersummary/daily` | Récupération et forme | non | |
-| E15 | GET | `/usersummary-service/v2/dailysummaries` | Récupération et forme | oui | #11 |
+| E15 | GET | `/usersummary-service/v2/dailysummaries` | Récupération et forme | oui | #11, #72 |
 | E16 | GET | `/wellness-service/wellness/bodyBattery/reports/daily` | Récupération et forme | oui | #12 |
 | E17 | GET | `/wellness-service/wellness/daily/spo2acclimation/{calendarDate}` | Récupération et forme | non | |
 | E18 | GET | `/wellness-service/wellness/dailyHeartRate` | Récupération et forme | oui | #11 |

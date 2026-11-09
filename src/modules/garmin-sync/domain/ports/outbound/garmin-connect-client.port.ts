@@ -34,6 +34,21 @@ export interface IGarminConnectClient {
    * @throws GarminUnavailableError si Garmin est en panne ou répond de façon inattendue.
    */
   fetchRecoveryDays(range: RecoveryRange): Promise<RecoveryDay[]>;
+
+  /**
+   * Renvoie les calories journalières de chaque jour de la plage (dates incluses), dans l'ordre chronologique, jours sans séance compris.
+   * La valeur est le total de la journée Garmin (`burnedTotal`, repos inclus). Un jour sans donnée a `calories` à null, jamais à zéro.
+   *
+   * @throws GarminAccessDeniedError si Garmin refuse la clé ou le jeton.
+   * @throws GarminUnavailableError si Garmin est en panne ou répond de façon inattendue.
+   */
+  fetchDailyCalories(range: RecoveryRange): Promise<DailyCaloriesDay[]>;
+}
+
+export interface DailyCaloriesDay {
+  /** Jour calendaire, format YYYY-MM-DD. */
+  readonly date: string;
+  readonly calories: number | null;
 }
 
 export interface RecoveryRange {

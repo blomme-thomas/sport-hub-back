@@ -75,17 +75,19 @@ Les codes `STATS_RANGE_INVALID` et `STATS_RANGE_TOO_LARGE` sont déclarés dans 
 
 ## Tableau de bord
 
-`GET /api/stats/dashboard?period=7d|30d|3m|1y` (issue #50) renvoie les indicateurs d'une période glissante qui se termine aujourd'hui (UTC), avec la même durée juste avant pour la variation. Code : `GetDashboardStatsUseCase`, `DashboardStatsCalculator` (pur, sans I/O), `DashboardPeriodWindow` (fenêtres). Port : `findDashboardFacts`, qui renvoie `type`, `startedAt`, `durationSeconds` et les indicateurs de la table `activities` (calories, dénivelé, FC moyenne, cinq zones).
+`GET /api/stats/dashboard?period=7d|30d|3m|1y` (issue #50) renvoie les indicateurs d'une période glissante qui se termine aujourd'hui (UTC), avec la même durée juste avant pour la variation. Code : `GetDashboardStatsUseCase`, `DashboardStatsCalculator` (pur, sans I/O), `DashboardPeriodWindow` (fenêtres). Port : `findDashboardFacts`, qui renvoie `type`, `startedAt`, `durationSeconds` et les indicateurs de la table `activities` (dénivelé, FC moyenne, cinq zones). Les calories ne viennent plus des activités (issue #72) : elles viennent du résumé quotidien Garmin, via le port `IDailyCaloriesProvider` (`DAILY_CALORIES_PROVIDER`), implémenté par `GarminDailyCaloriesAdapter` qui appelle `GetDailyCaloriesUseCase` de `garmin-sync` (ACL, voir ADR 0006).
 
 - Fenêtres : la courante va de `from` (inclus) jusqu'au lendemain de aujourd'hui (exclu). `7d` et `30d` reculent de jours, `3m` et `1y` de mois calendaires ; le jour est ramené au dernier jour du mois cible s'il n'existe pas (30 mars moins un mois donne le 28 ou 29 février).
-- Absent ≠ zéro : sommes (calories, dénivelé) et moyenne (FC) ne portent que sur les activités qui renseignent la valeur ; `null` si aucune ne la renseigne. Une zone cardiaque est sommée de la même façon.
+- Absent ≠ zéro : sommes (dénivelé) et moyenne (FC) ne portent que sur les activités qui renseignent la valeur ; `null` si aucune ne la renseigne. Une zone cardiaque est sommée de la même façon.
+- Calories : `daily[].calories` est le total journalier Garmin (`burnedTotal`, repos inclus) du jour, `null` sans donnée ; `totals.calories` est la somme des jours renseignés, `null` si aucun. Hypothèse : le sens `burnedTotal` est établi par la spécification, non vérifié sur une réponse réelle. Le jour en cours peut être partiel.
+- Échec Garmin : les calories étant lues en parallèle des activités, une erreur Garmin fait échouer le tableau de bord en 502 (`GARMIN_ACCESS_DENIED`) ou 503 (`GARMIN_UNAVAILABLE`), sans repli sur les activités. `GET /api/advice/dashboard` (conseils) en hérite.
 - Répartition par sport : une entrée par `type`, triée par type.
 - Série journalière : une entrée par jour de la période, jours vides compris.
 - Variation : calculée sur la durée totale. `unknown` si la période précédente n'a aucune séance (`percent` à `null`) ; sinon `up`, `down` ou `flat`, avec `percent` arrondi à une décimale.
 - Hypothèse : l'unité des zones cardiaques est supposée en secondes, non confirmée par la spec Garmin.
-- Le tableau de bord ne lit que les activités de `garmin-sync` ; les activités enfants sont exclues à la synchronisation (`excludeChildren`).
+- Le tableau de bord lit les activités de `garmin-sync` et les calories journalières Garmin ; les activités enfants sont exclues à la synchronisation (`excludeChildren`).
 
-Validation : `period` obligatoire, parmi les quatre valeurs, sinon `400 VALIDATION_FAILED`. Couvert par les tests unitaires du calculateur et des fenêtres. Pas encore de test e2e sur cette route.
+Validation : `period` obligatoire, parmi les quatre valeurs, sinon `400 VALIDATION_FAILED`. Couvert par les tests unitaires du calculateur et des fenêtres, et par les e2e de `test/training-stats.e2e-spec.ts` (fake de `DAILY_CALORIES_PROVIDER`, aucun appel réseau).
 
 ## Limites connues
 

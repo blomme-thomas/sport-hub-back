@@ -196,6 +196,21 @@ describe('OpenAPI (e2e)', () => {
     ).toContain('ProblemDetailsDto');
   });
 
+  it('documente_la_route_GET_api_stats_dashboard_avec_200_400_502_et_503', () => {
+    const operation = document.paths['/api/stats/dashboard']?.get;
+    expect(operation).toBeDefined();
+    expect(operation?.responses?.['200']).toBeDefined();
+    for (const status of ['400', '502', '503']) {
+      const response = operation?.responses?.[status] as {
+        content?: Record<string, { schema?: { $ref?: string } }>;
+      };
+      expect(response).toBeDefined();
+      expect(
+        response.content?.['application/problem+json']?.schema?.$ref,
+      ).toContain('ProblemDetailsDto');
+    }
+  });
+
   it('publie_le_schema_TrainingStatsResponseDto_avec_les_periodes', () => {
     const schema = document.components?.schemas?.[
       'TrainingStatsResponseDto'

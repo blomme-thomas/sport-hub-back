@@ -1,3 +1,4 @@
+import type { DailyCalories } from '../ports/outbound/daily-calories.provider.port.js';
 import type { DashboardActivityFact } from '../ports/outbound/training-activity.read-model.port.js';
 import type { DashboardWindow } from '../value-objects/dashboard-period.vo.js';
 import { DashboardStatsCalculator } from './dashboard-stats-calculator.service.js';
@@ -44,7 +45,6 @@ describe('DashboardStatsCalculator', () => {
       [
         fact('2026-11-07T07:00:00.000Z', {
           metrics: {
-            calories: 500,
             averageHeartRate: 140,
             hrTimeInZone: [600, null, null, null, null],
           },
@@ -57,12 +57,13 @@ describe('DashboardStatsCalculator', () => {
         }),
       ],
       [],
+      [],
     );
 
     expect(stats.totals).toEqual({
       count: 2,
       durationSeconds: 7200,
-      calories: 500,
+      calories: null,
       elevationGainMeters: null,
     });
     expect(stats.averageHeartRate).toBe(150);
@@ -73,6 +74,7 @@ describe('DashboardStatsCalculator', () => {
     const stats = calculator.compute(
       WINDOW,
       [fact('2026-11-07T07:00:00.000Z')],
+      [],
       [],
     );
 
@@ -100,6 +102,7 @@ describe('DashboardStatsCalculator', () => {
         }),
       ],
       [],
+      [],
     );
 
     expect(stats.bySport).toEqual([
@@ -117,6 +120,7 @@ describe('DashboardStatsCalculator', () => {
       WINDOW,
       [fact('2026-11-07T07:00:00.000Z')],
       [],
+      [],
     );
 
     expect(stats.variation).toEqual({ direction: 'unknown', percent: null });
@@ -131,6 +135,7 @@ describe('DashboardStatsCalculator', () => {
       WINDOW,
       [fact('2026-11-07T07:00:00.000Z', { durationSeconds: 2500 })],
       previous,
+      [],
     );
     expect(up.variation).toEqual({ direction: 'up', percent: 25 });
 
@@ -138,6 +143,7 @@ describe('DashboardStatsCalculator', () => {
       WINDOW,
       [fact('2026-11-07T07:00:00.000Z', { durationSeconds: 1000 })],
       previous,
+      [],
     );
     expect(down.variation).toEqual({ direction: 'down', percent: -50 });
 
@@ -145,7 +151,126 @@ describe('DashboardStatsCalculator', () => {
       WINDOW,
       [fact('2026-11-07T07:00:00.000Z', { durationSeconds: 2000 })],
       previous,
+      [],
     );
     expect(flat.variation).toEqual({ direction: 'flat', percent: 0 });
+  });
+
+  describe('calories journalières du résumé quotidien Garmin', () => {
+    it('renvoie pour chaque jour de la période la calorie Garmin du jour, jours sans séance compris', () => {
+      const dailyCalories: DailyCalories[] = [
+        { date: '2026-11-07', calories: 2350 },
+        { date: '2026-11-08', calories: 2100 },
+      ];
+
+      const stats = calculator.compute(
+        WINDOW,
+        [fact('2026-11-07T07:00:00.000Z')],
+        [],
+        dailyCalories,
+      );
+
+      expect(stats.daily).toEqual([
+        { date: '2026-11-07', count: 1, durationSeconds: 3600, calories: 2350 },
+        { date: '2026-11-08', count: 0, durationSeconds: 0, calories: 2100 },
+      ]);
+    });
+
+    it('totalise les calories des jours qui ont une valeur et ignore les jours null', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [],
+        [],
+        [
+          { date: '2026-11-07', calories: 2350 },
+          { date: '2026-11-08', calories: null },
+        ],
+      );
+
+      expect(stats.totals.calories).toBe(2350);
+    });
+
+    it('additionne les calories de tous les jours renseignés', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [],
+        [],
+        [
+          { date: '2026-11-07', calories: 2350 },
+          { date: '2026-11-08', calories: 2100 },
+        ],
+      );
+
+      expect(stats.totals.calories).toBe(4450);
+    });
+
+    it('renvoie totals.calories à null quand aucun jour de la période n a de valeur', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [fact('2026-11-07T07:00:00.000Z')],
+        [],
+        [
+          { date: '2026-11-07', calories: null },
+          { date: '2026-11-08', calories: null },
+        ],
+      );
+
+      expect(stats.totals.calories).toBeNull();
+      expect(stats.daily.map((day) => day.calories)).toEqual([null, null]);
+    });
+
+    it('renvoie totals.calories à null sans aucune donnée journalière, même si une séance porte des calories', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [fact('2026-11-07T07:00:00.000Z', { metrics: { calories: 500 } })],
+        [],
+        [],
+      );
+
+      expect(stats.totals.calories).toBeNull();
+    });
+
+    it('ne reprend pas les calories des activités : seul le résumé quotidien alimente le tableau de bord', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [fact('2026-11-07T07:00:00.000Z', { metrics: { calories: 500 } })],
+        [],
+        [{ date: '2026-11-07', calories: 2350 }],
+      );
+
+      expect(stats.daily[0]?.calories).toBe(2350);
+      expect(stats.totals.calories).toBe(2350);
+    });
+
+    it('ignore les valeurs Garmin dont la date est hors de la période', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [],
+        [],
+        [
+          { date: '2026-11-06', calories: 9999 },
+          { date: '2026-11-07', calories: 2350 },
+          { date: '2026-11-09', calories: 9999 },
+        ],
+      );
+
+      expect(stats.daily).toHaveLength(2);
+      expect(stats.totals.calories).toBe(2350);
+    });
+
+    it('garde une valeur Garmin de zéro comme une valeur présente', () => {
+      const stats = calculator.compute(
+        WINDOW,
+        [],
+        [],
+        [
+          { date: '2026-11-07', calories: 0 },
+          { date: '2026-11-08', calories: null },
+        ],
+      );
+
+      expect(stats.daily[0]?.calories).toBe(0);
+      expect(stats.totals.calories).toBe(0);
+    });
   });
 });

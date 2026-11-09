@@ -23,6 +23,7 @@ type Handler = (req: IncomingMessage, res: ServerResponse) => void;
 const TOKEN_PATH =
   '/personalapitoken-service/personal-api/personal-api-key/token';
 const ACTIVITIES_PATH = '/activitylist-service/activities/search/activities';
+const DAILY_SUMMARIES_PATH = '/usersummary-service/v2/dailysummaries';
 const API_KEY = 'cle-secrete-garmin-12345';
 
 const FAST_DEFAULTS = {
@@ -59,6 +60,21 @@ function garminItem(id: number, overrides: Record<string, unknown> = {}) {
   };
 }
 
+function dailySummaryItem(calendarDate: string, burnedTotal: number) {
+  return {
+    calendarDate,
+    calories: { burnedResting: 1800, burnedActive: 550, burnedTotal },
+  };
+}
+
+function daysBetween(from: string, to: string): number {
+  return (
+    (Date.parse(`${to}T00:00:00.000Z`) - Date.parse(`${from}T00:00:00.000Z`)) /
+      (24 * 60 * 60 * 1000) +
+    1
+  );
+}
+
 async function rejection(promise: Promise<unknown>): Promise<unknown> {
   return promise.then(
     () => undefined,
@@ -73,6 +89,8 @@ describe('GarminConnectAdapter', () => {
   let activitiesHandler: Handler;
   let tokenHits: IncomingMessage[];
   let activityHits: IncomingMessage[];
+  let dailySummaryHits: IncomingMessage[];
+  let dailySummariesHandler: Handler;
   let moduleRef: TestingModule;
   let http: HttpClientService;
   let logged: string[];
@@ -108,6 +126,11 @@ describe('GarminConnectAdapter', () => {
         activitiesHandler(req, res);
         return;
       }
+      if (path === DAILY_SUMMARIES_PATH) {
+        dailySummaryHits.push(req);
+        dailySummariesHandler(req, res);
+        return;
+      }
       reply(res, 404, {});
     });
     await new Promise<void>((resolve) =>
@@ -124,12 +147,14 @@ describe('GarminConnectAdapter', () => {
   beforeEach(async () => {
     tokenHits = [];
     activityHits = [];
+    dailySummaryHits = [];
     let count = 0;
     tokenHandler = (_req, res) => {
       count += 1;
       reply(res, 200, fakeJwt(count));
     };
     activitiesHandler = (_req, res) => reply(res, 200, []);
+    dailySummariesHandler = (_req, res) => reply(res, 200, { data: [] });
     logged = [];
     for (const level of ['log', 'warn', 'error', 'debug', 'verbose'] as const) {
       vi.spyOn(Logger.prototype, level).mockImplementation(
@@ -563,6 +588,132 @@ describe('GarminConnectAdapter', () => {
       await expect(
         unreachable.fetchActivitiesSince(null),
       ).rejects.toBeInstanceOf(GarminUnavailableError);
+    });
+  });
+
+  describe('calories journalières (résumé quotidien)', () => {
+    const RANGE = { from: '2026-11-01', to: '2026-11-03' };
+    const YEAR = { from: '2026-01-01', to: '2026-12-31' };
+
+    it('interroge le résumé quotidien avec la plage incluse en startDate et endDate', async () => {
+      await adapter().fetchDailyCalories(RANGE);
+
+      expect(dailySummaryHits).toHaveLength(1);
+      expect(dailySummaryHits[0].method).toBe('GET');
+      expect(query(dailySummaryHits[0]).get('startDate')).toBe('2026-11-01');
+      expect(query(dailySummaryHits[0]).get('endDate')).toBe('2026-11-03');
+    });
+
+    it('envoie le jeton d accès en Bearer et jamais la clé dans l URL', async () => {
+      await adapter().fetchDailyCalories(RANGE);
+
+      expect(dailySummaryHits[0].headers.authorization).toBe(
+        `Bearer ${fakeJwt(1)}`,
+      );
+      expect(dailySummaryHits[0].url).not.toContain(API_KEY);
+    });
+
+    it('renvoie un jour par date de la plage, avec burnedTotal pour le jour renseigné', async () => {
+      dailySummariesHandler = (_req, res) =>
+        reply(res, 200, {
+          data: [dailySummaryItem('2026-11-02', 2350)],
+        });
+
+      await expect(adapter().fetchDailyCalories(RANGE)).resolves.toEqual([
+        { date: '2026-11-01', calories: null },
+        { date: '2026-11-02', calories: 2350 },
+        { date: '2026-11-03', calories: null },
+      ]);
+    });
+
+    it('couvre une année en tranches de 90 jours au plus, contiguës, sans trou ni chevauchement', async () => {
+      const requested: { startDate: string; endDate: string }[] = [];
+      dailySummariesHandler = (req, res) => {
+        requested.push({
+          startDate: query(req).get('startDate') ?? '',
+          endDate: query(req).get('endDate') ?? '',
+        });
+        reply(res, 200, { data: [] });
+      };
+
+      const days = await adapter().fetchDailyCalories(YEAR);
+
+      expect(days).toHaveLength(365);
+      expect(requested[0]?.startDate).toBe(YEAR.from);
+      expect(requested[requested.length - 1]?.endDate).toBe(YEAR.to);
+      for (const [index, chunk] of requested.entries()) {
+        expect(daysBetween(chunk.startDate, chunk.endDate)).toBeLessThanOrEqual(
+          90,
+        );
+        if (index > 0) {
+          const previousEnd = Date.parse(
+            `${requested[index - 1]?.endDate}T00:00:00.000Z`,
+          );
+          const start = Date.parse(`${chunk.startDate}T00:00:00.000Z`);
+          expect(start - previousEnd).toBe(24 * 60 * 60 * 1000);
+        }
+      }
+    });
+
+    it('renvoie les jours sans donnée à null quand une tranche répond 204', async () => {
+      dailySummariesHandler = (_req, res) => reply(res, 204, '');
+
+      const days = await adapter().fetchDailyCalories(RANGE);
+
+      expect(days).toHaveLength(3);
+      for (const day of days) {
+        expect(day.calories).toBeNull();
+      }
+    });
+
+    it('lève GarminUnavailableError quand une tranche échoue et n appelle pas les tranches suivantes', async () => {
+      let calls = 0;
+      dailySummariesHandler = (_req, res) => {
+        calls += 1;
+        if (calls === 1) {
+          reply(res, 200, { data: [] });
+          return;
+        }
+        reply(res, 500, {});
+      };
+
+      await expect(adapter().fetchDailyCalories(YEAR)).rejects.toBeInstanceOf(
+        GarminUnavailableError,
+      );
+      expect(dailySummaryHits).toHaveLength(2);
+    });
+
+    it('lève GarminAccessDeniedError quand Garmin refuse le jeton sur le résumé quotidien', async () => {
+      dailySummariesHandler = (_req, res) => reply(res, 401, {});
+
+      await expect(adapter().fetchDailyCalories(RANGE)).rejects.toBeInstanceOf(
+        GarminAccessDeniedError,
+      );
+    });
+
+    it('ne transmet ni cause ni secret dans l erreur du résumé quotidien', async () => {
+      dailySummariesHandler = (_req, res) => reply(res, 503, {});
+
+      const error = (await rejection(
+        adapter().fetchDailyCalories(RANGE),
+      )) as Error;
+
+      expect(error).toBeInstanceOf(GarminUnavailableError);
+      expect(error.cause).toBeUndefined();
+      const dump = `${error.message} ${error.stack ?? ''} ${JSON.stringify(error)}`;
+      expect(dump).not.toContain(API_KEY);
+      expect(dump).not.toContain(fakeJwt(1));
+    });
+
+    it('ne journalise ni la clé ni le jeton lors de la lecture des calories', async () => {
+      dailySummariesHandler = (_req, res) =>
+        reply(res, 200, { data: [dailySummaryItem('2026-11-01', 2100)] });
+
+      await adapter().fetchDailyCalories(RANGE);
+
+      const output = logged.join('\n');
+      expect(output).not.toContain(API_KEY);
+      expect(output).not.toContain(fakeJwt(1));
     });
   });
 

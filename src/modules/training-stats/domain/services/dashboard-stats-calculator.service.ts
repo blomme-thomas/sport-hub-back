@@ -1,10 +1,11 @@
+import type { DailyCalories } from '../ports/outbound/daily-calories.provider.port.js';
 import type { DashboardActivityFact } from '../ports/outbound/training-activity.read-model.port.js';
 import type { DashboardWindow } from '../value-objects/dashboard-period.vo.js';
 
 export interface DashboardTotals {
   readonly count: number;
   readonly durationSeconds: number;
-  /** Somme des calories des activités qui les renseignent ; null si aucune ne les renseigne. */
+  /** Somme des calories journalières Garmin des jours de la période qui en ont une ; null si aucun jour n'en a. */
   readonly calories: number | null;
   /** Somme du dénivelé positif des activités qui le renseignent ; null si aucune ne le renseigne. */
   readonly elevationGainMeters: number | null;
@@ -21,6 +22,7 @@ export interface DailyPoint {
   readonly date: string;
   readonly count: number;
   readonly durationSeconds: number;
+  /** Calories journalières Garmin (total de la journée, repos inclus) ; null sans donnée pour ce jour. */
   readonly calories: number | null;
 }
 
@@ -49,14 +51,21 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export class DashboardStatsCalculator {
   /**
    * Calcule les indicateurs d'une période et les compare à la période précédente.
+   * Les calories viennent du résumé quotidien Garmin, jamais de la somme des activités : un jour sans donnée reste null.
    * Un indicateur absent d'une activité n'est jamais compté comme zéro : sommes et moyennes ne portent que sur les valeurs présentes.
    */
   compute(
     window: DashboardWindow,
     current: readonly DashboardActivityFact[],
     previous: readonly DashboardActivityFact[],
+    dailyCalories: readonly DailyCalories[],
   ): DashboardStats {
-    const totals = DashboardStatsCalculator.totalsOf(current);
+    const daily = DashboardStatsCalculator.dailyOf(
+      window.current,
+      current,
+      dailyCalories,
+    );
+    const totals = DashboardStatsCalculator.totalsOf(current, daily);
     return {
       totals,
       averageHeartRate: DashboardStatsCalculator.averageOf(
@@ -68,7 +77,7 @@ export class DashboardStatsCalculator {
         ),
       ),
       bySport: DashboardStatsCalculator.bySportOf(current),
-      daily: DashboardStatsCalculator.dailyOf(window.current, current),
+      daily,
       variation: DashboardStatsCalculator.variationOf(
         totals.durationSeconds,
         previous,
@@ -78,6 +87,7 @@ export class DashboardStatsCalculator {
 
   private static totalsOf(
     facts: readonly DashboardActivityFact[],
+    daily: readonly DailyPoint[],
   ): DashboardTotals {
     return {
       count: facts.length,
@@ -86,7 +96,7 @@ export class DashboardStatsCalculator {
         0,
       ),
       calories: DashboardStatsCalculator.sumOf(
-        facts.map((fact) => fact.metrics.calories),
+        daily.map((day) => day.calories),
       ),
       elevationGainMeters: DashboardStatsCalculator.sumOf(
         facts.map((fact) => fact.metrics.elevationGainMeters),
@@ -115,6 +125,7 @@ export class DashboardStatsCalculator {
   private static dailyOf(
     bounds: DashboardWindow['current'],
     facts: readonly DashboardActivityFact[],
+    dailyCalories: readonly DailyCalories[],
   ): DailyPoint[] {
     const days = new Map<string, DashboardActivityFact[]>();
     for (
@@ -127,6 +138,9 @@ export class DashboardStatsCalculator {
     for (const fact of facts) {
       days.get(fact.startedAt.toISOString().slice(0, 10))?.push(fact);
     }
+    const caloriesByDate = new Map<string, number | null>(
+      dailyCalories.map((day) => [day.date, day.calories]),
+    );
     return [...days.entries()].map(([date, dayFacts]) => ({
       date,
       count: dayFacts.length,
@@ -134,9 +148,7 @@ export class DashboardStatsCalculator {
         (sum, fact) => sum + fact.durationSeconds,
         0,
       ),
-      calories: DashboardStatsCalculator.sumOf(
-        dayFacts.map((fact) => fact.metrics.calories),
-      ),
+      calories: caloriesByDate.get(date) ?? null,
     }));
   }
 

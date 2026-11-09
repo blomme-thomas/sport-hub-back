@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  DAILY_CALORIES_PROVIDER,
+  type IDailyCaloriesProvider,
+} from '../../domain/ports/outbound/daily-calories.provider.port.js';
+import {
   TRAINING_ACTIVITY_READ_MODEL,
   type ITrainingActivityReadModel,
 } from '../../domain/ports/outbound/training-activity.read-model.port.js';
@@ -24,6 +28,8 @@ export class GetDashboardStatsUseCase {
   constructor(
     @Inject(TRAINING_ACTIVITY_READ_MODEL)
     private readonly readModel: ITrainingActivityReadModel,
+    @Inject(DAILY_CALORIES_PROVIDER)
+    private readonly dailyCalories: IDailyCaloriesProvider,
     @Inject(DashboardStatsCalculator)
     private readonly calculator: DashboardStatsCalculator,
   ) {}
@@ -31,6 +37,9 @@ export class GetDashboardStatsUseCase {
   /**
    * Calcule les indicateurs du tableau de bord pour une période glissante se terminant aujourd'hui (UTC),
    * avec la période précédente de même durée. Les activités enfants ne sont pas synchronisées (excludeChildren côté Garmin).
+   *
+   * @throws GarminAccessDeniedError si Garmin refuse la clé ou le jeton (calories journalières).
+   * @throws GarminUnavailableError si Garmin est indisponible (calories journalières).
    */
   async execute(
     period: DashboardPeriod,
@@ -42,6 +51,9 @@ export class GetDashboardStatsUseCase {
 
   /**
    * Calcule les indicateurs pour une fenêtre explicite (courante et précédente), par exemple une semaine ISO.
+   *
+   * @throws GarminAccessDeniedError si Garmin refuse la clé ou le jeton (calories journalières).
+   * @throws GarminUnavailableError si Garmin est indisponible (calories journalières).
    */
   async executeForWindow(window: DashboardWindow): Promise<DashboardStats> {
     return this.computeWindow(window);
@@ -50,7 +62,7 @@ export class GetDashboardStatsUseCase {
   private async computeWindow(
     window: DashboardWindow,
   ): Promise<DashboardStats> {
-    const [current, previous] = await Promise.all([
+    const [current, previous, dailyCalories] = await Promise.all([
       this.readModel.findDashboardFacts({
         from: window.current.from,
         toExclusive: window.current.toExclusive,
@@ -61,7 +73,11 @@ export class GetDashboardStatsUseCase {
         toExclusive: window.previous.toExclusive,
         type: null,
       }),
+      this.dailyCalories.findDailyCalories({
+        from: window.current.from,
+        toExclusive: window.current.toExclusive,
+      }),
     ]);
-    return this.calculator.compute(window, current, previous);
+    return this.calculator.compute(window, current, previous, dailyCalories);
   }
 }

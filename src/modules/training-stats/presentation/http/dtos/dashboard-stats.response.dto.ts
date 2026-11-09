@@ -13,7 +13,7 @@ export class DashboardTotalsResponseDto {
     nullable: true,
     example: 2100,
     description:
-      'Somme des calories des séances qui les renseignent ; null si aucune ne les renseigne',
+      'Somme des calories journalières Garmin (total de la journée, repos inclus) des jours de la période qui en ont une ; null si aucun jour n’en a. Ne reprend pas les calories des séances. Le jour en cours peut être partiel',
   })
   calories!: number | null;
 
@@ -53,7 +53,13 @@ export class DashboardDayResponseDto {
   @ApiProperty({ example: 3600 })
   durationSeconds!: number;
 
-  @ApiProperty({ type: Number, nullable: true, example: 600 })
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    example: 2350,
+    description:
+      'Calories journalières Garmin du jour (total de la journée, repos inclus) ; null sans donnée Garmin pour ce jour, jamais 0. Le jour en cours peut être partiel',
+  })
   calories!: number | null;
 }
 
