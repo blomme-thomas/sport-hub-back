@@ -37,41 +37,6 @@ const DAILY_HEART_RATE_PATH = '/wellness-service/wellness/dailyHeartRate';
 const DAILY_SUMMARIES_PATH = '/usersummary-service/v2/dailysummaries';
 const ACTIVITY_FILE_PATH = '/download-service/files/activity';
 const settingsSchema = z.object({ displayName: z.string().nullish() });
-
-/** Structure seule (noms des champs et types, deux niveaux), sans aucune valeur. */
-function shapeOf(value: unknown, depth = 0): unknown {
-  if (
-    value === null ||
-    typeof value !== 'object' ||
-    Array.isArray(value) ||
-    depth >= 2
-  ) {
-    return value === null
-      ? 'null'
-      : Array.isArray(value)
-        ? 'array'
-        : typeof value;
-  }
-  return Object.fromEntries(
-    Object.entries(value).map(([key, child]) => [
-      key,
-      shapeOf(child, depth + 1),
-    ]),
-  );
-}
-
-/**
- * DIAGNOSTIC TEMPORAIRE : si `GARMIN_DEBUG_CLAIMS=1`, logue la structure de la réponse des réglages du profil
- * (noms de champs et types, jamais les valeurs), pour localiser le champ du prénom. À retirer ensuite.
- */
-function logSettingsShapeIfRequested(body: unknown, logger: Logger): void {
-  if (process.env['GARMIN_DEBUG_CLAIMS'] !== '1') {
-    return;
-  }
-  logger.warn(
-    `Structure des réglages du profil Garmin (diagnostic) : ${JSON.stringify(shapeOf(body))}`,
-  );
-}
 const heartRateZonesSchema = z.array(
   z.object({
     sport: z.string().nullish(),
@@ -144,9 +109,7 @@ export class GarminConnectAdapter implements IGarminConnectClient {
 
   async fetchDisplayName(): Promise<string | null> {
     const url = `${this.config.personalApiBaseUrl}${SETTINGS_PATH}`;
-    const body = await this.getJson(url);
-    logSettingsShapeIfRequested(body, this.logger);
-    const parsed = settingsSchema.safeParse(body);
+    const parsed = settingsSchema.safeParse(await this.getJson(url));
     if (!parsed.success) {
       throw new GarminUnavailableError();
     }
