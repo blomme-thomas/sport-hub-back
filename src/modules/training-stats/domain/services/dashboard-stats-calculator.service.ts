@@ -1,6 +1,10 @@
 import type { DailyCalories } from '../ports/outbound/daily-calories.provider.port.js';
 import type { DashboardActivityFact } from '../ports/outbound/training-activity.read-model.port.js';
 import type { DashboardWindow } from '../value-objects/dashboard-period.vo.js';
+import {
+  sportFamilyOf,
+  type SportFamily,
+} from '../value-objects/sport-family.vo.js';
 
 export interface DashboardTotals {
   readonly count: number;
@@ -13,6 +17,7 @@ export interface DashboardTotals {
 
 export interface SportBreakdown {
   readonly type: string;
+  readonly family: SportFamily;
   readonly count: number;
   readonly durationSeconds: number;
 }
@@ -118,7 +123,7 @@ export class DashboardStatsCalculator {
       bySport.set(fact.type, entry);
     }
     return [...bySport.entries()]
-      .map(([type, entry]) => ({ type, ...entry }))
+      .map(([type, entry]) => ({ type, family: sportFamilyOf(type), ...entry }))
       .sort((a, b) => a.type.localeCompare(b.type));
   }
 
