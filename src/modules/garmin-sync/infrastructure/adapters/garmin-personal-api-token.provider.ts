@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { z } from 'zod';
 import {
   garminConfig,
@@ -33,8 +33,27 @@ function expiryOf(token: string): number | undefined {
   }
 }
 
+/**
+ * DIAGNOSTIC TEMPORAIRE : si `GARMIN_DEBUG_CLAIMS=1`, logue le payload décodé du jeton (claims et valeurs).
+ * Ne logue jamais l'en-tête, la signature ni le jeton brut. À retirer une fois le champ du prénom identifié.
+ */
+function logClaimsIfRequested(token: string, logger: Logger): void {
+  if (process.env['GARMIN_DEBUG_CLAIMS'] !== '1') {
+    return;
+  }
+  try {
+    const payload = Buffer.from(token.split('.')[1], 'base64url').toString(
+      'utf8',
+    );
+    logger.warn(`Claims du jeton Garmin (diagnostic) : ${payload}`);
+  } catch {
+    logger.warn('Claims du jeton Garmin illisibles (diagnostic)');
+  }
+}
+
 @Injectable()
 export class GarminPersonalApiTokenProvider {
+  private readonly logger = new Logger(GarminPersonalApiTokenProvider.name);
   private cached?: CachedToken;
   private pending?: Promise<string>;
 
@@ -100,6 +119,7 @@ export class GarminPersonalApiTokenProvider {
     }
 
     this.cached = { value: parsed.data, expiresAt };
+    logClaimsIfRequested(parsed.data, this.logger);
     return parsed.data;
   }
 }
