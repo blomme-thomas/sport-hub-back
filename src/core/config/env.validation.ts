@@ -89,8 +89,6 @@ export const garminEnvSchema = z.object({
   GARMIN_PERSONAL_API_BASE_URL: z
     .url()
     .default(DEFAULT_GARMIN_PERSONAL_API_BASE_URL),
-  /** Diagnostic temporaire des claims du jeton Garmin. Déclarée ici pour que Zod la conserve dans `process.env`. */
-  GARMIN_DEBUG_CLAIMS: z.enum(['0', '1']).optional(),
   GARMIN_SYNC_CRON_ENABLED: z
     .enum(['true', 'false'])
     .default('true')
