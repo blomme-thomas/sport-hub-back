@@ -551,6 +551,17 @@
             "example": 4000,
             "type": "number"
           },
+          "family": {
+            "description": "Famille de sport du type (course, vélo, natation, autre), calculée par le back",
+            "enum": [
+              "running",
+              "cycling",
+              "swimming",
+              "other"
+            ],
+            "example": "running",
+            "type": "string"
+          },
           "type": {
             "description": "Type d'activité",
             "example": "running",
@@ -559,6 +570,7 @@
         },
         "required": [
           "type",
+          "family",
           "count",
           "durationSeconds"
         ],

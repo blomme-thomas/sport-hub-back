@@ -106,8 +106,8 @@ describe('DashboardStatsCalculator', () => {
     );
 
     expect(stats.bySport).toEqual([
-      { type: 'cycling', count: 1, durationSeconds: 1200 },
-      { type: 'running', count: 2, durationSeconds: 2400 },
+      { type: 'cycling', family: 'cycling', count: 1, durationSeconds: 1200 },
+      { type: 'running', family: 'running', count: 2, durationSeconds: 2400 },
     ]);
     expect(stats.daily).toEqual([
       { date: '2026-11-07', count: 2, durationSeconds: 2400, calories: null },

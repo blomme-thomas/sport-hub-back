@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DASHBOARD_PERIODS } from '../../../domain/value-objects/dashboard-period.vo.js';
+import {
+  SPORT_FAMILIES,
+  type SportFamily,
+} from '../../../domain/value-objects/sport-family.vo.js';
 
 export class DashboardTotalsResponseDto {
   @ApiProperty({ example: 4, description: 'Nombre de séances' })
@@ -30,6 +34,14 @@ export class DashboardTotalsResponseDto {
 export class DashboardSportResponseDto {
   @ApiProperty({ example: 'running', description: "Type d'activité" })
   type!: string;
+
+  @ApiProperty({
+    enum: SPORT_FAMILIES,
+    example: 'running',
+    description:
+      'Famille de sport du type (course, vélo, natation, autre), calculée par le back',
+  })
+  family!: SportFamily;
 
   @ApiProperty({ example: 2 })
   count!: number;
