@@ -1,4 +1,8 @@
 import type { Discipline } from '../../domain/entities/discipline.entity.js';
+import {
+  sportFamilyOf,
+  type SportFamily,
+} from '../../../../shared/domain/value-objects/sport-family.vo.js';
 
 export interface RenameDisciplineCommand {
   typeKey: string;
@@ -11,6 +15,7 @@ export class DisciplineDto {
     readonly label: string,
     readonly firstSeenAt: Date,
     readonly lastSeenAt: Date,
+    readonly family: SportFamily,
   ) {}
 
   static fromDomain(discipline: Discipline): DisciplineDto {
@@ -19,6 +24,7 @@ export class DisciplineDto {
       discipline.label.toString(),
       discipline.firstSeenAt,
       discipline.lastSeenAt,
+      sportFamilyOf(discipline.typeKey.toString()),
     );
   }
 }

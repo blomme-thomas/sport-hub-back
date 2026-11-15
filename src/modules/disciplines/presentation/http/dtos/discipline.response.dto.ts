@@ -1,4 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  SPORT_FAMILIES,
+  type SportFamily,
+} from '../../../../../shared/domain/value-objects/sport-family.vo.js';
 
 export class DisciplineResponseDto {
   @ApiProperty({
@@ -33,4 +37,12 @@ export class DisciplineResponseDto {
       'Instant de la dernière synchronisation qui a vu la discipline',
   })
   lastSeenAt!: Date;
+
+  @ApiProperty({
+    enum: SPORT_FAMILIES,
+    example: 'running',
+    description:
+      'Famille de sport de la discipline (course, vélo, natation ou autre), pour les pictogrammes et la répartition',
+  })
+  family!: SportFamily;
 }

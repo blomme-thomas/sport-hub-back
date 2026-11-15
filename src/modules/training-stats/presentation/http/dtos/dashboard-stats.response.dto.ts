@@ -3,7 +3,7 @@ import { DASHBOARD_PERIODS } from '../../../domain/value-objects/dashboard-perio
 import {
   SPORT_FAMILIES,
   type SportFamily,
-} from '../../../domain/value-objects/sport-family.vo.js';
+} from '../../../../../shared/domain/value-objects/sport-family.vo.js';
 
 export class DashboardTotalsResponseDto {
   @ApiProperty({ example: 4, description: 'Nombre de séances' })

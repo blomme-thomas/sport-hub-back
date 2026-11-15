@@ -63,6 +63,7 @@ describe('RenameDisciplineUseCase', () => {
         label: DisciplineLabel.create('running'),
         firstSeenAt: FIRST_SEEN_AT,
         lastSeenAt: LAST_SEEN_AT,
+        family: 'running',
       }),
     );
     const moduleRef = await Test.createTestingModule({
@@ -83,6 +84,7 @@ describe('RenameDisciplineUseCase', () => {
         label: 'Course à pied',
         firstSeenAt: FIRST_SEEN_AT,
         lastSeenAt: LAST_SEEN_AT,
+        family: 'running',
       });
     });
 

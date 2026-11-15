@@ -5,16 +5,18 @@ const disciplineDto = {
   label: 'Course à pied',
   firstSeenAt: new Date('2026-05-01T08:00:00.000Z'),
   lastSeenAt: new Date('2026-11-07T10:00:00.000Z'),
+  family: 'running' as const,
 };
 
 describe('DisciplineHttpMapper', () => {
   describe('toResponse', () => {
-    it('restitue une discipline avec sa clé, son libellé et ses dates', () => {
+    it('restitue une discipline avec sa clé, son libellé, ses dates et sa famille', () => {
       expect(DisciplineHttpMapper.toResponse(disciplineDto)).toEqual({
         typeKey: 'running',
         label: 'Course à pied',
         firstSeenAt: new Date('2026-05-01T08:00:00.000Z'),
         lastSeenAt: new Date('2026-11-07T10:00:00.000Z'),
+        family: 'running',
       });
     });
   });

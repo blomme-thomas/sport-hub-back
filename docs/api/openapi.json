@@ -732,6 +732,17 @@
       },
       "DisciplineResponseDto": {
         "properties": {
+          "family": {
+            "description": "Famille de sport de la discipline (course, vélo, natation ou autre), pour les pictogrammes et la répartition",
+            "enum": [
+              "running",
+              "cycling",
+              "swimming",
+              "other"
+            ],
+            "example": "running",
+            "type": "string"
+          },
           "firstSeenAt": {
             "description": "Instant de la première synchronisation qui a vu la discipline",
             "example": "2026-05-01T06:30:00.000Z",
@@ -759,7 +770,8 @@
           "typeKey",
           "label",
           "firstSeenAt",
-          "lastSeenAt"
+          "lastSeenAt",
+          "family"
         ],
         "type": "object"
       },
