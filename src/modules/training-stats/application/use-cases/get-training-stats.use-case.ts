@@ -9,7 +9,7 @@ import {
   type PreviousPeriodStats,
 } from '../../domain/services/training-stats-calculator.service.js';
 import type { ActivityVolume } from '../../domain/value-objects/activity-volume.vo.js';
-import { sportFamilyOf } from '../../domain/value-objects/sport-family.vo.js';
+import { sportFamilyOf } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import type {
   MetricVariation,
   VolumeVariation,

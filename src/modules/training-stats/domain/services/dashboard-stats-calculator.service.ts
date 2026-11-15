@@ -4,7 +4,7 @@ import type { DashboardWindow } from '../value-objects/dashboard-period.vo.js';
 import {
   sportFamilyOf,
   type SportFamily,
-} from '../value-objects/sport-family.vo.js';
+} from '../../../../shared/domain/value-objects/sport-family.vo.js';
 
 export interface DashboardTotals {
   readonly count: number;

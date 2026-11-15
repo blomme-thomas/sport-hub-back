@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   SPORT_FAMILIES,
   type SportFamily,
-} from '../../../domain/value-objects/sport-family.vo.js';
+} from '../../../../../shared/domain/value-objects/sport-family.vo.js';
 
 export class VolumeResponseDto {
   @ApiProperty({ example: 3, description: 'Nombre de séances' })

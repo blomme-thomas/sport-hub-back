@@ -1,4 +1,4 @@
-import type { SportFamily } from '../../domain/value-objects/sport-family.vo.js';
+import type { SportFamily } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import type { StatsGranularity } from '../../domain/value-objects/stats-granularity.vo.js';
 
 export interface TrainingStatsQuery {

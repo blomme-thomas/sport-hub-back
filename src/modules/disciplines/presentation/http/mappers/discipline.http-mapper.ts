@@ -20,6 +20,7 @@ export class DisciplineHttpMapper {
       label: dto.label,
       firstSeenAt: dto.firstSeenAt,
       lastSeenAt: dto.lastSeenAt,
+      family: dto.family,
     };
   }
 

@@ -68,6 +68,7 @@ describe('ListDisciplinesUseCase', () => {
         label: 'Course à pied',
         firstSeenAt: FIRST_SEEN_AT,
         lastSeenAt: LAST_SEEN_AT,
+        family: 'running',
       },
     ]);
   });
