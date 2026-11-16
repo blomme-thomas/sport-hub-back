@@ -141,3 +141,15 @@ Hypothèses :
 - Le rattachement se fait sur le jour de l'occurrence, les volumes sur la semaine UTC : une activité du dimanche soir ou du lundi matin (Paris) peut tomber dans l'autre semaine côté volumes.
 - `hrTimeInZone` est supposé en secondes (non confirmé).
 - L'effort perçu réalisé par module n'est pas enregistré : `perceivedEffort` ne reprend que la valeur prévue au plan.
+
+## Export d'un mois (issue #99)
+
+- `GET /api/exports/months/:month` (mois `AAAA-MM`, par exemple `2026-11`) renvoie un fichier JSON au format `bilan-mois`, version 1. Même module `exports` que l'export hebdomadaire.
+- Erreur : `400 EXPORT_MONTH_INVALID` si le libellé est mal formé ou si le mois n'existe pas. Un mois sans données renvoie `200` avec des listes vides.
+- Blocs : `periode` (`mois`, `premierJour`, `dernierJour`, du 1er au dernier jour du mois), `notesPourLAnalyse`, `resume` (totaux du mois), `semaines`.
+- `semaines` : une entrée par semaine ISO qui touche le mois. Chacune ne reprend que les jours du mois ; `partielle` vaut `true` quand la semaine déborde sur un mois voisin, et `premierJour`/`dernierJour` indiquent la part retenue. Chaque entrée contient `resume`, `seances` et `activitesNonPlanifiees`, avec la même structure que l'export hebdomadaire.
+- Une séance ou une activité du mois n'apparaît que dans une seule semaine ; une séance du 31 octobre ou du 1er décembre n'est jamais reprise, même si sa semaine ISO touche novembre.
+
+Hypothèses :
+- Les totaux du mois et de chaque semaine sont calculés à partir des séances et activités retenues (et non via `training-stats`), donc sans comparaison avec le mois ou la semaine précédente.
+- Les jours sont lus en UTC, comme pour l'export hebdomadaire.

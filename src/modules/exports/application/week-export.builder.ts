@@ -1,3 +1,4 @@
+import { calendarDay } from '../../../shared/domain/value-objects/calendar-day.js';
 import type {
   WeekActivity,
   WeekActivityDetail,
@@ -38,14 +39,17 @@ export interface WeekExportDto {
   activitesNonPlanifiees: WeekExportActivityDto[];
 }
 
-export interface WeekSummaryDto {
+export interface PlannedSummaryDto {
   seancesPrevues: number;
   seancesRealisees: number;
   seancesManquees: number;
   seancesAnnulees: number;
   dureePrevueMinutes: number;
-  dureeRealiseeSeconds: number;
   distancePrevueMeters: number | null;
+}
+
+export interface WeekSummaryDto extends PlannedSummaryDto {
+  dureeRealiseeSeconds: number;
   distanceRealiseeMeters: number;
   activitesRealisees: number;
   semainePrecedente: {
@@ -121,31 +125,19 @@ const PARIS_DAY = new Intl.DateTimeFormat('en-CA', {
  * Les champs sont repris un à un : aucune donnée brute Garmin, identifiant Garmin ou nom de compte n'est repris.
  */
 export function buildWeekExport(input: WeekExportInput): WeekExportDto {
-  const planned = input.occurrences.filter((o) => o.status !== 'annulee');
-  const linkedIds = new Set(
-    input.occurrences
-      .map((o) => o.linkedActivityId)
-      .filter((id): id is string => id !== null),
-  );
+  const planned = plannedSummary(input.occurrences);
   return {
     kind: WEEK_EXPORT_KIND,
     schemaVersion: WEEK_EXPORT_SCHEMA_VERSION,
     periode: {
       semaine: input.label,
-      premierJour: isoDay(input.monday),
-      dernierJour: isoDay(input.sunday),
+      premierJour: calendarDay(input.monday),
+      dernierJour: calendarDay(input.sunday),
     },
     notesPourLAnalyse: WEEK_EXPORT_NOTES,
     resume: {
-      seancesPrevues: planned.length,
-      seancesRealisees: countStatus(input.occurrences, 'realisee'),
-      seancesManquees: countStatus(input.occurrences, 'manquee'),
-      seancesAnnulees: countStatus(input.occurrences, 'annulee'),
-      dureePrevueMinutes: sum(planned.map((o) => o.durationMinutes)),
+      ...planned,
       dureeRealiseeSeconds: input.volumes.current.durationSeconds,
-      distancePrevueMeters: sumOrNull(
-        planned.map((o) => o.targetDistanceMeters),
-      ),
       distanceRealiseeMeters: input.volumes.current.distanceMeters,
       activitesRealisees: input.volumes.current.count,
       semainePrecedente: {
@@ -159,20 +151,56 @@ export function buildWeekExport(input: WeekExportInput): WeekExportDto {
         distancePourcent: input.volumes.variation.distanceMeters,
       },
     },
-    seances: input.occurrences.map((occurrence) =>
-      toSessionDto(occurrence, input.linkedDetails),
-    ),
-    activitesNonPlanifiees: input.activities
-      .filter((activity) => !linkedIds.has(activity.id))
-      .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime())
-      .map((activity) => ({
-        type: activity.type,
-        startedAt: activity.startedAt,
-        durationSeconds: activity.durationSeconds,
-        distanceMeters: activity.distanceMeters,
-        averageHeartRate: activity.averageHeartRate,
-      })),
+    seances: buildSessions(input.occurrences, input.linkedDetails),
+    activitesNonPlanifiees: buildUnplanned(input.activities, input.occurrences),
   };
+}
+
+/** Compte les séances par statut et totalise le plan (les séances annulées ne comptent pas dans le plan). */
+export function plannedSummary(
+  occurrences: readonly WeekSessionOccurrence[],
+): PlannedSummaryDto {
+  const planned = occurrences.filter((o) => o.status !== 'annulee');
+  return {
+    seancesPrevues: planned.length,
+    seancesRealisees: countStatus(occurrences, 'realisee'),
+    seancesManquees: countStatus(occurrences, 'manquee'),
+    seancesAnnulees: countStatus(occurrences, 'annulee'),
+    dureePrevueMinutes: sum(planned.map((o) => o.durationMinutes)),
+    distancePrevueMeters: sumOrNull(planned.map((o) => o.targetDistanceMeters)),
+  };
+}
+
+/** Renvoie les séances avec leur plan et, si l'activité liée est du même jour, leur réalisé et leur atteinte. */
+export function buildSessions(
+  occurrences: readonly WeekSessionOccurrence[],
+  linkedDetails: ReadonlyMap<string, WeekActivityDetail>,
+): WeekExportSessionDto[] {
+  return occurrences.map((occurrence) =>
+    toSessionDto(occurrence, linkedDetails),
+  );
+}
+
+/** Renvoie les activités qui ne sont liées à aucune séance des occurrences données, triées par date de début. */
+export function buildUnplanned(
+  activities: readonly WeekActivity[],
+  occurrences: readonly WeekSessionOccurrence[],
+): WeekExportActivityDto[] {
+  const linkedIds = new Set(
+    occurrences
+      .map((o) => o.linkedActivityId)
+      .filter((id): id is string => id !== null),
+  );
+  return activities
+    .filter((activity) => !linkedIds.has(activity.id))
+    .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime())
+    .map((activity) => ({
+      type: activity.type,
+      startedAt: activity.startedAt,
+      durationSeconds: activity.durationSeconds,
+      distanceMeters: activity.distanceMeters,
+      averageHeartRate: activity.averageHeartRate,
+    }));
 }
 
 function toSessionDto(
@@ -227,10 +255,6 @@ function toSessionDto(
             zoneGapsPoints: occurrence.achievement.zoneGapsPoints,
           },
   };
-}
-
-function isoDay(date: Date): string {
-  return date.toISOString().slice(0, 10);
 }
 
 function countStatus(
