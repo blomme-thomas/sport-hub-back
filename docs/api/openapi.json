@@ -1661,6 +1661,39 @@
         ],
         "type": "object"
       },
+      "SessionImportTemplateResponseDto": {
+        "properties": {
+          "importId": {
+            "description": "Identifiant unique du fichier, à générer pour chaque fichier",
+            "example": "<UUID v4 unique pour ce fichier>",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Type de fichier, à reprendre tel quel",
+            "example": "plan-seances",
+            "type": "string"
+          },
+          "schemaVersion": {
+            "description": "Version du format du fichier",
+            "example": 1,
+            "type": "number"
+          },
+          "seances": {
+            "description": "Séances du fichier. Chaque champ à valeurs fermées liste ses valeurs possibles à sa place ; les clés de discipline sont celles du référentiel courant.",
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "schemaVersion",
+          "importId",
+          "seances"
+        ],
+        "type": "object"
+      },
       "SessionModuleRequestDto": {
         "properties": {
           "durationMinutes": {
@@ -4329,6 +4362,28 @@
           }
         },
         "summary": "Crée une séance planifiée, éventuellement avec ses modules ordonnés",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
+    "/api/sessions/import/template": {
+      "get": {
+        "operationId": "sessionsImportTemplate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionImportTemplateResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Renvoie le modèle d'un fichier d'import de séances, avec les valeurs possibles de chaque champ à valeurs fermées et les clés de discipline du référentiel",
         "tags": [
           "seances"
         ]
