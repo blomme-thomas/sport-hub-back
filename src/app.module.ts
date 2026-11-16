@@ -14,6 +14,7 @@ import { ConseilsModule } from './modules/conseils/conseils.module.js';
 import { PausesModule } from './modules/pauses/pauses.module.js';
 import { CalendrierModule } from './modules/calendrier/calendrier.module.js';
 import { PrismaModule } from './core/prisma/prisma.module.js';
+import { ReglagesModule } from './modules/reglages/reglages.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PrismaModule } from './core/prisma/prisma.module.js';
     WorkoutGenerationModule,
     CreneauxModule,
     ObjectifsModule,
+    ReglagesModule,
     DisciplinesModule,
     SeancesModule,
     ExportsModule,
