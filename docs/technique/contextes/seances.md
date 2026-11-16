@@ -125,3 +125,19 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 - `GET /api/sessions/import/template` renvoie un modèle de fichier au format `plan-seances`, `schemaVersion` 1, avec `importId` (identifiant unique du fichier, à générer) et une séance d'exemple.
 - Chaque champ à valeurs fermées porte ses valeurs possibles à sa place : `type` des modules (`echauffement | educatifs | series | retour_au_calme | autre`), `perceivedEffort` (`1` à `10`), `disciplineTypeKey` (clés du référentiel au moment de la requête, ou `<clé du référentiel>` si le référentiel est vide), clés de `targetZones` (`heartRate | pace | power`). Les champs libres ne portent que des exemples.
 - Hypothèse : la validation du fichier et l'import ne sont pas encore livrés (issue #98) ; le modèle ne fait qu'annoncer le format.
+
+## Export d'une semaine (issue #97)
+
+- `GET /api/exports/weeks/:week` (semaine ISO `AAAA-Www`, par exemple `2026-W46`) renvoie un fichier JSON au format `bilan-semaine`, version 1, pour une analyse hors application. Le code vit dans le module `exports`, qui compose les façades publiques de `seances`, `garmin-sync` et `training-stats` ; `seances` ne le connaît pas.
+- Erreur : `400 EXPORT_WEEK_INVALID` si le libellé est mal formé ou si la semaine n'existe pas. Une semaine sans données renvoie `200` avec des listes vides et des totaux nuls.
+- Blocs : `periode` (`semaine`, `premierJour`, `dernierJour`), `notesPourLAnalyse` (consigne d'analyse, texte fixe), `resume`, `seances`, `activitesNonPlanifiees`.
+- `seances` : une entrée par occurrence de la semaine, annulées comprises (`statut`). `plan` reprend durée, distance visée, zones cibles et modules (`perceivedEffort` est l'effort prévu au plan). `realise` vaut `null` sans activité liée. `atteinte` reprend les taux et écarts par zone de la séance.
+- `resume` : compte des séances prévues (hors annulées), réalisées, manquées et annulées ; durée et distance prévues et réalisées ; activités réalisées de la semaine ; semaine précédente et variation en pourcentage. Les volumes passent par `training-stats` (semaine ISO, UTC), comme `GET /api/stats?granularity=week`.
+- `activitesNonPlanifiees` : activités de la semaine sans séance rapprochée.
+- Exclusions : identifiants Garmin, payloads bruts, documents FIT, nom du compte. La réponse ne reprend que les champs listés ci-dessus.
+
+Hypothèses :
+- Une série hebdomadaire ne porte qu'une activité liée : le réalisé et l'atteinte ne sont rattachés à une occurrence que si l'activité liée est du même jour (heure de Paris) que l'occurrence. Une activité liée à une série n'apparaît donc pas comme réalisée sur les autres semaines.
+- Le rattachement se fait sur le jour de l'occurrence, les volumes sur la semaine UTC : une activité du dimanche soir ou du lundi matin (Paris) peut tomber dans l'autre semaine côté volumes.
+- `hrTimeInZone` est supposé en secondes (non confirmé).
+- L'effort perçu réalisé par module n'est pas enregistré : `perceivedEffort` ne reprend que la valeur prévue au plan.

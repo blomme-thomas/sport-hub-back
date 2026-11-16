@@ -4,3 +4,7 @@ export { ListSessionsUseCase } from './application/use-cases/list-sessions.use-c
 export { GetSessionForActivityUseCase } from './application/use-cases/get-session-for-activity.use-case.js';
 export type { LinkedSessionDto } from './application/use-cases/get-session-for-activity.use-case.js';
 export { MODULE_TYPES } from './domain/value-objects/module-type.vo.js';
+export { GetSessionUseCase } from './application/use-cases/get-session.use-case.js';
+export { ListSessionOccurrencesUseCase } from './application/use-cases/list-session-occurrences.use-case.js';
+export type { SessionDto } from './application/dtos/session.dto.js';
+export type { SessionOccurrence } from './domain/services/session-occurrences.js';
