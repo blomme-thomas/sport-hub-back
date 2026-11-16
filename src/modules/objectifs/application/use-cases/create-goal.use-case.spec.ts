@@ -176,4 +176,27 @@ describe('CreateGoalUseCase', () => {
       },
     );
   });
+
+  describe('objectif hebdomadaire', () => {
+    const WEEKLY: CreateGoalCommand = {
+      title: 'Volume de la semaine',
+      type: 'hebdomadaire',
+      targetTimeSeconds: 28800,
+    };
+
+    it('crée un objectif hebdomadaire quand il n’y en a pas encore', async () => {
+      await useCase.execute(WEEKLY);
+
+      expect(repository.goals.size).toBe(1);
+    });
+
+    it('refuse un second objectif hebdomadaire avec GOAL_INVALID, sans rien enregistrer', async () => {
+      await useCase.execute(WEEKLY);
+
+      await expect(
+        useCase.execute({ ...WEEKLY, targetTimeSeconds: 36000 }),
+      ).rejects.toBeInstanceOf(InvalidGoalError);
+      expect(repository.goals.size).toBe(1);
+    });
+  });
 });

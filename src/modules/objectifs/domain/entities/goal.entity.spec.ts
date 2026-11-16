@@ -133,6 +133,53 @@ describe('Goal', () => {
       },
     );
 
+    it('accepte un objectif hebdomadaire avec un temps cible, sans date ni format', () => {
+      const goal = Goal.create(
+        props({
+          type: 'hebdomadaire',
+          targetDate: null,
+          eventFormat: null,
+          targetTime: TargetTime.create(28800),
+        }),
+      );
+      expect(goal.type).toBe('hebdomadaire');
+      expect(goal.targetTime?.seconds()).toBe(28800);
+    });
+
+    it('refuse un objectif hebdomadaire sans temps cible avec GOAL_INVALID', () => {
+      expect(() =>
+        Goal.create(
+          props({
+            type: 'hebdomadaire',
+            targetDate: null,
+            eventFormat: null,
+            targetTime: null,
+          }),
+        ),
+      ).toThrow(InvalidGoalError);
+    });
+
+    it('refuse une date cible ou un format sur un objectif hebdomadaire avec GOAL_INVALID', () => {
+      expect(() =>
+        Goal.create(
+          props({
+            type: 'hebdomadaire',
+            targetDate: day('2027-06-20'),
+            eventFormat: null,
+          }),
+        ),
+      ).toThrow(InvalidGoalError);
+      expect(() =>
+        Goal.create(
+          props({
+            type: 'hebdomadaire',
+            targetDate: null,
+            eventFormat: 'olympique',
+          }),
+        ),
+      ).toThrow(InvalidGoalError);
+    });
+
     it('refuse une date invalide avec GOAL_INVALID', () => {
       expect(() =>
         Goal.create(props({ targetDate: new Date('date invalide') })),

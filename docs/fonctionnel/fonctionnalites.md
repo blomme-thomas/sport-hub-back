@@ -18,7 +18,8 @@ Périmètre visé (d'après `CLAUDE.md`) : synchronisation Garmin Connect, calcu
 | Créneaux | Fuseau horaire utilisé pour les calculs | Non livré : le fuseau est une métadonnée, les heures restent murales ([ADR 0009](../technique/decisions/0009-creneaux-heure-murale-locale.md)) |
 | Objectifs | Création, consultation, modification et suppression d'un objectif (`/api/goals`) : événement avec titre, date cible, format et temps cible, ou volume et régularité ; modifiable à tout moment, sans contrainte de date | Livrée (issue #36). Contexte : [objectifs](../technique/contextes/objectifs.md). Parcours : à compléter |
 | Objectifs | Liste des objectifs à venir (`GET /api/goals?upcoming=true` : date cible aujourd'hui ou postérieure, jour UTC ; sans date, jamais à venir) | Livrée (issue #36) |
-| Objectifs | Calcul de la progression vers l'objectif | Non livré (hors périmètre de l'issue #36) |
+| Objectifs | Cible hebdomadaire : un objectif `hebdomadaire` (temps cible par semaine ISO, un seul à la fois) ; `GET /api/goals/weekly/:week` renvoie la cible, la durée réalisée de la semaine et l'historique des huit dernières semaines. Le pourcentage et le statut sont calculés côté affichage. | Livrée (issue front #31). Parcours : à compléter |
+| Objectifs | Calcul de la progression vers un événement ou un volume | Non livré (hors périmètre de l'issue #36) |
 | Objectifs | Génération de planning à partir de l'objectif | Non livré (hors périmètre de l'issue #36) |
 | Objectifs | Arbitrage entre plusieurs objectifs simultanés | Non livré (question ouverte dans [la vision produit](vision.md)) |
 | Disciplines | Enregistrement automatique des disciplines (types d'activité Garmin) pendant chaque synchronisation, sans doublon | Livré (issue #45). Contexte : [disciplines](../technique/contextes/disciplines.md). Parcours : à compléter |

@@ -1,4 +1,10 @@
-export const GOAL_TYPES = ['evenement', 'volume', 'regularite'] as const;
+/** `hebdomadaire` : temps cible par semaine ISO, sans date ni format (un seul à la fois). */
+export const GOAL_TYPES = [
+  'evenement',
+  'volume',
+  'regularite',
+  'hebdomadaire',
+] as const;
 
 export type GoalType = (typeof GOAL_TYPES)[number];
 
