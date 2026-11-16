@@ -9,7 +9,6 @@ import type { TargetTime } from '../value-objects/target-time.vo.js';
 
 const TITLE_MAX_LENGTH = 200;
 const EVENT_TYPE: GoalType = 'evenement';
-const WEEKLY_TYPE: GoalType = 'hebdomadaire';
 
 export interface GoalProps {
   title: string;
@@ -136,7 +135,7 @@ export class Goal {
     }
     if (!isGoalType(props.type)) {
       throw new InvalidGoalError(
-        'le type doit être evenement, volume, regularite ou hebdomadaire',
+        'le type doit être evenement, volume ou regularite',
       );
     }
     const targetDate = props.targetDate ?? null;
@@ -145,23 +144,12 @@ export class Goal {
     }
     const eventFormat = props.eventFormat ?? null;
     const targetTime = props.targetTime ?? null;
-    if (props.type === WEEKLY_TYPE) {
-      if (targetTime === null) {
-        throw new InvalidGoalError(
-          'un objectif hebdomadaire exige un temps cible',
-        );
-      }
-      if (targetDate !== null || eventFormat !== null) {
-        throw new InvalidGoalError(
-          'un objectif hebdomadaire ne porte ni date cible ni format',
-        );
-      }
-    } else if (
+    if (
       props.type !== EVENT_TYPE &&
       (eventFormat !== null || targetTime !== null)
     ) {
       throw new InvalidGoalError(
-        'le format et le temps cible ne sont permis que pour un événement ou un objectif hebdomadaire',
+        'le format et le temps cible ne sont permis que pour un événement',
       );
     }
     return {

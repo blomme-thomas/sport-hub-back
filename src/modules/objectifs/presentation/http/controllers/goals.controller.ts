@@ -29,14 +29,11 @@ import { GoalResponseDto } from '../dtos/goal.response.dto.js';
 import { ListGoalsRequestDto } from '../dtos/list-goals.request.dto.js';
 import { UpdateGoalRequestDto } from '../dtos/update-goal.request.dto.js';
 import { GoalHttpMapper } from '../mappers/goal.http-mapper.js';
-import { GetWeeklyGoalUseCase } from '../../../application/use-cases/get-weekly-goal.use-case.js';
-import { WeeklyGoalResponseDto } from '../dtos/weekly-goal.response.dto.js';
 
 @ApiTags('objectifs')
 @Controller('goals')
 export class GoalsController {
   constructor(
-    private readonly getWeeklyGoal: GetWeeklyGoalUseCase,
     private readonly createGoal: CreateGoalUseCase,
     private readonly listGoals: ListGoalsUseCase,
     private readonly getGoal: GetGoalUseCase,
@@ -74,17 +71,6 @@ export class GoalsController {
       GoalHttpMapper.toListQuery(request),
     );
     return GoalHttpMapper.toListResponse(dtos);
-  }
-
-  @Get('weekly/:week')
-  @ApiOperation({
-    summary:
-      'Cible hebdomadaire et durée réalisée de la semaine ISO (AAAA-Www), avec l’historique des huit dernières semaines',
-  })
-  @ApiOkResponse({ type: WeeklyGoalResponseDto })
-  @ApiProblemResponses(400)
-  async weekly(@Param('week') week: string): Promise<WeeklyGoalResponseDto> {
-    return this.getWeeklyGoal.execute(week);
   }
 
   @Get(':id')
