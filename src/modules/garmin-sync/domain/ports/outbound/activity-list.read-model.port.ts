@@ -24,6 +24,8 @@ export interface ActivityDetailItem extends ActivityListItem {
   maxHeartRate: number | null;
   /** Effort perçu saisi dans Garmin, de 1 à 10 ; null si Garmin ne l'a pas enregistré. */
   perceivedEffort: number | null;
+  /** Ressenti de la séance saisi dans Garmin, valeur brute 0 à 100 ; null si absent. */
+  feeling: number | null;
   /** Cinq zones cardiaques, de la zone 1 à la zone 5. */
   hrTimeInZone: (number | null)[];
   /** Série de fréquence cardiaque décodée du fichier d'origine, null si elle n'a pas été décodée. */

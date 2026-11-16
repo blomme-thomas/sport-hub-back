@@ -44,6 +44,7 @@ export class GarminWeekActivitiesAdapter implements IWeekActivitiesSource {
         ...toWeekActivity(detail),
         hrTimeInZone: detail.hrTimeInZone,
         perceivedEffort: detail.perceivedEffort,
+        feeling: detail.feeling,
       };
     } catch (error) {
       if (error instanceof ActivityNotFoundError) {

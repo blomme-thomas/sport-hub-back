@@ -72,5 +72,7 @@ describe("Effort perçu Garmin sur le détail d'activité (e2e)", () => {
     expect(first.body.perceivedEffort).toBe(6);
     expect(second.status).toBe(200);
     expect(second.body.perceivedEffort).toBeNull();
+    expect(first.body.feeling).toBe(50);
+    expect(second.body.feeling).toBeNull();
   });
 });
