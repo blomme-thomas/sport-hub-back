@@ -71,6 +71,7 @@ describe('Détail d’une activité (e2e)', () => {
       elevationGainMeters: 120,
       averageHeartRate: 145,
       maxHeartRate: 172,
+      perceivedEffort: null,
       hrTimeInZone: [600, 1200, 1500, 300, null],
       heartRateSeries: null,
     });

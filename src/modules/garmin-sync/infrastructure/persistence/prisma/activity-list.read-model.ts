@@ -9,7 +9,7 @@ import type {
   IActivityListReadModel,
 } from '../../../domain/ports/outbound/activity-list.read-model.port.js';
 import type { ActivityFitDocument } from '../../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
-import { maxHeartRateOf } from './activity-detail.mapper.js';
+import { maxHeartRateOf, perceivedEffortOf } from './activity-detail.mapper.js';
 
 const LIST_SELECT = {
   id: true,
@@ -31,6 +31,7 @@ const DETAIL_SELECT = {
   hrTimeInZone4: true,
   hrTimeInZone5: true,
   rawPayload: true,
+  fitDocument: { select: { document: true } },
 } satisfies Prisma.ActivitySelect;
 
 @Injectable()
@@ -84,6 +85,7 @@ export class PrismaActivityListReadModel implements IActivityListReadModel {
       calories: record.calories,
       elevationGainMeters: record.elevationGainMeters,
       maxHeartRate: maxHeartRateOf(record.rawPayload),
+      perceivedEffort: perceivedEffortOf(record.fitDocument?.document ?? null),
       hrTimeInZone: [
         record.hrTimeInZone1,
         record.hrTimeInZone2,

@@ -153,3 +153,5 @@ Hypothèses :
 Hypothèses :
 - Les totaux du mois et de chaque semaine sont calculés à partir des séances et activités retenues (et non via `training-stats`), donc sans comparaison avec le mois ou la semaine précédente.
 - Les jours sont lus en UTC, comme pour l'export hebdomadaire.
+
+- `realise.perceivedEffort` (export de semaine et de mois, issue #103) reprend l'effort perçu Garmin de l'activité liée (voir [garmin-sync](garmin-sync.md#effort-perçu-garmin-issue-103)). Il est distinct de `plan.modules[].perceivedEffort`, l'effort prévu au plan, qui reste le seul niveau par module.

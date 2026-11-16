@@ -39,6 +39,7 @@ export interface WeekActivity {
 
 export interface WeekActivityDetail extends WeekActivity {
   hrTimeInZone: (number | null)[];
+  perceivedEffort: number | null;
 }
 
 export interface WeekVolume {
