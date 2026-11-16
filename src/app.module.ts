@@ -8,6 +8,7 @@ import { GarminSyncModule } from './modules/garmin-sync/garmin-sync.module.js';
 import { TrainingStatsModule } from './modules/training-stats/training-stats.module.js';
 import { WorkoutGenerationModule } from './modules/workout-generation/workout-generation.module.js';
 import { SeancesModule } from './modules/seances/seances.module.js';
+import { ExportsModule } from './modules/exports/exports.module.js';
 import { PlanificationModule } from './modules/planification/planification.module.js';
 import { ConseilsModule } from './modules/conseils/conseils.module.js';
 import { PausesModule } from './modules/pauses/pauses.module.js';
@@ -26,6 +27,7 @@ import { PrismaModule } from './core/prisma/prisma.module.js';
     ObjectifsModule,
     DisciplinesModule,
     SeancesModule,
+    ExportsModule,
     PlanificationModule,
     ConseilsModule,
     PausesModule,

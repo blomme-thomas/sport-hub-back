@@ -73,6 +73,8 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     ListSessionsUseCase,
     CreateSessionUseCase,
     GetSessionForActivityUseCase,
+    GetSessionUseCase,
+    ListSessionOccurrencesUseCase,
   ],
 })
 export class SeancesModule {}
