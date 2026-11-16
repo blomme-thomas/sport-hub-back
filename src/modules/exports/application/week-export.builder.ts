@@ -97,6 +97,7 @@ export interface WeekExportRealisedDto {
   averageHeartRate: number | null;
   hrTimeInZone: (number | null)[];
   perceivedEffort: number | null;
+  feeling: number | null;
 }
 
 export interface WeekExportAchievementDto {
@@ -247,6 +248,7 @@ function toSessionDto(
             averageHeartRate: matched.averageHeartRate,
             hrTimeInZone: matched.hrTimeInZone,
             perceivedEffort: matched.perceivedEffort,
+            feeling: matched.feeling,
           },
     atteinte:
       matched === undefined || occurrence.achievement === null

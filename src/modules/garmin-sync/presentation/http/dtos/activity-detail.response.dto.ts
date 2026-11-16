@@ -51,6 +51,15 @@ export class ActivityDetailResponseDto {
   perceivedEffort!: number | null;
 
   @ApiProperty({
+    type: Number,
+    nullable: true,
+    example: 75,
+    description:
+      "Ressenti de la séance saisi dans Garmin, valeur brute 0 à 100 (valeurs observées 25, 50, 75, 100 ; sens des paliers non confirmé) ; null si Garmin ne l'a pas enregistré",
+  })
+  feeling!: number | null;
+
+  @ApiProperty({
     type: [Number],
     nullable: true,
     minItems: 5,

@@ -155,3 +155,5 @@ Hypothèses :
 - Les jours sont lus en UTC, comme pour l'export hebdomadaire.
 
 - `realise.perceivedEffort` (export de semaine et de mois, issue #103) reprend l'effort perçu Garmin de l'activité liée (voir [garmin-sync](garmin-sync.md#effort-perçu-garmin-issue-103)). Il est distinct de `plan.modules[].perceivedEffort`, l'effort prévu au plan, qui reste le seul niveau par module.
+
+- `realise.feeling` (exports de semaine et de mois, issue #106) reprend le ressenti Garmin brut de l'activité liée (voir [garmin-sync](garmin-sync.md#ressenti-garmin-issue-106)).

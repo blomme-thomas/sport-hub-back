@@ -235,3 +235,9 @@ Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes) et `garmin
 - `GET /api/activities/:id` renvoie `perceivedEffort` : l'effort perçu saisi dans Garmin après l'activité, de 1 à 10, ou `null` si Garmin ne l'a pas enregistré.
 - Source : `workoutRpe` du message de session du document FIT stocké (`activity_fit_documents`), sans appel à Garmin. Garmin le stocke à l'échelle 10 fois plus grande (valeurs observées sur les activités locales : 20 à 100, toujours multiples de 10) : la valeur exposée vaut `workoutRpe / 10`. Une valeur hors de cette grille donne `null`.
 - `workoutFeel` (ressenti) n'est pas exposé.
+
+## Ressenti Garmin (issue #106)
+
+- `GET /api/activities/:id` renvoie `feeling` : le ressenti de la séance saisi dans Garmin, valeur brute de 0 à 100, ou `null` si Garmin ne l'a pas enregistré.
+- Source : `workoutFeel` du message de session du document FIT stocké, sans appel à Garmin. Valeurs observées sur les activités locales : 25, 50, 75 et 100 ; une valeur hors de cette liste donne `null`.
+- Le sens exact de chaque palier n'est pas confirmé : la valeur est exposée brute, sans libellé ni conversion.

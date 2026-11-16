@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { maxHeartRateOf, perceivedEffortOf } from './activity-detail.mapper.js';
+import {
+  feelingOf,
+  maxHeartRateOf,
+  perceivedEffortOf,
+} from './activity-detail.mapper.js';
 
 describe('maxHeartRateOf', () => {
   it('lit la FC maximale du payload Garmin', () => {
@@ -34,5 +38,20 @@ describe('perceivedEffortOf', () => {
     expect(perceivedEffortOf({ session: { workoutRpe: 65 } })).toBeNull();
     expect(perceivedEffortOf({ session: { workoutRpe: 0 } })).toBeNull();
     expect(perceivedEffortOf({ session: { workoutRpe: '60' } })).toBeNull();
+  });
+});
+
+describe('feelingOf', () => {
+  it('renvoie la valeur brute observée de workoutFeel', () => {
+    expect(feelingOf({ session: { workoutFeel: 75 } })).toBe(75);
+    expect(feelingOf({ session: { workoutFeel: 25 } })).toBe(25);
+  });
+
+  it('renvoie null sans session, sans valeur ou hors des valeurs observées', () => {
+    expect(feelingOf(null)).toBeNull();
+    expect(feelingOf({ session: null })).toBeNull();
+    expect(feelingOf({ session: {} })).toBeNull();
+    expect(feelingOf({ session: { workoutFeel: 60 } })).toBeNull();
+    expect(feelingOf({ session: { workoutFeel: '75' } })).toBeNull();
   });
 });
