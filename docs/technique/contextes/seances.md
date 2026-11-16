@@ -39,6 +39,7 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 | `POST` | `/api/sessions` | Crée une séance, éventuellement avec ses modules (201) | 400 |
 | `GET` | `/api/sessions?from&to` | Liste les **occurrences** des séances dans la période (bornes incluses), triées par date, heure puis identifiant (voir [Récurrence](#récurrence)) | 400 |
 | `GET` | `/api/sessions/:id` | Renvoie la séance avec ses modules et son journal | 400, 404 |
+| `GET` | `/api/sessions/import/template` | Renvoie le modèle d'un fichier d'import de séances : chaque champ à valeurs fermées liste ses valeurs possibles, et `disciplineTypeKey` liste les clés du référentiel courant | 200 |
 | `PATCH` | `/api/sessions/:id` | Modifie les champs fournis ; `null` efface description, matériel ou points d'attention | 400, 404, 409 |
 | `PUT` | `/api/sessions/:id/modules` | Remplace la liste ordonnée des modules et renumérote les positions de 1 à n | 400, 404, 409 |
 | `DELETE` | `/api/sessions/:id` | Supprime la séance, réalisée ou non (204) | 400, 404 |
@@ -118,3 +119,9 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 - Création : `POST /api/sessions` accepte `startTime`. Modification : `PATCH /api/sessions/:id` accepte `startTime` ; `null` efface l'heure.
 - Une modification d'heure est journalisée (champ `startTime`) et positionne `modifiedManually`, comme les autres champs.
 - L'heure est exportée par le calendrier ICS (`GET /api/calendar.ics`, voir [calendrier](calendrier.md)).
+
+## Modèle d'import (issue #96)
+
+- `GET /api/sessions/import/template` renvoie un modèle de fichier au format `plan-seances`, `schemaVersion` 1, avec `importId` (identifiant unique du fichier, à générer) et une séance d'exemple.
+- Chaque champ à valeurs fermées porte ses valeurs possibles à sa place : `type` des modules (`echauffement | educatifs | series | retour_au_calme | autre`), `perceivedEffort` (`1` à `10`), `disciplineTypeKey` (clés du référentiel au moment de la requête, ou `<clé du référentiel>` si le référentiel est vide), clés de `targetZones` (`heartRate | pace | power`). Les champs libres ne portent que des exemples.
+- Hypothèse : la validation du fichier et l'import ne sont pas encore livrés (issue #98) ; le modèle ne fait qu'annoncer le format.
