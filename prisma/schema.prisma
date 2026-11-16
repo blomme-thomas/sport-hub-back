@@ -219,3 +219,11 @@ model DashboardAdvice {
 
   @@map("dashboard_advices")
 }
+
+model SessionImport {
+  id           String   @id @db.Uuid
+  importedAt   DateTime @map("imported_at") @db.Timestamptz(3)
+  sessionCount Int      @map("session_count")
+
+  @@map("session_imports")
+}

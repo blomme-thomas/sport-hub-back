@@ -24,6 +24,7 @@ import { GetSessionUseCase } from '../../../application/use-cases/get-session.us
 import { LinkSessionActivityUseCase } from '../../../application/use-cases/link-session-activity.use-case.js';
 import { CancelSessionOccurrenceUseCase } from '../../../application/use-cases/cancel-session-occurrence.use-case.js';
 import { GetSessionImportTemplateUseCase } from '../../../application/use-cases/get-session-import-template.use-case.js';
+import { ImportSessionsUseCase } from '../../../application/use-cases/import-sessions.use-case.js';
 import { ListSessionOccurrencesUseCase } from '../../../application/use-cases/list-session-occurrences.use-case.js';
 import { MoveSessionOccurrenceUseCase } from '../../../application/use-cases/move-session-occurrence.use-case.js';
 import { RestoreSessionOccurrenceUseCase } from '../../../application/use-cases/restore-session-occurrence.use-case.js';
@@ -43,6 +44,8 @@ import {
   SessionOccurrenceListResponseDto,
   SessionOccurrenceResponseDto,
 } from '../dtos/session-list.response.dto.js';
+import { ImportSessionsRequestDto } from '../dtos/import-sessions.request.dto.js';
+import { ImportSessionsResponseDto } from '../dtos/import-sessions.response.dto.js';
 import { SessionImportTemplateResponseDto } from '../dtos/session-import-template.response.dto.js';
 import { SessionResponseDto } from '../dtos/session.response.dto.js';
 import { UpdateSessionRequestDto } from '../dtos/update-session.request.dto.js';
@@ -66,7 +69,24 @@ export class SessionsController {
     private readonly cancelSessionOccurrence: CancelSessionOccurrenceUseCase,
     private readonly restoreSessionOccurrence: RestoreSessionOccurrenceUseCase,
     private readonly getSessionImportTemplate: GetSessionImportTemplateUseCase,
+    private readonly importSessions: ImportSessionsUseCase,
   ) {}
+
+  @Post('import')
+  @ApiOperation({
+    summary:
+      "Importe un fichier plan-seances : ajoute ses séances planifiées sans rien modifier de l'existant ; le fichier est refusé en entier si une séance est invalide ou si son importId a déjà été importé",
+  })
+  @ApiCreatedResponse({ type: ImportSessionsResponseDto })
+  @ApiProblemResponses(400, 409)
+  async importPlan(
+    @Body() request: ImportSessionsRequestDto,
+  ): Promise<ImportSessionsResponseDto> {
+    const dto = await this.importSessions.execute(
+      SessionImportHttpMapper.toImportCommand(request),
+    );
+    return SessionImportHttpMapper.toImportResponse(dto);
+  }
 
   @Get('import/template')
   @ApiOperation({

@@ -7,6 +7,7 @@ import type {
   SessionPeriod,
 } from '../../../domain/ports/outbound/session.repository.port.js';
 import type { SessionId } from '../../../domain/value-objects/session-id.vo.js';
+import { buildSessionSaveOperations } from './session.save-operations.js';
 import { SessionMapper } from './session.mapper.js';
 
 const SESSION_INCLUDE = {
@@ -73,65 +74,9 @@ export class PrismaSessionRepositoryAdapter implements ISessionRepository {
   }
 
   async save(session: Session): Promise<void> {
-    const { modules, activityLink, ...scalars } =
-      SessionMapper.toPersistence(session);
-    const operations: Prisma.PrismaPromise<unknown>[] = [
-      this.prisma.session.upsert({
-        where: { id: scalars.id },
-        create: scalars,
-        update: scalars,
-      }),
-      this.prisma.sessionModule.deleteMany({
-        where: { sessionId: scalars.id },
-      }),
-      this.prisma.sessionActivityLink.deleteMany({
-        where: { sessionId: scalars.id },
-      }),
-    ];
-    if (activityLink !== null) {
-      operations.push(
-        this.prisma.sessionActivityLink.create({
-          data: {
-            sessionId: scalars.id,
-            activityId: activityLink.activityId,
-            origin: activityLink.origin,
-            linkedAt: activityLink.linkedAt,
-          },
-        }),
-      );
-    }
-    if (modules.length > 0) {
-      operations.push(
-        this.prisma.sessionModule.createMany({
-          data: modules.map((module) => ({
-            sessionId: scalars.id,
-            position: module.position,
-            type: module.type,
-            durationMinutes: module.durationMinutes,
-            instruction: module.instruction,
-            targetZones:
-              module.targetZones === null
-                ? Prisma.DbNull
-                : (module.targetZones as Prisma.InputJsonObject),
-            perceivedEffort: module.perceivedEffort,
-          })),
-        }),
-      );
-    }
-    const pending = session.pendingLogEntries;
-    if (pending.length > 0) {
-      operations.push(
-        this.prisma.sessionChangeLog.createMany({
-          data: pending.map((entry) => ({
-            sessionId: scalars.id,
-            changedAt: entry.changedAt,
-            field: entry.field,
-            previousValue: entry.previousValue,
-          })),
-        }),
-      );
-    }
-    await this.prisma.$transaction(operations);
+    await this.prisma.$transaction(
+      buildSessionSaveOperations(this.prisma, session),
+    );
   }
 
   async delete(id: SessionId): Promise<void> {

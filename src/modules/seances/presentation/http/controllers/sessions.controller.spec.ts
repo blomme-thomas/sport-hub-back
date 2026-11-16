@@ -6,6 +6,7 @@ import { GetSessionUseCase } from '../../../application/use-cases/get-session.us
 import { LinkSessionActivityUseCase } from '../../../application/use-cases/link-session-activity.use-case.js';
 import { CancelSessionOccurrenceUseCase } from '../../../application/use-cases/cancel-session-occurrence.use-case.js';
 import { GetSessionImportTemplateUseCase } from '../../../application/use-cases/get-session-import-template.use-case.js';
+import { ImportSessionsUseCase } from '../../../application/use-cases/import-sessions.use-case.js';
 import { ListSessionOccurrencesUseCase } from '../../../application/use-cases/list-session-occurrences.use-case.js';
 import { MoveSessionOccurrenceUseCase } from '../../../application/use-cases/move-session-occurrence.use-case.js';
 import { RestoreSessionOccurrenceUseCase } from '../../../application/use-cases/restore-session-occurrence.use-case.js';
@@ -66,6 +67,10 @@ describe('SessionsController', () => {
       controllers: [SessionsController],
       providers: [
         { provide: CreateSessionUseCase, useValue: { execute: createExecute } },
+        {
+          provide: ImportSessionsUseCase,
+          useValue: { execute: vi.fn() },
+        },
         {
           provide: GetSessionImportTemplateUseCase,
           useValue: { execute: vi.fn() },
