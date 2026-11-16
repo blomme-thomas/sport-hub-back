@@ -110,7 +110,7 @@ function heartRateSampleOf(
 ): { occurredAt: Date; bpm: number } | null {
   const bpm = record.heartRate;
   const timestamp = record.timestamp;
-  if (!isUsable(bpm) || !(timestamp instanceof Date)) {
+  if (!isUsable(bpm) || bpm === 0 || !(timestamp instanceof Date)) {
     return null;
   }
   return { occurredAt: timestamp, bpm: bpm as number };
