@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { maxHeartRateOf } from './activity-detail.mapper.js';
+import { maxHeartRateOf, perceivedEffortOf } from './activity-detail.mapper.js';
 
 describe('maxHeartRateOf', () => {
   it('lit la FC maximale du payload Garmin', () => {
@@ -17,5 +17,22 @@ describe('maxHeartRateOf', () => {
     ['un payload texte', 'brut'],
   ])('renvoie null pour %s', (_label, payload) => {
     expect(maxHeartRateOf(payload)).toBeNull();
+  });
+});
+
+describe('perceivedEffortOf', () => {
+  it("convertit workoutRpe (dixième de l'échelle 1 à 10) en effort de 1 à 10", () => {
+    expect(perceivedEffortOf({ session: { workoutRpe: 60 } })).toBe(6);
+    expect(perceivedEffortOf({ session: { workoutRpe: 100 } })).toBe(10);
+    expect(perceivedEffortOf({ session: { workoutRpe: 20 } })).toBe(2);
+  });
+
+  it('renvoie null sans session, sans valeur ou hors de la grille', () => {
+    expect(perceivedEffortOf(null)).toBeNull();
+    expect(perceivedEffortOf({ session: null })).toBeNull();
+    expect(perceivedEffortOf({ session: {} })).toBeNull();
+    expect(perceivedEffortOf({ session: { workoutRpe: 65 } })).toBeNull();
+    expect(perceivedEffortOf({ session: { workoutRpe: 0 } })).toBeNull();
+    expect(perceivedEffortOf({ session: { workoutRpe: '60' } })).toBeNull();
   });
 });

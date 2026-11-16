@@ -54,6 +54,7 @@ function detail(
     distanceMeters: 10200,
     averageHeartRate: 150,
     hrTimeInZone: [600, 1800, 1000, 100, null],
+    perceivedEffort: 6,
     ...overrides,
   };
 }
@@ -141,6 +142,7 @@ describe('buildWeekExport', () => {
       durationSeconds: 3500,
       distanceMeters: 10200,
       hrTimeInZone: [600, 1800, 1000, 100, null],
+      perceivedEffort: 6,
     });
     expect(result.seances[0].atteinte).toEqual({
       distanceRate: 102,

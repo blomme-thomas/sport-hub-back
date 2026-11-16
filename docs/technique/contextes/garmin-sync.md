@@ -229,3 +229,9 @@ Ces points sont isolés dans `garmin-connect.adapter.ts` (constantes) et `garmin
 - Unitaires (colocalisés) complémentaires : `ListActivitiesUseCase` (fake du read model), `ActivitiesController` (use case substitué), `GarminSyncScheduler` (planification, verrou, journalisation des échecs).
 - e2e (`test/`) : `activity-repository.e2e-spec.ts` (upsert sans doublon, `findLatestStartedAt`, `findByGarminActivityIds`, aller-retour du mapping) ; `garmin-sync.e2e-spec.ts` (Garmin simulé : première exécution, rejeu, payload modifié, fenêtre de 7 jours décalée d'un jour (`startDate`), activité invalide sautée, 502 et 503, absence de clé dans le corps) ; `activities.e2e-spec.ts` (liste vide, tri et pagination, filtres seuls et combinés, bornes incluses, pas de fuite de `rawPayload`, 400 `VALIDATION_FAILED` par champ).
 - `openapi.e2e-spec.ts` vérifie que les deux codes figurent dans l'enum `ProblemCode`, que la route de synchronisation documente 200, 502 et 503, et que `GET /api/activities` documente ses paramètres et son 400.
+
+## Effort perçu Garmin (issue #103)
+
+- `GET /api/activities/:id` renvoie `perceivedEffort` : l'effort perçu saisi dans Garmin après l'activité, de 1 à 10, ou `null` si Garmin ne l'a pas enregistré.
+- Source : `workoutRpe` du message de session du document FIT stocké (`activity_fit_documents`), sans appel à Garmin. Garmin le stocke à l'échelle 10 fois plus grande (valeurs observées sur les activités locales : 20 à 100, toujours multiples de 10) : la valeur exposée vaut `workoutRpe / 10`. Une valeur hors de cette grille donne `null`.
+- `workoutFeel` (ressenti) n'est pas exposé.

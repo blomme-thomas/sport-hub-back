@@ -111,6 +111,12 @@
             "nullable": true,
             "type": "number"
           },
+          "perceivedEffort": {
+            "description": "Effort perçu saisi dans Garmin, de 1 à 10 ; null si Garmin ne l'a pas enregistré",
+            "example": 6,
+            "nullable": true,
+            "type": "number"
+          },
           "startedAt": {
             "format": "date-time",
             "type": "string"
@@ -131,6 +137,7 @@
           "elevationGainMeters",
           "averageHeartRate",
           "maxHeartRate",
+          "perceivedEffort",
           "hrTimeInZone",
           "heartRateSeries"
         ],

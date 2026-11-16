@@ -42,6 +42,15 @@ export class ActivityDetailResponseDto {
   maxHeartRate!: number | null;
 
   @ApiProperty({
+    type: Number,
+    nullable: true,
+    example: 6,
+    description:
+      "Effort perçu saisi dans Garmin, de 1 à 10 ; null si Garmin ne l'a pas enregistré",
+  })
+  perceivedEffort!: number | null;
+
+  @ApiProperty({
     type: [Number],
     nullable: true,
     minItems: 5,
