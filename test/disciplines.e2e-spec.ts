@@ -78,6 +78,7 @@ describe('Disciplines (e2e)', () => {
             label: 'running',
             firstSeenAt: '2026-05-01T08:00:00.000Z',
             lastSeenAt: '2026-05-01T08:00:00.000Z',
+            family: 'running',
           },
         ],
       });
@@ -110,6 +111,7 @@ describe('Disciplines (e2e)', () => {
         label: 'Course à pied',
         firstSeenAt: '2026-05-01T08:00:00.000Z',
         lastSeenAt: '2026-05-01T08:00:00.000Z',
+        family: 'running',
       });
       expect(listed.body.items).toEqual([patched.body]);
     });
