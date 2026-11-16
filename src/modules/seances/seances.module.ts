@@ -11,6 +11,9 @@ import { LinkSessionActivityUseCase } from './application/use-cases/link-session
 import { ListSessionsUseCase } from './application/use-cases/list-sessions.use-case.js';
 import { ListSessionOccurrencesUseCase } from './application/use-cases/list-session-occurrences.use-case.js';
 import { GetSessionImportTemplateUseCase } from './application/use-cases/get-session-import-template.use-case.js';
+import { ImportSessionsUseCase } from './application/use-cases/import-sessions.use-case.js';
+import { SESSION_IMPORT_REPOSITORY } from './domain/ports/outbound/session-import.repository.port.js';
+import { PrismaSessionImportRepositoryAdapter } from './infrastructure/persistence/prisma/session-import.repository.adapter.js';
 import { MoveSessionOccurrenceUseCase } from './application/use-cases/move-session-occurrence.use-case.js';
 import { CancelSessionOccurrenceUseCase } from './application/use-cases/cancel-session-occurrence.use-case.js';
 import { RestoreSessionOccurrenceUseCase } from './application/use-cases/restore-session-occurrence.use-case.js';
@@ -40,6 +43,7 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     CancelSessionOccurrenceUseCase,
     RestoreSessionOccurrenceUseCase,
     GetSessionImportTemplateUseCase,
+    ImportSessionsUseCase,
     GetSessionUseCase,
     GetSessionForActivityUseCase,
     UpdateSessionUseCase,
@@ -52,6 +56,10 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
     {
       provide: SESSION_OCCURRENCE_EXCEPTION_REPOSITORY,
       useClass: PrismaSessionOccurrenceExceptionRepositoryAdapter,
+    },
+    {
+      provide: SESSION_IMPORT_REPOSITORY,
+      useClass: PrismaSessionImportRepositoryAdapter,
     },
     { provide: DISCIPLINE_CATALOG, useClass: DisciplinesCatalogAdapter },
     { provide: ACTIVITY_CATALOG, useClass: GarminActivityCatalogAdapter },

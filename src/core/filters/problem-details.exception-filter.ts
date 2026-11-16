@@ -47,6 +47,13 @@ interface BodyParserError {
   status: number;
 }
 
+function domainErrorItems(
+  error: DomainError,
+): ValidationErrorItem[] | undefined {
+  const { errors } = error as { errors?: unknown };
+  return Array.isArray(errors) ? (errors as ValidationErrorItem[]) : undefined;
+}
+
 function isBodyParserError(error: unknown): error is BodyParserError {
   if (typeof error !== 'object' || error === null) return false;
   const { type, status } = error as { type?: unknown; status?: unknown };
@@ -193,10 +200,12 @@ export class ProblemDetailsExceptionFilter implements ExceptionFilter {
           `[${correlationId}] Business Error ${exception.code} : code non mappé dans DOMAIN_ERROR_STATUS, statut ${DEFAULT_DOMAIN_ERROR_STATUS} par défaut`,
         );
       }
+      const errors = domainErrorItems(exception);
       return {
         status: mapped ?? DEFAULT_DOMAIN_ERROR_STATUS,
         code: exception.code,
         detail: exception.message,
+        ...(errors ? { errors } : {}),
       };
     }
 
