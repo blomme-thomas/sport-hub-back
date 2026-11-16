@@ -1,11 +1,16 @@
 import { GOAL_TYPES, isGoalType } from './goal-type.vo.js';
 
 describe('GoalType', () => {
-  it('liste les trois types d’objectif autorisés', () => {
-    expect([...GOAL_TYPES]).toEqual(['evenement', 'volume', 'regularite']);
+  it('liste les quatre types d’objectif autorisés', () => {
+    expect([...GOAL_TYPES]).toEqual([
+      'evenement',
+      'volume',
+      'regularite',
+      'hebdomadaire',
+    ]);
   });
 
-  it.each(['evenement', 'volume', 'regularite'])(
+  it.each(['evenement', 'volume', 'regularite', 'hebdomadaire'])(
     'reconnaît %s comme un type d’objectif',
     (value) => {
       expect(isGoalType(value)).toBe(true);

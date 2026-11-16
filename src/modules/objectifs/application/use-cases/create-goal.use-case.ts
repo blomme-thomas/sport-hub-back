@@ -4,6 +4,7 @@ import {
   type IGoalRepository,
   GOAL_REPOSITORY,
 } from '../../domain/ports/outbound/goal.repository.port.js';
+import { InvalidGoalError } from '../../domain/errors/invalid-goal.error.js';
 import { TargetTime } from '../../domain/value-objects/target-time.vo.js';
 import { type CreateGoalCommand, GoalDto } from '../dtos/goal.dto.js';
 
@@ -21,6 +22,14 @@ export class CreateGoalUseCase {
    * @throws InvalidTargetTimeError si le temps cible n'est pas un entier strictement positif.
    */
   async execute(command: CreateGoalCommand): Promise<GoalDto> {
+    if (command.type === 'hebdomadaire') {
+      const existing = await this.goals.findAll({});
+      if (existing.some((goal) => goal.type === 'hebdomadaire')) {
+        throw new InvalidGoalError(
+          'un seul objectif hebdomadaire est autorisé ; modifiez l’existant',
+        );
+      }
+    }
     const goal = Goal.create({
       title: command.title,
       type: command.type,
