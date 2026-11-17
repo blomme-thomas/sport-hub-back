@@ -20,7 +20,8 @@
           "source": {
             "enum": [
               "ia",
-              "generique"
+              "generique",
+              "saisie-manuelle"
             ],
             "example": "ia",
             "type": "string"
@@ -1649,6 +1650,20 @@
         ],
         "type": "object"
       },
+      "SaveActivityCommentRequestDto": {
+        "properties": {
+          "text": {
+            "description": "Commentaire saisi à la main, qui remplace le commentaire existant ; espaces en bordure retirés. Pas de limite de longueur.",
+            "example": "Séance difficile, j'ai tenu l'allure jusqu'au bout.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
       "ScheduledSessionResponseDto": {
         "properties": {
           "date": {
@@ -3181,6 +3196,77 @@
           }
         },
         "summary": "Génère le commentaire d'une activité, ou le régénère en remplaçant le précédent. Un seul appel au modèle ; sans séance rapprochée, commentaire générique sans appel",
+        "tags": [
+          "conseils"
+        ]
+      },
+      "put": {
+        "operationId": "activityCommentsSaveManual",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "6b1b3a7e-2f4d-4c8e-9a51-0d7c2e8f9a10",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveActivityCommentRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityCommentResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remplace le commentaire de l'activité par un texte saisi à la main, sans appel au modèle. Source « saisie-manuelle », modèle vide, sans limite de longueur",
         "tags": [
           "conseils"
         ]

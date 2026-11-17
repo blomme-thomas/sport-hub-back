@@ -11,7 +11,11 @@ export class ActivityCommentResponseDto {
   })
   text!: string;
 
-  @ApiProperty({ type: String, enum: ['ia', 'generique'], example: 'ia' })
+  @ApiProperty({
+    type: String,
+    enum: ['ia', 'generique', 'saisie-manuelle'],
+    example: 'ia',
+  })
   source!: string;
 
   @ApiProperty({ type: String, nullable: true, example: 'claude-sonnet-5-5' })

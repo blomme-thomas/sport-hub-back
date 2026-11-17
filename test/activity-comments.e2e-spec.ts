@@ -174,6 +174,75 @@ describe('Commentaires d’activités (e2e)', () => {
     });
   });
 
+  describe('PUT /api/activities/:id/comment', () => {
+    it('remplace le commentaire généré par le texte saisi, sans appel au modèle', async () => {
+      await linkActivityToSession();
+      await http()
+        .post(`/api/activities/${ACTIVITY_LINKED}/comment`)
+        .expect(201);
+
+      const res = await http()
+        .put(`/api/activities/${ACTIVITY_LINKED}/comment`)
+        .send({ text: '  Sortie tranquille, aucun souci.  ' })
+        .expect(200);
+
+      expect(res.body).toMatchObject({
+        activityId: ACTIVITY_LINKED,
+        text: 'Sortie tranquille, aucun souci.',
+        source: 'saisie-manuelle',
+        model: null,
+      });
+      expect(generator.calls).toHaveLength(1);
+    });
+
+    it('crée le commentaire d’une activité sans séance, sans appel au modèle', async () => {
+      const res = await http()
+        .put(`/api/activities/${ACTIVITY_FREE}/comment`)
+        .send({ text: 'Footing de récupération.' })
+        .expect(200);
+
+      expect(res.body.source).toBe('saisie-manuelle');
+      expect(generator.calls).toHaveLength(0);
+    });
+
+    it('accepte un texte de plus de 1000 caractères et le relit tel quel', async () => {
+      const text = 'a'.repeat(1500);
+      await http()
+        .put(`/api/activities/${ACTIVITY_FREE}/comment`)
+        .send({ text })
+        .expect(200);
+
+      const res = await http()
+        .get(`/api/activities/${ACTIVITY_FREE}/comment`)
+        .expect(200);
+
+      expect(res.body.text).toBe(text);
+      expect(res.body.source).toBe('saisie-manuelle');
+    });
+
+    it('renvoie 400 avec errors[] pour un texte vide', async () => {
+      const res = await http()
+        .put(`/api/activities/${ACTIVITY_FREE}/comment`)
+        .send({ text: '   ' })
+        .expect(400);
+
+      expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+      expect(res.body.errors).toEqual(
+        expect.arrayContaining([expect.objectContaining({ field: 'text' })]),
+      );
+    });
+
+    it('renvoie 404 ACTIVITY_NOT_FOUND pour une activité inconnue', async () => {
+      const res = await http()
+        .put(`/api/activities/${UNKNOWN_ID}/comment`)
+        .send({ text: 'Texte' })
+        .expect(404);
+
+      expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+      expect(res.body.code).toBe('ACTIVITY_NOT_FOUND');
+    });
+  });
+
   describe('GET /api/activities/:id/comment', () => {
     it('renvoie le commentaire stocké sans appel au modèle', async () => {
       await linkActivityToSession();
