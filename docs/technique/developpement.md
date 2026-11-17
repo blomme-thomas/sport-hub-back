@@ -114,7 +114,9 @@ La clé est un secret : la renseigner uniquement dans `.env`. Elle n'est jamais 
 
 ## CI (GitHub Actions, `.github/workflows/`)
 
-- `ci-branch` : à chaque push sur `feature/**` et `fix/**` : `npm ci`, `prisma generate`, format, lint, `deps:check`, contrat OpenAPI à jour (régénération de `docs/api/openapi.json` ; échec si le fichier commité est périmé, voir [Contrat OpenAPI](openapi.md#garde-fou-ci)), `npm audit` (échoue sur high et critical).
+- `ci-branch` : à chaque push sur `feature/**` et `fix/**` : `npm ci`, `prisma generate`, format, lint, `deps:check`, contrat OpenAPI à jour (régénération de `docs/api/openapi.json` ; échec si le fichier commité est périmé, voir [Contrat OpenAPI](openapi.md#garde-fou-ci)), `npm audit --omit=dev` (échoue sur high et critical des seules dépendances de production ; les dépendances de développement sont exclues, voir ci-dessous).
+
+**Audit des dépendances de développement (exclues du garde-fou)** : `picomatch` (ReDoS sur motifs glob, GHSA-fc5q-39xc-vjpf) est vulnérable sur toute sa plage (`<= 4.0.7`), sans version corrigée à la date de cette décision. Il n'est atteint que par des outils de développement (vitest, vite, dependency-cruiser, `@nestjs/cli`) et jamais par le runtime de l'API, usage local mono-utilisateur. Le garde-fou CI est donc restreint à la production. À réévaluer dès qu'une version corrigée existe : retirer `--omit=dev` une fois `npm audit` vert sur l'arbre complet.
 - `ci-develop` : à chaque push sur `develop` (PR fusionnée) : tests unitaires, tests e2e (service PostgreSQL 16, étape « Migrations » `npm run prisma:migrate:deploy` avant les e2e), build.
 - `ci-release` : sur les branches `release/**` et les PR vers `main` issues d'une release : garde-fou de version (voir [Workflow Git](workflow-git.md)).
 - `ci-main` : à chaque push sur `main` issu d'un merge de `release/**` : création automatique du tag `vx.y.z` et de la release GitHub (voir [Workflow Git](workflow-git.md)).
