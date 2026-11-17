@@ -5,6 +5,7 @@ import { SeancesModule } from '../seances/index.js';
 import { TrainingStatsModule } from '../training-stats/index.js';
 import { GenerateActivityCommentUseCase } from './application/use-cases/generate-activity-comment.use-case.js';
 import { GetActivityCommentUseCase } from './application/use-cases/get-activity-comment.use-case.js';
+import { SaveManualActivityCommentUseCase } from './application/use-cases/save-manual-activity-comment.use-case.js';
 import { GenerateWeeklyReviewUseCase } from './application/use-cases/generate-weekly-review.use-case.js';
 import { GetWeeklyReviewUseCase } from './application/use-cases/get-weekly-review.use-case.js';
 import { GenerateDashboardAdviceUseCase } from './application/use-cases/generate-dashboard-advice.use-case.js';
@@ -50,6 +51,7 @@ import { WeeklyReviewsController } from './presentation/http/controllers/weekly-
   providers: [
     GenerateActivityCommentUseCase,
     GetActivityCommentUseCase,
+    SaveManualActivityCommentUseCase,
     GenerateWeeklyReviewUseCase,
     GetWeeklyReviewUseCase,
     GenerateDashboardAdviceUseCase,
