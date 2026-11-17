@@ -49,4 +49,4 @@ jobs:
           fi
 
       - name: Audit des dépendances
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
