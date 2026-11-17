@@ -46,25 +46,29 @@ Structure : `domain/value-objects/iso-week.vo.ts` (`IsoWeek`), `domain/value-obj
 |---|---|---|---|
 | `POST` | `/api/activities/:id/comment` | Génère le commentaire, ou le remplace s'il existe (201) | 400, 404, 502, 503 |
 | `GET` | `/api/activities/:id/comment` | Renvoie le commentaire stocké, sans appel au modèle | 400, 404 |
+| `PUT` | `/api/activities/:id/comment` | Remplace le commentaire par un texte saisi à la main, sans appel au modèle (200) | 400, 404 |
 
 ## Règles
 
 - **Activité rapprochée** (une séance y est liée, voir [seances](seances.md#rapprochement-avec-les-activités)) : un seul appel au modèle. Source `ia`, modèle et date de génération stockés.
 - **Activité sans séance rapprochée** : commentaire générique stocké, sans appel au modèle. Source `generique`, modèle `null`.
 - **Régénération** : `POST` remplace le commentaire existant et enregistre la nouvelle date.
+- **Saisie manuelle** : `PUT` avec `{ "text" }` remplace le commentaire existant, sans fusion ni historique. Source `saisie-manuelle`, modèle `null`, date de mise à jour enregistrée. Le texte est épuré de ses espaces en bordure et ne peut pas être vide (400 avec `errors[]`). Activité inconnue : 404 `ACTIVITY_NOT_FOUND`. Aucune limite de longueur, et aucun appel au modèle.
 - **Lecture** : `GET` ne fait jamais d'appel au modèle.
 - **Contenu envoyé au modèle** : type, date, durée et distance de l'activité, et discipline, date, durée et statut de la séance prévue. Aucun identifiant Garmin ni `rawPayload`.
-- **Longueur** : le texte fait de 1 à 1000 caractères. Une réponse vide, tronquée (`stop_reason` différent de `end_turn`) ou non textuelle donne 502 `ACTIVITY_COMMENT_INVALID_OUTPUT` et ne remplace rien.
+- **Longueur** : le texte généré fait de 1 à 1000 caractères. Une réponse vide, tronquée (`stop_reason` différent de `end_turn`) ou non textuelle donne 502 `ACTIVITY_COMMENT_INVALID_OUTPUT` et ne remplace rien. La limite ne s'applique pas à la saisie manuelle, y compris à sa relecture par `GET`.
+- **Migration** : la contrainte `activity_comments_source_check` accepte `saisie-manuelle` (migration `20261127120000_add_manual_activity_comment_source`, rétrocompatible). Retour arrière : supprimer les lignes `saisie-manuelle`, puis rétablir la contrainte à deux valeurs.
 
 ## Structure
 
 | Couche | Fichier | Rôle |
 |---|---|---|
-| Domain | `domain/value-objects/activity-comment.vo.ts` | `ActivityComment` : texte validé, origine (`ia` ou `generique`), modèle, date |
+| Domain | `domain/value-objects/activity-comment.vo.ts` | `ActivityComment` : texte validé, origine (`ia`, `generique` ou `saisie-manuelle`), modèle, date |
 | Domain | `domain/ports/outbound/conseils.ports.ts` | Ports `IActivityReader`, `IPlannedSessionReader`, `IActivityCommentGenerator`, `IActivityCommentRepository`, horloge `ConseilsClock` |
 | Domain | `domain/errors/` | `ActivityNotFoundError` (`ACTIVITY_NOT_FOUND`), `ActivityCommentNotFoundError`, `ActivityCommentInvalidOutputError`, `ActivityCommentUnavailableError`, `ActivityCommentAccessDeniedError` |
 | Application | `application/use-cases/generate-activity-comment.use-case.ts` | `GenerateActivityCommentUseCase` |
 | Application | `application/use-cases/get-activity-comment.use-case.ts` | `GetActivityCommentUseCase` |
+| Application | `application/use-cases/save-manual-activity-comment.use-case.ts` | `SaveManualActivityCommentUseCase` (saisie manuelle, sans modèle) |
 | Infrastructure | `infrastructure/adapters/garmin-activity-reader.adapter.ts` | ACL vers `GetActivityUseCase` (`garmin-sync`) |
 | Infrastructure | `infrastructure/adapters/seances-planned-session-reader.adapter.ts` | ACL vers `GetSessionForActivityUseCase` (`seances`) |
 | Infrastructure | `infrastructure/adapters/claude-activity-comment.generator.adapter.ts` | Appel unique à Claude, texte libre, traduction des erreurs du SDK |
