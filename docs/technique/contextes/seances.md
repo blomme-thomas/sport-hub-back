@@ -150,6 +150,18 @@ Hypothèses :
 - `semaines` : une entrée par semaine ISO qui touche le mois. Chacune ne reprend que les jours du mois ; `partielle` vaut `true` quand la semaine déborde sur un mois voisin, et `premierJour`/`dernierJour` indiquent la part retenue. Chaque entrée contient `resume`, `seances` et `activitesNonPlanifiees`, avec la même structure que l'export hebdomadaire.
 - Une séance ou une activité du mois n'apparaît que dans une seule semaine ; une séance du 31 octobre ou du 1er décembre n'est jamais reprise, même si sa semaine ISO touche novembre.
 
+## Export d'une séance (issue #110)
+
+- `GET /api/exports/sessions/:id` (UUID de la séance) renvoie un fichier JSON au format `bilan-seance`, version 1 : `format: "bilan-seance"`, `kind: "seance"`, `schemaVersion: 1`. Module `exports`, qui réutilise le format du bloc `seances` de l'export hebdomadaire (`buildSessions`).
+- Erreur : `404 SESSION_NOT_FOUND` si la séance n'existe pas, `400` (`errors[]`) si l'identifiant n'est pas un UUID.
+- Blocs : `notesPourLAnalyse` (consigne d'analyse, texte fixe) et `seance` (`plan`, `realise`, `atteinte`, au même format que l'export hebdomadaire).
+- `realise` vaut `null` sans activité liée, ou si l'activité liée n'est pas du même jour que la séance. `atteinte` suit `realise`.
+- Exclusions : identifiants Garmin, payloads bruts, nom du compte. La réponse ne reprend que les champs listés.
+
+Hypothèses :
+- `notesPourLAnalyse` est la consigne d'analyse fixe (comme dans les exports hebdomadaire et mensuel), et non les notes saisies sur la séance (`description`, `equipment`, `attentionPoints`), non reprises.
+- Le format `bilan-seance` est porté par `format`, et `kind` vaut `seance` (le type de l'objet exporté) : c'est une lecture de la story #110, à confirmer.
+
 Hypothèses :
 - Les totaux du mois et de chaque semaine sont calculés à partir des séances et activités retenues (et non via `training-stats`), donc sans comparaison avec le mois ou la semaine précédente.
 - Les jours sont lus en UTC, comme pour l'export hebdomadaire.

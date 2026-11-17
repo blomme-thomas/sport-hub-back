@@ -3634,6 +3634,62 @@
         ]
       }
     },
+    "/api/exports/sessions/{id}": {
+      "get": {
+        "operationId": "sessionExportsGetSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fichier bilan-seance, version 1 ; une séance sans activité rapprochée renvoie un réalisé et une atteinte à null"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Bilan JSON d'une séance planifiée avec son activité réalisée rapprochée, pour analyse hors application : plan, réalisé et atteinte",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/api/exports/weeks/{week}": {
       "get": {
         "operationId": "weekExportsGetWeek",
