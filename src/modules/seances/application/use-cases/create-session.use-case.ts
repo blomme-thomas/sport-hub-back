@@ -38,8 +38,7 @@ export class CreateSessionUseCase {
       targetDistanceMeters: command.targetDistanceMeters ?? null,
       targetHrZonePercentages: command.targetHrZonePercentages ?? null,
       description: command.description,
-      equipment: command.equipment,
-      attentionPoints: command.attentionPoints,
+      title: command.title,
       modules: buildSessionModules(command.modules ?? []),
     });
     if (!(await this.disciplines.exists(session.disciplineTypeKey))) {

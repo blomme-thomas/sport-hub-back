@@ -17,8 +17,7 @@ import {
 
 const DISCIPLINE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
-const EQUIPMENT_MAX_LENGTH = 1000;
-const ATTENTION_POINTS_MAX_LENGTH = 1000;
+const TITLE_MAX_LENGTH = 200;
 const DURATION_MAX_MINUTES = 1440;
 const MODULES_MAX = 30;
 
@@ -43,8 +42,7 @@ export interface SessionProps {
   startTime?: string | null;
   recurrence?: SessionRecurrence;
   description?: string | null;
-  equipment?: string | null;
-  attentionPoints?: string | null;
+  title?: string | null;
   modules?: SessionModule[];
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[] | null;
@@ -60,8 +58,7 @@ export interface SessionReconstitutionProps {
   status: string;
   modifiedManually: boolean;
   description: string | null;
-  equipment: string | null;
-  attentionPoints: string | null;
+  title?: string | null;
   modules: SessionModule[];
   changeLog: SessionChangeLogEntry[];
   activityLink?: SessionActivityLink | null;
@@ -77,8 +74,7 @@ export interface SessionChanges {
   recurrence?: SessionRecurrence;
   status?: string;
   description?: string | null;
-  equipment?: string | null;
-  attentionPoints?: string | null;
+  title?: string | null;
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[] | null;
 }
@@ -91,8 +87,7 @@ interface SessionFieldsInput {
   recurrence: string;
   status: string;
   description: string | null;
-  equipment: string | null;
-  attentionPoints: string | null;
+  title: string | null;
   targetDistanceMeters: number | null;
   targetHrZonePercentages: number[] | null;
 }
@@ -105,8 +100,7 @@ interface SessionFields {
   recurrence: SessionRecurrence;
   status: SessionStatus;
   description: string | null;
-  equipment: string | null;
-  attentionPoints: string | null;
+  title: string | null;
   targetDistanceMeters: number | null;
   targetHrZonePercentages: number[] | null;
 }
@@ -139,8 +133,7 @@ export class Session {
       targetHrZonePercentages: props.targetHrZonePercentages ?? null,
       status: 'planifiee',
       description: props.description ?? null,
-      equipment: props.equipment ?? null,
-      attentionPoints: props.attentionPoints ?? null,
+      title: props.title ?? null,
     });
     return new Session({
       id: SessionId.generate(),
@@ -169,8 +162,7 @@ export class Session {
       targetHrZonePercentages: props.targetHrZonePercentages ?? null,
       status: props.status,
       description: props.description,
-      equipment: props.equipment,
-      attentionPoints: props.attentionPoints,
+      title: props.title ?? null,
     });
     return new Session({
       id: props.id,
@@ -229,12 +221,8 @@ export class Session {
     return this.state.description;
   }
 
-  get equipment(): string | null {
-    return this.state.equipment;
-  }
-
-  get attentionPoints(): string | null {
-    return this.state.attentionPoints;
+  get title(): string | null {
+    return this.state.title;
   }
 
   get activityLink(): SessionActivityLink | null {
@@ -283,12 +271,7 @@ export class Session {
         changes.description === undefined
           ? current.description
           : changes.description,
-      equipment:
-        changes.equipment === undefined ? current.equipment : changes.equipment,
-      attentionPoints:
-        changes.attentionPoints === undefined
-          ? current.attentionPoints
-          : changes.attentionPoints,
+      title: changes.title === undefined ? current.title : changes.title,
     });
     const entries = changedEntries(current, next, now);
     return new Session({
@@ -411,16 +394,7 @@ function validateFields(input: SessionFieldsInput): SessionFields {
       DESCRIPTION_MAX_LENGTH,
       'la description',
     ),
-    equipment: normalizeText(
-      input.equipment,
-      EQUIPMENT_MAX_LENGTH,
-      'le matériel',
-    ),
-    attentionPoints: normalizeText(
-      input.attentionPoints,
-      ATTENTION_POINTS_MAX_LENGTH,
-      'les points d’attention',
-    ),
+    title: normalizeText(input.title, TITLE_MAX_LENGTH, 'le titre'),
   };
 }
 
@@ -559,18 +533,11 @@ function changedEntries(
       previousValue: current.description,
     });
   }
-  if (next.equipment !== current.equipment) {
+  if (next.title !== current.title) {
     entries.push({
       changedAt: now,
-      field: 'equipment',
-      previousValue: current.equipment,
-    });
-  }
-  if (next.attentionPoints !== current.attentionPoints) {
-    entries.push({
-      changedAt: now,
-      field: 'attentionPoints',
-      previousValue: current.attentionPoints,
+      field: 'title',
+      previousValue: current.title,
     });
   }
   return entries;

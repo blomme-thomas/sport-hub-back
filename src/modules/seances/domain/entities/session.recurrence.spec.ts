@@ -57,8 +57,6 @@ describe('Session : récurrence', () => {
       status: 'planifiee',
       modifiedManually: false,
       description: null,
-      equipment: null,
-      attentionPoints: null,
       modules: [],
       changeLog: [],
       recurrence: 'hebdomadaire',

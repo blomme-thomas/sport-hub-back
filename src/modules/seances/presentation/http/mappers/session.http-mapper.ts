@@ -35,8 +35,7 @@ export class SessionHttpMapper {
       targetDistanceMeters: request.targetDistanceMeters,
       targetHrZonePercentages: request.targetHrZonePercentages,
       description: request.description,
-      equipment: request.equipment,
-      attentionPoints: request.attentionPoints,
+      title: request.title,
       modules: request.modules,
     };
   }
@@ -56,8 +55,7 @@ export class SessionHttpMapper {
       targetHrZonePercentages: request.targetHrZonePercentages,
       status: request.status,
       description: request.description,
-      equipment: request.equipment,
-      attentionPoints: request.attentionPoints,
+      title: request.title,
     };
   }
 
@@ -86,8 +84,7 @@ export class SessionHttpMapper {
       status: dto.status,
       modifiedManually: dto.modifiedManually,
       description: dto.description,
-      equipment: dto.equipment,
-      attentionPoints: dto.attentionPoints,
+      title: dto.title,
       modules: dto.modules.map((module) =>
         SessionHttpMapper.toModuleResponse(module),
       ),

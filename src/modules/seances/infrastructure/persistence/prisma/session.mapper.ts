@@ -47,8 +47,7 @@ export interface SessionRecord {
   status: string;
   modifiedManually: boolean;
   description: string | null;
-  equipment: string | null;
-  attentionPoints: string | null;
+  title: string | null;
   modules: SessionModuleRecord[];
   changeLogs: SessionChangeLogRecord[];
   activityLink?: SessionActivityLinkRecord | null;
@@ -70,8 +69,7 @@ export interface SessionPersistence {
   status: string;
   modifiedManually: boolean;
   description: string | null;
-  equipment: string | null;
-  attentionPoints: string | null;
+  title: string | null;
   modules: SessionModulePrimitives[];
   activityLink: SessionActivityLinkRecord | null;
 }
@@ -97,8 +95,7 @@ export class SessionMapper {
           }
         : null,
       description: record.description,
-      equipment: record.equipment,
-      attentionPoints: record.attentionPoints,
+      title: record.title,
       modules: record.modules.map((module) =>
         SessionModule.create({
           position: module.position,
@@ -130,8 +127,7 @@ export class SessionMapper {
       status: session.status,
       modifiedManually: session.modifiedManually,
       description: session.description,
-      equipment: session.equipment,
-      attentionPoints: session.attentionPoints,
+      title: session.title,
       modules: session.modules.map((module) => module.toPrimitives()),
       activityLink: session.activityLink,
     };

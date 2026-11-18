@@ -32,8 +32,6 @@ const sessionDto = {
   status: 'planifiee',
   modifiedManually: false,
   description: null,
-  equipment: null,
-  attentionPoints: null,
   modules: [],
   changeLog: [],
   activity: null,

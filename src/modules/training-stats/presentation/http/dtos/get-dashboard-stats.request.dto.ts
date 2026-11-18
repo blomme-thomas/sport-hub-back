@@ -9,9 +9,9 @@ export class GetDashboardStatsRequestDto {
   @ApiProperty({
     type: String,
     enum: DASHBOARD_PERIODS,
-    example: '30d',
+    example: 'month',
     description:
-      "Période glissante se terminant aujourd'hui (UTC) : 7 ou 30 jours, 3 mois ou 1 an. La période précédente a la même durée.",
+      'Semaine ISO ou mois civil en cours (UTC) : week ou month. La période précédente est de même nature.',
   })
   @IsIn(DASHBOARD_PERIODS)
   period!: DashboardPeriod;

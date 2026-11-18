@@ -54,8 +54,6 @@ describe('CreateSessionRequestDto', () => {
       failedProperties({
         ...VALID,
         description: 'Séance de fond',
-        equipment: 'Palmes',
-        attentionPoints: 'Épaule droite',
         modules: [MODULE, { ...MODULE, type: 'series' }],
       }),
     ).resolves.toEqual([]);
@@ -96,16 +94,6 @@ describe('CreateSessionRequestDto', () => {
       'description de plus de 2000 caractères',
       { description: 'a'.repeat(2001) },
       'description',
-    ],
-    [
-      'matériel de plus de 1000 caractères',
-      { equipment: 'a'.repeat(1001) },
-      'equipment',
-    ],
-    [
-      'points d’attention de plus de 1000 caractères',
-      { attentionPoints: 'a'.repeat(1001) },
-      'attentionPoints',
     ],
     [
       'plus de trente modules',

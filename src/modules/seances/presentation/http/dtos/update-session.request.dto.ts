@@ -126,6 +126,18 @@ export class UpdateSessionRequestDto {
   @ApiPropertyOptional({
     type: String,
     nullable: true,
+    maxLength: 200,
+    example: 'Fond en aisance',
+    description: 'Nouveau titre, absent = inchangé, null = effacé',
+  })
+  @ValidateIf(isTextProvided)
+  @IsString()
+  @MaxLength(200)
+  title?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
     maxLength: 2000,
     example: 'Seuil',
     description: 'Nouvelle description, absent = inchangée, null = effacée',
@@ -134,29 +146,4 @@ export class UpdateSessionRequestDto {
   @IsString()
   @MaxLength(2000)
   description?: string | null;
-
-  @ApiPropertyOptional({
-    type: String,
-    nullable: true,
-    maxLength: 1000,
-    example: 'Palmes',
-    description: 'Nouveau matériel, absent = inchangé, null = effacé',
-  })
-  @ValidateIf(isTextProvided)
-  @IsString()
-  @MaxLength(1000)
-  equipment?: string | null;
-
-  @ApiPropertyOptional({
-    type: String,
-    nullable: true,
-    maxLength: 1000,
-    example: 'Épaule droite',
-    description:
-      'Nouveaux points d’attention, absent = inchangés, null = effacés',
-  })
-  @ValidateIf(isTextProvided)
-  @IsString()
-  @MaxLength(1000)
-  attentionPoints?: string | null;
 }

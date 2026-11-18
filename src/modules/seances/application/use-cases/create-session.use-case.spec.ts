@@ -141,8 +141,7 @@ describe('CreateSessionUseCase', () => {
         status: 'planifiee',
         modifiedManually: false,
         description: null,
-        equipment: null,
-        attentionPoints: null,
+        title: null,
         modules: [],
         changeLog: [],
         activity: null,
@@ -195,13 +194,10 @@ describe('CreateSessionUseCase', () => {
       const result = await useCase.execute({
         ...NATATION,
         description: '   ',
-        equipment: 'Palmes',
       });
 
       expect(result).toMatchObject({
         description: null,
-        equipment: 'Palmes',
-        attentionPoints: null,
       });
     });
 

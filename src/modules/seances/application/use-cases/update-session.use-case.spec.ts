@@ -95,8 +95,6 @@ describe('UpdateSessionUseCase', () => {
           status: overrides.status,
           modifiedManually: false,
           description: base.description,
-          equipment: null,
-          attentionPoints: null,
           modules: [],
           changeLog: [],
         })

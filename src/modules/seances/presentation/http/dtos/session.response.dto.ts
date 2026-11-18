@@ -153,11 +153,8 @@ export class SessionResponseDto {
   @ApiProperty({ type: String, nullable: true, example: 'Séance de fond' })
   description!: string | null;
 
-  @ApiProperty({ type: String, nullable: true, example: 'Palmes' })
-  equipment!: string | null;
-
-  @ApiProperty({ type: String, nullable: true, example: 'Épaule droite' })
-  attentionPoints!: string | null;
+  @ApiProperty({ type: String, nullable: true, example: 'Fond en aisance' })
+  title!: string | null;
 
   @ApiProperty({
     type: [SessionModuleResponseDto],

@@ -9,8 +9,6 @@ const NOW = new Date('2026-11-08T10:00:00.000Z');
 const LATER = new Date('2026-11-09T10:00:00.000Z');
 const DISCIPLINE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
-const EQUIPMENT_MAX_LENGTH = 1000;
-const ATTENTION_POINTS_MAX_LENGTH = 1000;
 const DURATION_MAX = 1440;
 const MODULES_MAX = 30;
 
@@ -58,8 +56,6 @@ function reconstituted(overrides: Partial<ReconstituteProps> = {}): Session {
     status: 'planifiee',
     modifiedManually: false,
     description: null,
-    equipment: null,
-    attentionPoints: null,
     modules: [],
     changeLog: [],
     ...overrides,
@@ -72,8 +68,6 @@ describe('Session', () => {
       const session = Session.create(
         createProps({
           description: 'Séance de fond',
-          equipment: 'Palmes',
-          attentionPoints: 'Épaule droite',
         }),
       );
 
@@ -81,8 +75,6 @@ describe('Session', () => {
       expect(session.disciplineTypeKey).toBe('swimming');
       expect(session.durationMinutes).toBe(60);
       expect(session.description).toBe('Séance de fond');
-      expect(session.equipment).toBe('Palmes');
-      expect(session.attentionPoints).toBe('Épaule droite');
     });
 
     it('démarre au statut planifiee et non modifiée manuellement', () => {
@@ -185,18 +177,6 @@ describe('Session', () => {
       ).toBeNull();
     });
 
-    it('transforme un matériel vide en absence de valeur', () => {
-      expect(
-        Session.create(createProps({ equipment: '' })).equipment,
-      ).toBeNull();
-    });
-
-    it('transforme des points d’attention composés d’espaces en absence de valeur', () => {
-      expect(
-        Session.create(createProps({ attentionPoints: '   ' })).attentionPoints,
-      ).toBeNull();
-    });
-
     it(`accepte une description de ${DESCRIPTION_MAX_LENGTH} caractères`, () => {
       const description = 'a'.repeat(DESCRIPTION_MAX_LENGTH);
 
@@ -209,32 +189,6 @@ describe('Session', () => {
       expect(() =>
         Session.create(
           createProps({ description: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1) }),
-        ),
-      ).toThrow(InvalidSessionError);
-    });
-
-    it(`accepte un matériel de ${EQUIPMENT_MAX_LENGTH} caractères`, () => {
-      const equipment = 'a'.repeat(EQUIPMENT_MAX_LENGTH);
-
-      expect(Session.create(createProps({ equipment })).equipment).toBe(
-        equipment,
-      );
-    });
-
-    it(`refuse un matériel de plus de ${EQUIPMENT_MAX_LENGTH} caractères avec SESSION_INVALID`, () => {
-      expect(() =>
-        Session.create(
-          createProps({ equipment: 'a'.repeat(EQUIPMENT_MAX_LENGTH + 1) }),
-        ),
-      ).toThrow(InvalidSessionError);
-    });
-
-    it(`refuse des points d’attention de plus de ${ATTENTION_POINTS_MAX_LENGTH} caractères avec SESSION_INVALID`, () => {
-      expect(() =>
-        Session.create(
-          createProps({
-            attentionPoints: 'a'.repeat(ATTENTION_POINTS_MAX_LENGTH + 1),
-          }),
         ),
       ).toThrow(InvalidSessionError);
     });
@@ -363,21 +317,6 @@ describe('Session', () => {
       expect(changed.changeLog).toEqual([
         { changedAt: NOW, field: 'description', previousValue: 'Endurance' },
       ]);
-    });
-
-    it('efface matériel et points d’attention quand ils sont mis à null', () => {
-      const session = reconstituted({
-        equipment: 'Palmes',
-        attentionPoints: 'Épaule',
-      });
-
-      const changed = session.change(
-        { equipment: null, attentionPoints: null },
-        NOW,
-      );
-
-      expect(changed.equipment).toBeNull();
-      expect(changed.attentionPoints).toBeNull();
     });
 
     it('retire les espaces de la description modifiée', () => {

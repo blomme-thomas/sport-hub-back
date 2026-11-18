@@ -106,6 +106,17 @@ export class CreateSessionRequestDto {
 
   @ApiPropertyOptional({
     type: String,
+    maxLength: 200,
+    example: 'Fond en aisance',
+    description: 'Titre de la séance, facultatif',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  title?: string;
+
+  @ApiPropertyOptional({
+    type: String,
     maxLength: 2000,
     example: 'Séance de fond',
   })
@@ -113,26 +124,6 @@ export class CreateSessionRequestDto {
   @IsString()
   @MaxLength(2000)
   description?: string;
-
-  @ApiPropertyOptional({
-    type: String,
-    maxLength: 1000,
-    example: 'Palmes, plaquettes',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  equipment?: string;
-
-  @ApiPropertyOptional({
-    type: String,
-    maxLength: 1000,
-    example: 'Épaule droite',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  attentionPoints?: string;
 
   @ApiPropertyOptional({
     type: [SessionModuleRequestDto],

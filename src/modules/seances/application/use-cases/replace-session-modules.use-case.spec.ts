@@ -96,8 +96,6 @@ describe('ReplaceSessionModulesUseCase', () => {
       status,
       modifiedManually: false,
       description: null,
-      equipment: null,
-      attentionPoints: null,
       modules: [
         SessionModule.create({ position: 1, ...ECHAUFFEMENT }),
         SessionModule.create({ position: 2, ...SERIES }),

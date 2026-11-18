@@ -87,7 +87,7 @@ describe('GetDashboardStatsUseCase', () => {
 
   describe('calories journalières', () => {
     it('demande au fournisseur les calories de la période courante uniquement, pas celles de la période précédente', async () => {
-      await useCase.execute('7d', NOW);
+      await useCase.execute('week', NOW);
 
       expect(provider.windows).toEqual([
         {
@@ -106,7 +106,7 @@ describe('GetDashboardStatsUseCase', () => {
         { date: '2026-11-08', calories: null },
       ];
 
-      const result = await useCase.execute('7d', NOW);
+      const result = await useCase.execute('week', NOW);
 
       expect(result.stats.totals.calories).toBe(2350);
     });
@@ -114,7 +114,7 @@ describe('GetDashboardStatsUseCase', () => {
     it('renvoie des calories sur les jours sans séance quand le résumé quotidien en porte une', async () => {
       provider.days = [{ date: '2026-11-02', calories: 2100 }];
 
-      const result = await useCase.execute('7d', NOW);
+      const result = await useCase.execute('week', NOW);
 
       expect(
         result.stats.daily.find((day) => day.date === '2026-11-02'),
@@ -130,7 +130,7 @@ describe('GetDashboardStatsUseCase', () => {
       ];
       provider.days = [];
 
-      const result = await useCase.execute('7d', NOW);
+      const result = await useCase.execute('week', NOW);
 
       expect(result.stats.totals.calories).toBeNull();
     });
@@ -142,7 +142,7 @@ describe('GetDashboardStatsUseCase', () => {
         dashboardFact('2026-11-07T07:00:00.000Z', 500),
       ];
 
-      await expect(useCase.execute('7d', NOW)).rejects.toBe(failure);
+      await expect(useCase.execute('week', NOW)).rejects.toBe(failure);
     });
   });
 

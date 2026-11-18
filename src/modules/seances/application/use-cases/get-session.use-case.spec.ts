@@ -63,8 +63,6 @@ describe('GetSessionUseCase', () => {
       status: 'planifiee',
       modifiedManually: true,
       description: 'Endurance',
-      equipment: null,
-      attentionPoints: null,
       modules: [
         SessionModule.create({
           position: 1,
@@ -117,8 +115,7 @@ describe('GetSessionUseCase', () => {
       status: 'planifiee',
       modifiedManually: true,
       description: 'Endurance',
-      equipment: null,
-      attentionPoints: null,
+      title: null,
       modules: [
         {
           position: 1,

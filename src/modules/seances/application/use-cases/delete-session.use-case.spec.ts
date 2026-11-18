@@ -94,8 +94,6 @@ describe('DeleteSessionUseCase', () => {
       status: 'realisee',
       modifiedManually: false,
       description: null,
-      equipment: null,
-      attentionPoints: null,
       modules: [],
       changeLog: [],
     });

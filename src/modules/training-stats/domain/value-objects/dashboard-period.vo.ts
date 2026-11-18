@@ -1,4 +1,4 @@
-export const DASHBOARD_PERIODS = ['7d', '30d', '3m', '1y'] as const;
+export const DASHBOARD_PERIODS = ['week', 'month'] as const;
 
 export type DashboardPeriod = (typeof DASHBOARD_PERIODS)[number];
 
@@ -13,50 +13,49 @@ export interface DashboardWindow {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-const SHIFT: Record<
-  DashboardPeriod,
-  { unit: 'day' | 'month'; amount: number }
-> = {
-  '7d': { unit: 'day', amount: 7 },
-  '30d': { unit: 'day', amount: 30 },
-  '3m': { unit: 'month', amount: 3 },
-  '1y': { unit: 'month', amount: 12 },
-};
+const WEEK_DAYS = 7;
 
 /**
- * Fenêtres d'un tableau de bord, en UTC. La période courante se termine à la fin du jour `now` (inclus) ;
- * la période précédente a la même durée et se termine où commence la courante.
+ * Fenêtres d'un tableau de bord, en UTC : la semaine ISO (lundi à dimanche) ou le mois civil qui contient `now`.
+ * La période précédente est de même nature (semaine ou mois) et se termine où la courante commence.
  */
 export class DashboardPeriodWindow {
   static resolve(period: DashboardPeriod, now: Date): DashboardWindow {
-    const toExclusive = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) +
-        DAY_MS,
+    const current = boundsOf(period, now);
+    const previous = boundsOf(
+      period,
+      new Date(current.from.getTime() - DAY_MS),
     );
-    const from = DashboardPeriodWindow.shiftBack(toExclusive, period);
-    const previousFrom = DashboardPeriodWindow.shiftBack(from, period);
-    return {
-      current: { from, toExclusive },
-      previous: { from: previousFrom, toExclusive: from },
-    };
+    return { current, previous };
   }
+}
 
-  private static shiftBack(date: Date, period: DashboardPeriod): Date {
-    const { unit, amount } = SHIFT[period];
-    if (unit === 'day') {
-      return new Date(date.getTime() - amount * DAY_MS);
-    }
-    const targetMonthIndex =
-      date.getUTCFullYear() * 12 + date.getUTCMonth() - amount;
-    const year = Math.floor(targetMonthIndex / 12);
-    const month = targetMonthIndex - year * 12;
-    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-    const day = Math.min(date.getUTCDate(), lastDay);
-    return new Date(
-      Date.UTC(year, month, day, date.getUTCHours(), date.getUTCMinutes()),
-    );
-  }
+function boundsOf(period: DashboardPeriod, date: Date): DashboardBounds {
+  return period === 'week' ? weekBounds(date) : monthBounds(date);
+}
+
+/** Semaine ISO contenant la date : du lundi (inclus) au lundi suivant (exclu). */
+function weekBounds(date: Date): DashboardBounds {
+  const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+  const from = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate() - daysSinceMonday,
+  );
+  return {
+    from: new Date(from),
+    toExclusive: new Date(from + WEEK_DAYS * DAY_MS),
+  };
+}
+
+/** Mois civil contenant la date : du 1er (inclus) au 1er du mois suivant (exclu). */
+function monthBounds(date: Date): DashboardBounds {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  return {
+    from: new Date(Date.UTC(year, month, 1)),
+    toExclusive: new Date(Date.UTC(year, month + 1, 1)),
+  };
 }
 
 export function isDashboardPeriod(value: unknown): value is DashboardPeriod {
