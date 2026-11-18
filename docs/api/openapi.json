@@ -67,6 +67,17 @@
             "nullable": true,
             "type": "number"
           },
+          "family": {
+            "description": "Famille de sport déduite du type : course, vélo, natation ou autre",
+            "enum": [
+              "running",
+              "cycling",
+              "swimming",
+              "other"
+            ],
+            "example": "running",
+            "type": "string"
+          },
           "feeling": {
             "description": "Ressenti de la séance saisi dans Garmin, valeur brute 0 à 100 (valeurs observées 25, 50, 75, 100 ; sens des paliers non confirmé) ; null si Garmin ne l'a pas enregistré",
             "example": 75,
@@ -137,6 +148,7 @@
           "id",
           "garminActivityId",
           "type",
+          "family",
           "startedAt",
           "durationSeconds",
           "distanceMeters",
@@ -202,6 +214,17 @@
             "example": 3600.5,
             "type": "number"
           },
+          "family": {
+            "description": "Famille de sport déduite du type : course, vélo, natation ou autre",
+            "enum": [
+              "running",
+              "cycling",
+              "swimming",
+              "other"
+            ],
+            "example": "running",
+            "type": "string"
+          },
           "garminActivityId": {
             "description": "Identifiant de l'activité côté Garmin",
             "example": "12345678901",
@@ -228,6 +251,7 @@
           "id",
           "garminActivityId",
           "type",
+          "family",
           "startedAt",
           "durationSeconds",
           "distanceMeters",
@@ -344,11 +368,6 @@
       },
       "CreateSessionRequestDto": {
         "properties": {
-          "attentionPoints": {
-            "example": "Épaule droite",
-            "maxLength": 1000,
-            "type": "string"
-          },
           "date": {
             "description": "Jour de la séance (YYYY-MM-DD)",
             "example": "2026-05-04",
@@ -372,11 +391,6 @@
             "maximum": 1440,
             "minimum": 1,
             "type": "number"
-          },
-          "equipment": {
-            "example": "Palmes, plaquettes",
-            "maxLength": 1000,
-            "type": "string"
           },
           "modules": {
             "description": "Modules ordonnés ; leur ordre dans la liste fixe leur position",
@@ -422,6 +436,12 @@
             "maxItems": 5,
             "minItems": 5,
             "type": "array"
+          },
+          "title": {
+            "description": "Titre de la séance, facultatif",
+            "example": "Fond en aisance",
+            "maxLength": 200,
+            "type": "string"
           }
         },
         "required": [
@@ -637,12 +657,10 @@
           },
           "period": {
             "enum": [
-              "7d",
-              "30d",
-              "3m",
-              "1y"
+              "week",
+              "month"
             ],
-            "example": "30d",
+            "example": "month",
             "type": "string"
           },
           "to": {
@@ -1984,11 +2002,6 @@
             "nullable": true,
             "type": "object"
           },
-          "attentionPoints": {
-            "example": "Épaule droite",
-            "nullable": true,
-            "type": "string"
-          },
           "changeLog": {
             "description": "Journal des modifications manuelles, par ordre chronologique",
             "items": {
@@ -2013,11 +2026,6 @@
           "durationMinutes": {
             "example": 60,
             "type": "number"
-          },
-          "equipment": {
-            "example": "Palmes",
-            "nullable": true,
-            "type": "string"
           },
           "id": {
             "example": "0f8fad5b-d9cb-469f-a165-70867728950e",
@@ -2078,6 +2086,11 @@
             },
             "nullable": true,
             "type": "array"
+          },
+          "title": {
+            "example": "Fond en aisance",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
@@ -2093,8 +2106,7 @@
           "status",
           "modifiedManually",
           "description",
-          "equipment",
-          "attentionPoints",
+          "title",
           "modules",
           "changeLog",
           "activity"
@@ -2494,13 +2506,6 @@
       },
       "UpdateSessionRequestDto": {
         "properties": {
-          "attentionPoints": {
-            "description": "Nouveaux points d’attention, absent = inchangés, null = effacés",
-            "example": "Épaule droite",
-            "maxLength": 1000,
-            "nullable": true,
-            "type": "string"
-          },
           "date": {
             "description": "Nouvelle date (YYYY-MM-DD), absent = inchangée",
             "example": "2026-05-05",
@@ -2526,13 +2531,6 @@
             "maximum": 1440,
             "minimum": 1,
             "type": "number"
-          },
-          "equipment": {
-            "description": "Nouveau matériel, absent = inchangé, null = effacé",
-            "example": "Palmes",
-            "maxLength": 1000,
-            "nullable": true,
-            "type": "string"
           },
           "recurrence": {
             "description": "Nouvelle récurrence, absent = inchangée ; s’applique à toute la série",
@@ -2581,6 +2579,13 @@
             "maxItems": 5,
             "minItems": 5,
             "type": "array"
+          },
+          "title": {
+            "description": "Nouveau titre, absent = inchangé, null = effacé",
+            "example": "Fond en aisance",
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
           }
         },
         "type": "object"
@@ -5099,7 +5104,7 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Modifie une séance ; les champs absents sont inchangés, null efface description, matériel ou points d’attention",
+        "summary": "Modifie une séance ; les champs absents sont inchangés, null efface la description",
         "tags": [
           "seances"
         ]
@@ -6018,18 +6023,16 @@
         "operationId": "trainingStatsGetDashboard",
         "parameters": [
           {
-            "description": "Période glissante se terminant aujourd'hui (UTC) : 7 ou 30 jours, 3 mois ou 1 an. La période précédente a la même durée.",
+            "description": "Semaine ISO ou mois civil en cours (UTC) : week ou month. La période précédente est de même nature.",
             "in": "query",
             "name": "period",
             "required": true,
             "schema": {
               "enum": [
-                "7d",
-                "30d",
-                "3m",
-                "1y"
+                "week",
+                "month"
               ],
-              "example": "30d",
+              "example": "month",
               "type": "string"
             }
           }
