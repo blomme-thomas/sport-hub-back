@@ -40,7 +40,7 @@ Tenir les séances planifiées (tables `sessions`, `session_modules` et `session
 | `GET` | `/api/sessions?from&to` | Liste les **occurrences** des séances dans la période (bornes incluses), triées par date, heure puis identifiant (voir [Récurrence](#récurrence)) | 400 |
 | `GET` | `/api/sessions/:id` | Renvoie la séance avec ses modules et son journal | 400, 404 |
 | `GET` | `/api/sessions/import/template` | Renvoie le modèle d'un fichier d'import de séances : chaque champ à valeurs fermées liste ses valeurs possibles, et `disciplineTypeKey` liste les clés du référentiel courant | 200 |
-| `PATCH` | `/api/sessions/:id` | Modifie les champs fournis ; `null` efface description, matériel ou points d'attention | 400, 404, 409 |
+| `PATCH` | `/api/sessions/:id` | Modifie les champs fournis ; `null` efface la description | 400, 404, 409 |
 | `PUT` | `/api/sessions/:id/modules` | Remplace la liste ordonnée des modules et renumérote les positions de 1 à n | 400, 404, 409 |
 | `DELETE` | `/api/sessions/:id` | Supprime la séance, réalisée ou non (204) | 400, 404 |
 | `POST` | `/api/sessions/reconcile?from&to` | Rapproche automatiquement les séances planifiées de la période avec les activités du même jour et de la même discipline ; renvoie les couples créés (`items`) | 400 |
@@ -82,11 +82,11 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 
 ## Règles
 
-- **Champs** : date calendaire `YYYY-MM-DD` ; récurrence `aucune` ou `hebdomadaire` ; discipline de 1 à 100 caractères, présente dans le référentiel ; durée entière de 1 à 1440 minutes ; description 2000 caractères au plus, matériel et points d'attention 1000 au plus. Un texte vide après retrait des espaces devient `null`.
+- **Champs** : date calendaire `YYYY-MM-DD` ; récurrence `aucune` ou `hebdomadaire` ; discipline de 1 à 100 caractères, présente dans le référentiel ; durée entière de 1 à 1440 minutes ; description 2000 caractères au plus. Un texte vide après retrait des espaces devient `null`.
 - **Modules** : 30 au plus par séance. Les positions sont données par l'ordre de la liste (1 à n) ; aucune position n'est saisie par le client. Une durée de module suit les mêmes bornes que la séance.
 - **Statut** : une séance est créée `planifiee`. Le statut peut être changé par `PATCH` vers `realisee` ou `manquee`.
 - **Modification manuelle** : toute modification réelle (champ ou liste de modules différente) positionne `modifiedManually` à vrai et ajoute une entrée au journal. Une valeur identique ne journalise rien. Le journal est en ajout seul.
-- **Journal** : les champs journalisés sont `date`, `disciplineTypeKey`, `durationMinutes`, `recurrence`, `status`, `description`, `equipment`, `attentionPoints` et `modules`. Pour `modules`, `previousValue` contient la liste précédente sérialisée en JSON.
+- **Journal** : les champs journalisés sont `date`, `disciplineTypeKey`, `durationMinutes`, `recurrence`, `status`, `description` et `modules`. Pour `modules`, `previousValue` contient la liste précédente sérialisée en JSON.
 - **Séance réalisée** : elle ne peut plus être modifiée ni recevoir un nouveau remplacement de modules (409 `SESSION_ALREADY_COMPLETED`). Elle reste supprimable.
 - **Période** : `from` et `to` sont inclus ; la période compte au plus 366 jours.
 
@@ -159,7 +159,7 @@ Hypothèses :
 - Exclusions : identifiants Garmin, payloads bruts, nom du compte. La réponse ne reprend que les champs listés.
 
 Hypothèses :
-- `notesPourLAnalyse` est la consigne d'analyse fixe (comme dans les exports hebdomadaire et mensuel), et non les notes saisies sur la séance (`description`, `equipment`, `attentionPoints`), non reprises.
+- `notesPourLAnalyse` est la consigne d'analyse fixe (comme dans les exports hebdomadaire et mensuel), et non les notes saisies sur la séance (`description`), non reprises.
 - Le format `bilan-seance` est porté par `format`, et `kind` vaut `seance` (le type de l'objet exporté) : c'est une lecture de la story #110, à confirmer.
 
 Hypothèses :
