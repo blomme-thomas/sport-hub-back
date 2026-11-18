@@ -24,8 +24,6 @@ describe('UpdateSessionRequestDto', () => {
     await expect(
       failedProperties({
         description: null,
-        equipment: null,
-        attentionPoints: null,
       }),
     ).resolves.toEqual([]);
   });
@@ -48,11 +46,6 @@ describe('UpdateSessionRequestDto', () => {
       'description de plus de 2000 caractères',
       { description: 'a'.repeat(2001) },
       'description',
-    ],
-    [
-      'matériel de plus de 1000 caractères',
-      { equipment: 'a'.repeat(1001) },
-      'equipment',
     ],
   ])('refuse %s', async (_label, plain, property) => {
     await expect(failedProperties(plain)).resolves.toContain(property);

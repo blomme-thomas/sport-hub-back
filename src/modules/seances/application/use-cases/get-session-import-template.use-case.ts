@@ -38,8 +38,6 @@ export class GetSessionImportTemplateUseCase {
           durationMinutes: 60,
           startTime: '18:00',
           description: 'Séance de fond',
-          equipment: 'Palmes',
-          attentionPoints: 'Épaule droite',
           modules: [
             {
               type: MODULE_TYPES.join(' | '),

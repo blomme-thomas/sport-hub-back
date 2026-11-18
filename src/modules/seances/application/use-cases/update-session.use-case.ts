@@ -27,7 +27,7 @@ export class UpdateSessionUseCase {
   ) {}
 
   /**
-   * Modifie une séance : les champs absents gardent leur valeur, null efface description, matériel ou points d'attention.
+   * Modifie une séance : les champs absents gardent leur valeur, null efface la description.
    * Toute modification réelle positionne `modifiedManually` et est journalisée ; une discipline fournie doit exister dans le référentiel.
    *
    * @throws SessionNotFoundError si la séance n'existe pas.
@@ -49,8 +49,7 @@ export class UpdateSessionUseCase {
         targetHrZonePercentages: command.targetHrZonePercentages,
         status: command.status,
         description: command.description,
-        equipment: command.equipment,
-        attentionPoints: command.attentionPoints,
+        title: command.title,
       },
       this.clock(),
     );

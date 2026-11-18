@@ -12,8 +12,6 @@ export type SessionImportTemplateSessionDto = {
   durationMinutes: number;
   startTime: string;
   description: string;
-  equipment: string;
-  attentionPoints: string;
   modules: SessionImportTemplateModuleDto[];
 };
 

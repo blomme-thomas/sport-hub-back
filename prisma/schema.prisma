@@ -111,8 +111,7 @@ model Session {
   status               String                       @default("planifiee")
   modifiedManually     Boolean                      @default(false) @map("modified_manually")
   description          String?
-  equipment            String?
-  attentionPoints      String?                      @map("attention_points")
+  title                String?
   createdAt            DateTime                     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(3)
   modules              SessionModule[]

@@ -197,7 +197,7 @@ export class SessionsController {
   @Patch(':id')
   @ApiOperation({
     summary:
-      'Modifie une séance ; les champs absents sont inchangés, null efface description, matériel ou points d’attention',
+      'Modifie une séance ; les champs absents sont inchangés, null efface la description',
   })
   @ApiOkResponse({ type: SessionResponseDto })
   @ApiProblemResponses(400, 404, 409)

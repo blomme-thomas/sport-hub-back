@@ -48,8 +48,6 @@ describe('Session : heure de début', () => {
       status: 'planifiee',
       modifiedManually: false,
       description: null,
-      equipment: null,
-      attentionPoints: null,
       modules: [],
       changeLog: [],
     });

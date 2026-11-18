@@ -25,8 +25,7 @@ export interface CreateSessionCommand {
   startTime?: string | null;
   recurrence?: SessionRecurrence;
   description?: string | null;
-  equipment?: string | null;
-  attentionPoints?: string | null;
+  title?: string | null;
   modules?: SessionModuleInput[];
 }
 
@@ -41,8 +40,7 @@ export interface UpdateSessionCommand {
   recurrence?: SessionRecurrence;
   status?: string;
   description?: string | null;
-  equipment?: string | null;
-  attentionPoints?: string | null;
+  title?: string | null;
 }
 
 export interface ReplaceSessionModulesCommand {
@@ -95,8 +93,7 @@ export class SessionDto {
     readonly status: SessionStatus,
     readonly modifiedManually: boolean,
     readonly description: string | null,
-    readonly equipment: string | null,
-    readonly attentionPoints: string | null,
+    readonly title: string | null,
     readonly modules: SessionModuleDto[],
     readonly changeLog: ChangeLogEntryDto[],
     readonly activity: SessionActivityLinkDto | null,
@@ -120,8 +117,7 @@ export class SessionDto {
       session.status,
       session.modifiedManually,
       session.description,
-      session.equipment,
-      session.attentionPoints,
+      session.title,
       session.modules.map((module) => module.toPrimitives()),
       session.changeLog,
       link === null

@@ -39,8 +39,6 @@ const SEANCE_FIELDS = [
   'durationMinutes',
   'startTime',
   'description',
-  'equipment',
-  'attentionPoints',
   'modules',
 ];
 const MODULE_FIELDS = [
@@ -308,14 +306,6 @@ export class ImportSessionsUseCase {
     );
     const startTime = readText(raw, 'startTime', path, issues, true);
     const description = readText(raw, 'description', path, issues, true);
-    const equipment = readText(raw, 'equipment', path, issues, true);
-    const attentionPoints = readText(
-      raw,
-      'attentionPoints',
-      path,
-      issues,
-      true,
-    );
 
     const rawModules = raw.modules;
     if (!Array.isArray(rawModules) || rawModules.length === 0) {
@@ -364,8 +354,6 @@ export class ImportSessionsUseCase {
         durationMinutes,
         startTime,
         description,
-        equipment,
-        attentionPoints,
         modules,
       });
     } catch (error) {

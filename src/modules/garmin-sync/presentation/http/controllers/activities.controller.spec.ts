@@ -95,7 +95,7 @@ describe('ActivitiesController', () => {
   describe('réponse', () => {
     it('renvoie la page du use case au format de réponse', async () => {
       execute.mockResolvedValue({
-        items: [summary],
+        items: [{ ...summary, family: 'running' }],
         page: 1,
         pageSize: 20,
         total: 1,
@@ -110,7 +110,7 @@ describe('ActivitiesController', () => {
         pageSize: response.pageSize,
         total: response.total,
       }).toEqual({
-        items: [summary],
+        items: [{ ...summary, family: 'running' }],
         page: 1,
         pageSize: 20,
         total: 1,

@@ -5,6 +5,7 @@ import { GetActivityDetailUseCase } from '../../../application/use-cases/get-act
 import { GetActivityFitDocumentUseCase } from '../../../application/use-cases/get-activity-fit-document.use-case.js';
 import { ListActivitiesUseCase } from '../../../application/use-cases/list-activities.use-case.js';
 import { ActivityDetailResponseDto } from '../dtos/activity-detail.response.dto.js';
+import { sportFamilyOf } from '../../../../../shared/domain/value-objects/sport-family.vo.js';
 import { ActivityIdParamDto } from '../dtos/activity-id.param.dto.js';
 import { ActivityListResponseDto } from '../dtos/activity-list.response.dto.js';
 import { ListActivitiesRequestDto } from '../dtos/list-activities.request.dto.js';
@@ -48,7 +49,8 @@ export class ActivitiesController {
   async detail(
     @Param() params: ActivityIdParamDto,
   ): Promise<ActivityDetailResponseDto> {
-    return this.getActivityDetail.execute(params.id);
+    const detail = await this.getActivityDetail.execute(params.id);
+    return { ...detail, family: sportFamilyOf(detail.type) };
   }
 
   @Get(':id/fit')

@@ -95,7 +95,7 @@ export class DashboardVariationResponseDto {
 }
 
 export class DashboardStatsResponseDto {
-  @ApiProperty({ enum: DASHBOARD_PERIODS, example: '30d' })
+  @ApiProperty({ enum: DASHBOARD_PERIODS, example: 'month' })
   period!: string;
 
   @ApiProperty({ type: String, format: 'date', example: '2026-10-09' })

@@ -1,4 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  SPORT_FAMILIES,
+  type SportFamily,
+} from '../../../../../shared/domain/value-objects/sport-family.vo.js';
 
 export class ActivityDetailResponseDto {
   @ApiProperty({ type: String, format: 'uuid' })
@@ -9,6 +13,14 @@ export class ActivityDetailResponseDto {
 
   @ApiProperty({ type: String, example: 'running' })
   type!: string;
+
+  @ApiProperty({
+    enum: SPORT_FAMILIES,
+    example: 'running',
+    description:
+      'Famille de sport déduite du type : course, vélo, natation ou autre',
+  })
+  family!: SportFamily;
 
   @ApiProperty({ type: String, format: 'date-time' })
   startedAt!: Date;

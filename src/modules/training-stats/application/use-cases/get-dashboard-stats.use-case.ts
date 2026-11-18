@@ -35,8 +35,8 @@ export class GetDashboardStatsUseCase {
   ) {}
 
   /**
-   * Calcule les indicateurs du tableau de bord pour une période glissante se terminant aujourd'hui (UTC),
-   * avec la période précédente de même durée. Les activités enfants ne sont pas synchronisées (excludeChildren côté Garmin).
+   * Calcule les indicateurs du tableau de bord pour la semaine ISO ou le mois civil contenant `now` (UTC),
+   * avec la période précédente de même nature. Les activités enfants ne sont pas synchronisées (excludeChildren côté Garmin).
    *
    * @throws GarminAccessDeniedError si Garmin refuse la clé ou le jeton (calories journalières).
    * @throws GarminUnavailableError si Garmin est indisponible (calories journalières).

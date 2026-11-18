@@ -15,8 +15,6 @@ function record(overrides: Record<string, unknown> = {}) {
     status: 'planifiee',
     modifiedManually: true,
     description: 'Endurance',
-    equipment: null,
-    attentionPoints: null,
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
     modules: [
@@ -91,16 +89,12 @@ describe('SessionMapper', () => {
       const session = SessionMapper.toDomain(
         record({
           description: null,
-          equipment: null,
-          attentionPoints: null,
           modules: [],
           changeLogs: [],
         }),
       );
 
       expect(session.description).toBeNull();
-      expect(session.equipment).toBeNull();
-      expect(session.attentionPoints).toBeNull();
       expect(session.modules).toEqual([]);
       expect(session.changeLog).toEqual([]);
     });
@@ -124,8 +118,6 @@ describe('SessionMapper', () => {
         status: 'realisee',
         modifiedManually: false,
         description: 'Endurance',
-        equipment: 'Palmes',
-        attentionPoints: 'Épaule',
         modules: [
           SessionModule.create({
             position: 1,
@@ -156,8 +148,7 @@ describe('SessionMapper', () => {
         status: 'realisee',
         modifiedManually: false,
         description: 'Endurance',
-        equipment: 'Palmes',
-        attentionPoints: 'Épaule',
+        title: null,
         modules: [
           {
             position: 1,
@@ -180,8 +171,6 @@ describe('SessionMapper', () => {
 
       expect(SessionMapper.toPersistence(session)).toMatchObject({
         description: null,
-        equipment: null,
-        attentionPoints: null,
         modules: [],
       });
     });
