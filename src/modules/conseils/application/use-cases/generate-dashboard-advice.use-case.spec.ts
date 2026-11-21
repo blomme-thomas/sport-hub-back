@@ -43,7 +43,7 @@ class FakeReader implements IDashboardAdviceDataReader {
 }
 
 class FakeGenerator implements IDashboardAdviceGenerator {
-  generate = vi.fn(() =>
+  generate = vi.fn((_input: unknown) =>
     Promise.resolve({
       text: 'Belle semaine, garde la séance facile.',
       model: 'claude-sonnet-5-5',

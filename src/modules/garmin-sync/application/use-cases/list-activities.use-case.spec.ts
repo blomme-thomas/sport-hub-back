@@ -1,11 +1,13 @@
 import { Test } from '@nestjs/testing';
 import {
   ACTIVITY_LIST_READ_MODEL,
+  type ActivityDetailItem,
   type ActivityListCriteria,
   type ActivityListItem,
   type ActivityListPage,
   type IActivityListReadModel,
 } from '../../domain/ports/outbound/activity-list.read-model.port.js';
+import type { ActivityFitDocument } from '../../domain/ports/outbound/activity-heart-rate.extractor.port.js';
 import type { ActivityListQuery } from '../dtos/activity-list.dto.js';
 import { ListActivitiesUseCase } from './list-activities.use-case.js';
 
@@ -23,6 +25,7 @@ function item(
     startedAt: new Date('2026-05-10T06:30:00.000Z'),
     durationSeconds: 3600,
     distanceMeters: 10000,
+    averageHeartRate: null,
     ...overrides,
   };
 }
@@ -37,6 +40,14 @@ class FakeActivityListReadModel implements IActivityListReadModel {
   }
 
   findById(): Promise<ActivityListItem | null> {
+    return Promise.resolve(null);
+  }
+
+  findDetailById(): Promise<ActivityDetailItem | null> {
+    return Promise.resolve(null);
+  }
+
+  findFitDocument(): Promise<ActivityFitDocument | null> {
     return Promise.resolve(null);
   }
 }
@@ -116,6 +127,7 @@ describe('ListActivitiesUseCase', () => {
             startedAt: new Date('2026-05-10T06:30:00.000Z'),
             durationSeconds: 3600,
             distanceMeters: 10000,
+            averageHeartRate: null,
           },
           {
             id: 'b',
@@ -124,6 +136,7 @@ describe('ListActivitiesUseCase', () => {
             startedAt: new Date('2026-05-10T06:30:00.000Z'),
             durationSeconds: 3600,
             distanceMeters: 10000,
+            averageHeartRate: null,
           },
         ],
         page: 2,

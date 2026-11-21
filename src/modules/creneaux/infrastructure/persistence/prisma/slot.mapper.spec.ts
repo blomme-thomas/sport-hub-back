@@ -68,7 +68,7 @@ describe('SlotMapper', () => {
 
     const roundTrip = SlotMapper.toDomain({
       ...record(),
-      ...SlotMapper.toPersistence(original),
+      ...(SlotMapper.toPersistence(original) as ReturnType<typeof record>),
     });
 
     expect(roundTrip.id.toString()).toBe(original.id.toString());

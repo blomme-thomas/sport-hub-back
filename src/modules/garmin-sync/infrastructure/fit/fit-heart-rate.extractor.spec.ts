@@ -1,4 +1,10 @@
-import { Encoder, Profile } from '@garmin/fitsdk';
+import {
+  type Encodable,
+  Encoder,
+  type FileIdMesg,
+  Profile,
+  type RecordMesg,
+} from '@garmin/fitsdk';
 import { zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { GarminActivityFileInvalidError } from '../../domain/errors/garmin-activity-file-invalid.error.js';
@@ -10,22 +16,24 @@ function fitBytes(
   records: { seconds: number; heartRate?: number }[],
 ): Uint8Array {
   const encoder = new Encoder();
-  encoder.writeMesg({
+  const fileId: Encodable<FileIdMesg> = {
     mesgNum: Profile.MesgNum.FILE_ID,
     type: 'activity',
     manufacturer: 'development',
     product: 1,
     serialNumber: 1,
     timeCreated: START,
-  });
+  };
+  encoder.writeMesg(fileId);
   for (const record of records) {
-    encoder.writeMesg({
+    const sample: Encodable<RecordMesg> = {
       mesgNum: Profile.MesgNum.RECORD,
       timestamp: new Date(START.getTime() + record.seconds * 1000),
       ...(record.heartRate === undefined
         ? {}
         : { heartRate: record.heartRate }),
-    });
+    };
+    encoder.writeMesg(sample);
   }
   return encoder.close();
 }

@@ -63,7 +63,6 @@ describe('RenameDisciplineUseCase', () => {
         label: DisciplineLabel.create('running'),
         firstSeenAt: FIRST_SEEN_AT,
         lastSeenAt: LAST_SEEN_AT,
-        family: 'running',
       }),
     );
     const moduleRef = await Test.createTestingModule({

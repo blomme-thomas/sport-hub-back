@@ -33,6 +33,10 @@ class FakeSessionRepository implements ISessionRepository {
     );
   }
 
+  findOccurrenceCandidates(): Promise<Session[]> {
+    return Promise.resolve([...this.sessions.values()]);
+  }
+
   save(session: Session): Promise<void> {
     this.sessions.set(session.id.toString(), session);
     return Promise.resolve();
@@ -59,7 +63,6 @@ describe('GetSessionUseCase', () => {
       recurrence: 'aucune',
       targetDistanceMeters: null,
       targetHrZonePercentages: null,
-      achievement: null,
       status: 'planifiee',
       modifiedManually: true,
       description: 'Endurance',
@@ -111,11 +114,11 @@ describe('GetSessionUseCase', () => {
       recurrence: 'aucune',
       targetDistanceMeters: null,
       targetHrZonePercentages: null,
-      achievement: null,
       status: 'planifiee',
       modifiedManually: true,
       description: 'Endurance',
       title: null,
+      achievement: null,
       modules: [
         {
           position: 1,

@@ -27,6 +27,10 @@ function sessionDto(overrides: Partial<SessionDto> = {}): SessionDto {
     status: 'planifiee',
     modifiedManually: true,
     description: 'Endurance',
+    title: null,
+    targetDistanceMeters: null,
+    targetHrZonePercentages: null,
+    achievement: null,
     modules: [
       {
         position: 1,
@@ -143,6 +147,10 @@ describe('SessionHttpMapper', () => {
         status: 'planifiee',
         modifiedManually: true,
         description: 'Endurance',
+        achievement: null,
+        title: null,
+        targetDistanceMeters: null,
+        targetHrZonePercentages: null,
         modules: [
           {
             position: 1,

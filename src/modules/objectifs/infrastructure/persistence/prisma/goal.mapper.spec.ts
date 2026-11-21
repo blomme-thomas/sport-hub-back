@@ -91,7 +91,7 @@ describe('GoalMapper', () => {
 
     const roundTrip = GoalMapper.toDomain({
       ...record(),
-      ...GoalMapper.toPersistence(original),
+      ...(GoalMapper.toPersistence(original) as ReturnType<typeof record>),
     });
 
     expect(roundTrip.id.toString()).toBe(original.id.toString());

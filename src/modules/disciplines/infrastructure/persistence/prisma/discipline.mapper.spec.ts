@@ -64,7 +64,9 @@ describe('DisciplineMapper', () => {
 
     const roundTrip = DisciplineMapper.toDomain({
       ...record(),
-      ...DisciplineMapper.toPersistence(original),
+      ...(DisciplineMapper.toPersistence(original) as ReturnType<
+        typeof record
+      >),
     });
 
     expect(roundTrip.typeKey.toString()).toBe('running');

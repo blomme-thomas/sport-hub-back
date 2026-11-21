@@ -7,6 +7,8 @@ function clientReturning(displayName: string | null): IGarminConnectClient {
     fetchDisplayName: vi.fn().mockResolvedValue(displayName),
     fetchHeartRateZones: vi.fn(),
     fetchRecoveryDays: vi.fn(),
+    fetchActivityFile: vi.fn(),
+    fetchDailyCalories: vi.fn(),
   };
 }
 
