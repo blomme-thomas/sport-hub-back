@@ -1,7 +1,6 @@
 import { SESSION_ACTIVITY_METRICS } from './domain/ports/outbound/session-activity-metrics.port.js';
 import { GarminSessionActivityMetricsAdapter } from './infrastructure/adapters/garmin-session-activity-metrics.adapter.js';
 import { Module } from '@nestjs/common';
-import { DisciplinesModule } from '../disciplines/index.js';
 import { GarminSyncModule } from '../garmin-sync/index.js';
 import { CreateSessionUseCase } from './application/use-cases/create-session.use-case.js';
 import { DeleteSessionUseCase } from './application/use-cases/delete-session.use-case.js';
@@ -24,16 +23,14 @@ import { ReplaceSessionModulesUseCase } from './application/use-cases/replace-se
 import { UnlinkSessionActivityUseCase } from './application/use-cases/unlink-session-activity.use-case.js';
 import { UpdateSessionUseCase } from './application/use-cases/update-session.use-case.js';
 import { ACTIVITY_CATALOG } from './domain/ports/outbound/activity-catalog.port.js';
-import { DISCIPLINE_CATALOG } from './domain/ports/outbound/discipline-catalog.port.js';
 import { SEANCES_CLOCK } from './domain/ports/outbound/seances-clock.port.js';
 import { SESSION_REPOSITORY } from './domain/ports/outbound/session.repository.port.js';
 import { GarminActivityCatalogAdapter } from './infrastructure/adapters/garmin-activity-catalog.adapter.js';
-import { DisciplinesCatalogAdapter } from './infrastructure/adapters/disciplines-catalog.adapter.js';
 import { PrismaSessionRepositoryAdapter } from './infrastructure/persistence/prisma/session.repository.adapter.js';
 import { SessionsController } from './presentation/http/controllers/sessions.controller.js';
 
 @Module({
-  imports: [DisciplinesModule, GarminSyncModule],
+  imports: [GarminSyncModule],
   controllers: [SessionsController],
   providers: [
     CreateSessionUseCase,
@@ -61,7 +58,6 @@ import { SessionsController } from './presentation/http/controllers/sessions.con
       provide: SESSION_IMPORT_REPOSITORY,
       useClass: PrismaSessionImportRepositoryAdapter,
     },
-    { provide: DISCIPLINE_CATALOG, useClass: DisciplinesCatalogAdapter },
     { provide: ACTIVITY_CATALOG, useClass: GarminActivityCatalogAdapter },
     { provide: SEANCES_CLOCK, useValue: () => new Date() },
     {

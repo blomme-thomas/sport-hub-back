@@ -170,3 +170,12 @@ Hypothèses :
 - `realise.perceivedEffort` (export de semaine et de mois, issue #103) reprend l'effort perçu Garmin de l'activité liée (voir [garmin-sync](garmin-sync.md#effort-perçu-garmin-issue-103)). Il est distinct de `plan.modules[].perceivedEffort`, l'effort prévu au plan, qui reste le seul niveau par module.
 
 - `realise.feeling` (exports de semaine et de mois, issue #106) reprend le ressenti Garmin brut de l'activité liée (voir [garmin-sync](garmin-sync.md#ressenti-garmin-issue-106)).
+
+## Discipline d'une séance : famille (refonte)
+
+- Une séance porte la **famille** de sa discipline : `running` (course), `cycling` (vélo) ou `swimming` (natation). La colonne `discipline_type_key` contient cette famille.
+- Seules ces trois valeurs sont acceptées à la création, à la modification et à l'import (`SESSION_DISCIPLINE_UNKNOWN` sinon). La règle est dans l'entité `Session`.
+- `GET /api/sessions/disciplines` renvoie les choix proposés : `{ items: [{ typeKey, label }] }` avec Course, Vélo et Natation.
+- Le rapprochement séance ↔ activité compare la famille de la séance à `sportFamilyOf(type Garmin)` de l'activité : `road_biking`, `indoor_cycling` ou `virtual_ride` comptent comme vélo.
+- Migration `20261128120000_session_discipline_family` : convertit les séances existantes de leur type Garmin vers la famille. Un type hors des trois familles (ex. `hiking`) n'est pas converti et doit être corrigé à la main.
+- Le référentiel des disciplines (`/api/disciplines`) n'est plus consulté par le contexte séances.

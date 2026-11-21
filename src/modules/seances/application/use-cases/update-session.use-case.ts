@@ -1,10 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UnknownSessionDisciplineError } from '../../domain/errors/unknown-session-discipline.error.js';
 import {
-  DISCIPLINE_CATALOG,
-  type IDisciplineCatalog,
-} from '../../domain/ports/outbound/discipline-catalog.port.js';
-import {
   SEANCES_CLOCK,
   type SeancesClock,
 } from '../../domain/ports/outbound/seances-clock.port.js';
@@ -20,8 +16,6 @@ export class UpdateSessionUseCase {
   constructor(
     @Inject(SESSION_REPOSITORY)
     private readonly sessions: ISessionRepository,
-    @Inject(DISCIPLINE_CATALOG)
-    private readonly disciplines: IDisciplineCatalog,
     @Inject(SEANCES_CLOCK)
     private readonly clock: SeancesClock,
   ) {}
@@ -53,12 +47,6 @@ export class UpdateSessionUseCase {
       },
       this.clock(),
     );
-    if (
-      command.disciplineTypeKey !== undefined &&
-      !(await this.disciplines.exists(updated.disciplineTypeKey))
-    ) {
-      throw new UnknownSessionDisciplineError();
-    }
     await this.sessions.save(updated);
     return SessionDto.fromDomain(updated);
   }

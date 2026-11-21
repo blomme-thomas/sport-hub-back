@@ -1,3 +1,4 @@
+import { sportFamilyOf } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Session } from '../../domain/entities/session.entity.js';
 import {
@@ -58,7 +59,10 @@ export class ReconcileSessionsUseCase {
 
     const pairs = reconcileSessionsWithActivities(
       sessions.map(toReconciliationSession),
-      activities,
+      activities.map((activity) => ({
+        ...activity,
+        type: sportFamilyOf(activity.type),
+      })),
       linkedIds,
     );
     const now = this.clock();

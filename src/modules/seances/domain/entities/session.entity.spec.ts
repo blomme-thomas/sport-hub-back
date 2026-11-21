@@ -1,3 +1,4 @@
+import { UnknownSessionDisciplineError } from '../errors/unknown-session-discipline.error.js';
 import { InvalidSessionError } from '../errors/invalid-session.error.js';
 import { SessionAlreadyCompletedError } from '../errors/session-already-completed.error.js';
 import { SessionId } from '../value-objects/session-id.vo.js';
@@ -109,14 +110,27 @@ describe('Session', () => {
       ).toBe('swimming');
     });
 
-    it(`accepte une clé de discipline de ${DISCIPLINE_MAX_LENGTH} caractères`, () => {
-      const key = 'a'.repeat(DISCIPLINE_MAX_LENGTH);
+    it.each(['running', 'cycling', 'swimming'])(
+      'accepte la famille de discipline %s',
+      (family) => {
+        expect(
+          Session.create(createProps({ disciplineTypeKey: family }))
+            .disciplineTypeKey,
+        ).toBe(family);
+      },
+    );
 
-      expect(
-        Session.create(createProps({ disciplineTypeKey: key }))
-          .disciplineTypeKey,
-      ).toBe(key);
-    });
+    it.each(['road_biking', 'hiking', 'curling'])(
+      'refuse le type %s, qui n’est pas une famille, avec SESSION_DISCIPLINE_UNKNOWN',
+      (typeKey) => {
+        const error = captureError(() =>
+          Session.create(createProps({ disciplineTypeKey: typeKey })),
+        );
+
+        expect(error).toBeInstanceOf(UnknownSessionDisciplineError);
+        expect(error).toMatchObject({ code: 'SESSION_DISCIPLINE_UNKNOWN' });
+      },
+    );
 
     it.each([
       ['chaîne vide', ''],

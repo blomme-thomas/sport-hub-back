@@ -103,6 +103,30 @@ describe('ReconcileSessionsUseCase', () => {
     );
   });
 
+  it('rapproche une séance « vélo » d’une activité de n’importe quel type de vélo', async () => {
+    const repository = new FakeRepository();
+    const planned = Session.create({
+      date: new Date('2026-11-12T00:00:00.000Z'),
+      disciplineTypeKey: 'cycling',
+      durationMinutes: 90,
+    });
+    repository.sessions.set(planned.id.toString(), planned);
+    const useCase = new ReconcileSessionsUseCase(
+      repository,
+      catalog([{ id: 'a1', type: 'road_biking', localDate: '2026-11-12' }]),
+      () => NOW,
+    );
+
+    const pairs = await useCase.execute({
+      from: '2026-11-01',
+      to: '2026-11-30',
+    });
+
+    expect(pairs).toEqual([
+      { sessionId: planned.id.toString(), activityId: 'a1' },
+    ]);
+  });
+
   it('refuse une période inversée', async () => {
     const useCase = new ReconcileSessionsUseCase(
       new FakeRepository(),

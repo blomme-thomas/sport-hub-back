@@ -4,10 +4,6 @@ import { InvalidSessionError } from '../../domain/errors/invalid-session.error.j
 import { SessionAlreadyCompletedError } from '../../domain/errors/session-already-completed.error.js';
 import { SessionNotFoundError } from '../../domain/errors/session-not-found.error.js';
 import { UnknownSessionDisciplineError } from '../../domain/errors/unknown-session-discipline.error.js';
-import {
-  DISCIPLINE_CATALOG,
-  type IDisciplineCatalog,
-} from '../../domain/ports/outbound/discipline-catalog.port.js';
 import { SEANCES_CLOCK } from '../../domain/ports/outbound/seances-clock.port.js';
 import {
   SESSION_REPOSITORY,
@@ -55,22 +51,6 @@ class FakeSessionRepository implements ISessionRepository {
   }
 }
 
-class FakeDisciplineCatalog implements IDisciplineCatalog {
-  known: string[];
-
-  constructor(known: string[]) {
-    this.known = known;
-  }
-
-  listTypeKeys(): Promise<string[]> {
-    return Promise.resolve(this.known);
-  }
-
-  exists(typeKey: string): Promise<boolean> {
-    return Promise.resolve(this.known.includes(typeKey));
-  }
-}
-
 function captureError(action: () => Promise<unknown>): Promise<unknown> {
   return action().then(
     () => {
@@ -83,7 +63,6 @@ function captureError(action: () => Promise<unknown>): Promise<unknown> {
 describe('UpdateSessionUseCase', () => {
   let useCase: UpdateSessionUseCase;
   let repository: FakeSessionRepository;
-  let catalog: FakeDisciplineCatalog;
   let session: Session;
   let id: string;
 
@@ -113,12 +92,10 @@ describe('UpdateSessionUseCase', () => {
 
   beforeEach(async () => {
     repository = new FakeSessionRepository();
-    catalog = new FakeDisciplineCatalog(['swimming', 'running']);
     const moduleRef = await Test.createTestingModule({
       providers: [
         UpdateSessionUseCase,
         { provide: SESSION_REPOSITORY, useValue: repository },
-        { provide: DISCIPLINE_CATALOG, useValue: catalog },
         { provide: SEANCES_CLOCK, useValue: () => NOW },
       ],
     }).compile();
@@ -196,9 +173,7 @@ describe('UpdateSessionUseCase', () => {
       ]);
     });
 
-    it('ne vérifie pas la discipline quand elle n’est pas fournie, même si le référentiel ne la connaît plus', async () => {
-      catalog.known = [];
-
+    it('ne revalide pas la discipline quand elle n’est pas modifiée', async () => {
       const result = await useCase.execute({ id, durationMinutes: 50 });
 
       expect(result).toMatchObject({
@@ -207,7 +182,7 @@ describe('UpdateSessionUseCase', () => {
       });
     });
 
-    it('accepte une discipline du référentiel', async () => {
+    it('accepte une famille de discipline', async () => {
       const result = await useCase.execute({
         id,
         disciplineTypeKey: 'running',
@@ -229,7 +204,7 @@ describe('UpdateSessionUseCase', () => {
       expect(result).toMatchObject({ modifiedManually: false, changeLog: [] });
     });
 
-    it('refuse une discipline absente du référentiel avec SESSION_DISCIPLINE_UNKNOWN et ne persiste rien', async () => {
+    it('refuse une discipline qui n’est pas une famille avec SESSION_DISCIPLINE_UNKNOWN et ne persiste rien', async () => {
       const error = await captureError(() =>
         useCase.execute({ id, disciplineTypeKey: 'curling' }),
       );
