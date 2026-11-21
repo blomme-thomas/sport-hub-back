@@ -125,6 +125,7 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 - `GET /api/sessions/import/template` renvoie un modèle de fichier au format `plan-seances`, `schemaVersion` 1, avec `importId` (identifiant unique du fichier, à générer) et une séance d'exemple.
 - Chaque champ à valeurs fermées porte ses valeurs possibles à sa place : `type` des modules (`echauffement | educatifs | series | retour_au_calme | autre`), `perceivedEffort` (`1` à `10`), `disciplineTypeKey` (clés du référentiel au moment de la requête, ou `<clé du référentiel>` si le référentiel est vide), clés de `targetZones` (`heartRate | pace | power`). Les champs libres ne portent que des exemples.
 - Hypothèse : la validation du fichier et l'import ne sont pas encore livrés (issue #98) ; le modèle ne fait qu'annoncer le format.
+- Champs optionnels d'une séance du fichier : `title` (texte, 200 caractères au plus), `targetDistanceMeters` (nombre, en mètres), `targetHrZonePercentages` (liste de 5 nombres Z1 à Z5, totalisant 100). Ils sont validés par le domaine comme à la création manuelle.
 
 ## Export d'une semaine (issue #97)
 
