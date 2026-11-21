@@ -1,4 +1,8 @@
 import {
+  SESSION_DISCIPLINE_FAMILIES,
+  SESSION_DISCIPLINE_LABELS,
+} from '../../../../../shared/domain/value-objects/sport-family.vo.js';
+import {
   Body,
   Controller,
   Delete,
@@ -181,6 +185,25 @@ export class SessionsController {
       SessionHttpMapper.toListQuery(request),
     );
     return SessionHttpMapper.toOccurrenceListResponse(occurrences);
+  }
+
+  @Get('disciplines')
+  @ApiOperation({
+    summary:
+      'Liste les disciplines proposées pour une séance : course, vélo et natation. Les types Garmin de chaque famille (road_biking, lap_swimming…) sont regroupés sous ces familles.',
+  })
+  @ApiOkResponse({
+    description: 'Familles de discipline : { items: [{ typeKey, label }] }',
+  })
+  listSessionDisciplines(): {
+    items: { typeKey: string; label: string }[];
+  } {
+    return {
+      items: SESSION_DISCIPLINE_FAMILIES.map((family) => ({
+        typeKey: family,
+        label: SESSION_DISCIPLINE_LABELS[family],
+      })),
+    };
   }
 
   @Get(':id')

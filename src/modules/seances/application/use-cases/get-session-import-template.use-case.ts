@@ -1,9 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { SESSION_DISCIPLINE_FAMILIES } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import { MODULE_TYPES } from '../../domain/value-objects/module-type.vo.js';
-import {
-  DISCIPLINE_CATALOG,
-  type IDisciplineCatalog,
-} from '../../domain/ports/outbound/discipline-catalog.port.js';
 import type { SessionImportTemplateDto } from '../dtos/session-import-template.dto.js';
 import {
   SESSION_IMPORT_KIND,
@@ -16,16 +13,10 @@ const PERCEIVED_EFFORT_VALUES = Array.from({ length: 10 }, (_, index) =>
 
 @Injectable()
 export class GetSessionImportTemplateUseCase {
-  constructor(
-    @Inject(DISCIPLINE_CATALOG)
-    private readonly disciplines: IDisciplineCatalog,
-  ) {}
-
   /**
    * Renvoie le modèle d'un fichier d'import de séances : chaque champ à valeurs fermées porte ses valeurs possibles, avec les clés de discipline du référentiel courant.
    */
   async execute(): Promise<SessionImportTemplateDto> {
-    const typeKeys = await this.disciplines.listTypeKeys();
     return {
       kind: SESSION_IMPORT_KIND,
       schemaVersion: SESSION_IMPORT_SCHEMA_VERSION,
@@ -33,8 +24,7 @@ export class GetSessionImportTemplateUseCase {
       seances: [
         {
           date: '2026-11-16',
-          disciplineTypeKey:
-            typeKeys.length > 0 ? typeKeys.join(' | ') : '<clé du référentiel>',
+          disciplineTypeKey: SESSION_DISCIPLINE_FAMILIES.join(' | '),
           durationMinutes: 60,
           startTime: '18:00',
           title: 'Fond en aisance',

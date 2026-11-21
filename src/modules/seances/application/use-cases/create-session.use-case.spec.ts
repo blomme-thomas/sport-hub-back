@@ -4,10 +4,6 @@ import { InvalidSessionError } from '../../domain/errors/invalid-session.error.j
 import { InvalidSessionModuleError } from '../../domain/errors/invalid-session-module.error.js';
 import { UnknownSessionDisciplineError } from '../../domain/errors/unknown-session-discipline.error.js';
 import {
-  DISCIPLINE_CATALOG,
-  type IDisciplineCatalog,
-} from '../../domain/ports/outbound/discipline-catalog.port.js';
-import {
   SESSION_REPOSITORY,
   type ISessionRepository,
 } from '../../domain/ports/outbound/session.repository.port.js';
@@ -94,18 +90,6 @@ class FakeSessionRepository implements ISessionRepository {
   }
 }
 
-class FakeDisciplineCatalog implements IDisciplineCatalog {
-  constructor(private readonly known: string[]) {}
-
-  listTypeKeys(): Promise<string[]> {
-    return Promise.resolve(this.known);
-  }
-
-  exists(typeKey: string): Promise<boolean> {
-    return Promise.resolve(this.known.includes(typeKey));
-  }
-}
-
 function captureError(action: () => Promise<unknown>): Promise<unknown> {
   return action().then(
     () => {
@@ -125,10 +109,6 @@ describe('CreateSessionUseCase', () => {
       providers: [
         CreateSessionUseCase,
         { provide: SESSION_REPOSITORY, useValue: repository },
-        {
-          provide: DISCIPLINE_CATALOG,
-          useValue: new FakeDisciplineCatalog(['swimming']),
-        },
       ],
     }).compile();
     useCase = moduleRef.get(CreateSessionUseCase);
@@ -219,7 +199,7 @@ describe('CreateSessionUseCase', () => {
   });
 
   describe('refus sans persistance', () => {
-    it('refuse une discipline absente du référentiel avec SESSION_DISCIPLINE_UNKNOWN et ne persiste rien', async () => {
+    it('refuse une discipline qui n’est pas une famille (course, vélo, natation) avec SESSION_DISCIPLINE_UNKNOWN et ne persiste rien', async () => {
       const error = await captureError(() =>
         useCase.execute({ ...NATATION, disciplineTypeKey: 'curling' }),
       );

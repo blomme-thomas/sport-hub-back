@@ -1,7 +1,6 @@
 import { Session } from '../../domain/entities/session.entity.js';
 import { SessionImportAlreadyDoneError } from '../../domain/errors/session-import-already-done.error.js';
 import { SessionImportInvalidError } from '../../domain/errors/session-import-invalid.error.js';
-import type { IDisciplineCatalog } from '../../domain/ports/outbound/discipline-catalog.port.js';
 import type {
   ISessionImportRepository,
   SessionImportRecord,
@@ -22,18 +21,6 @@ class FakeImportRepository implements ISessionImportRepository {
   saveAll(record: SessionImportRecord, sessions: Session[]): Promise<void> {
     this.saved = { record, sessions };
     return Promise.resolve();
-  }
-}
-
-class FakeDisciplineCatalog implements IDisciplineCatalog {
-  constructor(private readonly keys: string[]) {}
-
-  exists(typeKey: string): Promise<boolean> {
-    return Promise.resolve(this.keys.includes(typeKey));
-  }
-
-  listTypeKeys(): Promise<string[]> {
-    return Promise.resolve(this.keys);
   }
 }
 
@@ -69,13 +56,9 @@ function plan(seances: unknown[] = [seance()]): Record<string, unknown> {
   };
 }
 
-function setup(keys = ['swimming', 'running']) {
+function setup() {
   const imports = new FakeImportRepository();
-  const useCase = new ImportSessionsUseCase(
-    imports,
-    new FakeDisciplineCatalog(keys),
-    () => IMPORTED_AT,
-  );
+  const useCase = new ImportSessionsUseCase(imports, () => IMPORTED_AT);
   return { imports, useCase };
 }
 
@@ -130,8 +113,8 @@ describe('ImportSessionsUseCase', () => {
     expect(imports.saved).toBeNull();
   });
 
-  it('signale la discipline absente du référentiel au chemin de la séance', async () => {
-    const { useCase } = setup(['swimming']);
+  it('signale une discipline qui n’est pas une famille, au chemin de la séance', async () => {
+    const { useCase } = setup();
 
     const issues = await invalidIssues(
       useCase,

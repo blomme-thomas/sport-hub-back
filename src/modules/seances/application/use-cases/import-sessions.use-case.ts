@@ -1,3 +1,4 @@
+import { isSessionDisciplineFamily } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { DomainError } from '../../../../shared/domain/domain-error.js';
 import { Session } from '../../domain/entities/session.entity.js';
@@ -6,10 +7,6 @@ import {
   SessionImportInvalidError,
   type SessionImportIssue,
 } from '../../domain/errors/session-import-invalid.error.js';
-import {
-  DISCIPLINE_CATALOG,
-  type IDisciplineCatalog,
-} from '../../domain/ports/outbound/discipline-catalog.port.js';
 import {
   SEANCES_CLOCK,
   type SeancesClock,
@@ -197,8 +194,6 @@ export class ImportSessionsUseCase {
   constructor(
     @Inject(SESSION_IMPORT_REPOSITORY)
     private readonly imports: ISessionImportRepository,
-    @Inject(DISCIPLINE_CATALOG)
-    private readonly disciplines: IDisciplineCatalog,
     @Inject(SEANCES_CLOCK)
     private readonly clock: SeancesClock,
   ) {}
@@ -277,15 +272,9 @@ export class ImportSessionsUseCase {
     rawSeances: unknown[],
     issues: ImportIssues,
   ): Promise<Session[]> {
-    const knownKeys = new Map<string, boolean>();
     const sessions: Session[] = [];
     for (const [index, raw] of rawSeances.entries()) {
-      const session = await this.buildSession(
-        raw,
-        `seances[${index}]`,
-        knownKeys,
-        issues,
-      );
+      const session = await this.buildSession(raw, `seances[${index}]`, issues);
       if (session !== null) {
         sessions.push(session);
       }
@@ -296,7 +285,6 @@ export class ImportSessionsUseCase {
   private async buildSession(
     raw: unknown,
     path: string,
-    knownKeys: Map<string, boolean>,
     issues: ImportIssues,
   ): Promise<Session | null> {
     if (!isRecord(raw)) {
@@ -375,11 +363,11 @@ export class ImportSessionsUseCase {
     ) {
       return null;
     }
-    if (!(await this.isKnownDiscipline(disciplineTypeKey, knownKeys))) {
+    if (!isSessionDisciplineFamily(disciplineTypeKey)) {
       issues.add(
         `${path}.disciplineTypeKey`,
         'SESSION_DISCIPLINE_UNKNOWN',
-        'discipline absente du référentiel',
+        'discipline inconnue : course (running), vélo (cycling) ou natation (swimming)',
       );
       return null;
     }
@@ -459,18 +447,5 @@ export class ImportSessionsUseCase {
     } catch (error) {
       return domainIssue(error, path, issues);
     }
-  }
-
-  private async isKnownDiscipline(
-    typeKey: string,
-    knownKeys: Map<string, boolean>,
-  ): Promise<boolean> {
-    const cached = knownKeys.get(typeKey);
-    if (cached !== undefined) {
-      return cached;
-    }
-    const known = await this.disciplines.exists(typeKey);
-    knownKeys.set(typeKey, known);
-    return known;
   }
 }

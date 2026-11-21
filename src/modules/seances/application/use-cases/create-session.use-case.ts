@@ -2,10 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Session } from '../../domain/entities/session.entity.js';
 import { UnknownSessionDisciplineError } from '../../domain/errors/unknown-session-discipline.error.js';
 import {
-  DISCIPLINE_CATALOG,
-  type IDisciplineCatalog,
-} from '../../domain/ports/outbound/discipline-catalog.port.js';
-import {
   SESSION_REPOSITORY,
   type ISessionRepository,
 } from '../../domain/ports/outbound/session.repository.port.js';
@@ -17,8 +13,6 @@ export class CreateSessionUseCase {
   constructor(
     @Inject(SESSION_REPOSITORY)
     private readonly sessions: ISessionRepository,
-    @Inject(DISCIPLINE_CATALOG)
-    private readonly disciplines: IDisciplineCatalog,
   ) {}
 
   /**
@@ -41,9 +35,6 @@ export class CreateSessionUseCase {
       title: command.title,
       modules: buildSessionModules(command.modules ?? []),
     });
-    if (!(await this.disciplines.exists(session.disciplineTypeKey))) {
-      throw new UnknownSessionDisciplineError();
-    }
     await this.sessions.save(session);
     return SessionDto.fromDomain(session);
   }

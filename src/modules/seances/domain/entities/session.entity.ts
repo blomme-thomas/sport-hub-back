@@ -1,4 +1,6 @@
 import { InvalidSessionError } from '../errors/invalid-session.error.js';
+import { UnknownSessionDisciplineError } from '../errors/unknown-session-discipline.error.js';
+import { isSessionDisciplineFamily } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import { SessionAlreadyCompletedError } from '../errors/session-already-completed.error.js';
 import { SessionId } from '../value-objects/session-id.vo.js';
 import { SessionModule } from '../value-objects/session-module.vo.js';
@@ -362,6 +364,9 @@ function validateFields(input: SessionFieldsInput): SessionFields {
     throw new InvalidSessionError(
       `la discipline dépasse ${DISCIPLINE_MAX_LENGTH} caractères`,
     );
+  }
+  if (!isSessionDisciplineFamily(disciplineTypeKey)) {
+    throw new UnknownSessionDisciplineError();
   }
   if (!isDuration(input.durationMinutes)) {
     throw new InvalidSessionError(
