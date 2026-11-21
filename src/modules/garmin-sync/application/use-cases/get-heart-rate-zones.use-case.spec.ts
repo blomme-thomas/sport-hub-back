@@ -9,6 +9,8 @@ function clientReturning(
     fetchDisplayName: vi.fn(),
     fetchHeartRateZones: vi.fn().mockResolvedValue(config),
     fetchRecoveryDays: vi.fn(),
+    fetchActivityFile: vi.fn(),
+    fetchDailyCalories: vi.fn(),
   };
 }
 

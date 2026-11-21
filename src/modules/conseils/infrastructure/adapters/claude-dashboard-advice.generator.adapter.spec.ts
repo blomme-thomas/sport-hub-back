@@ -5,7 +5,13 @@ import { DashboardAdviceUnavailableError } from '../../domain/errors/dashboard-a
 import type { DashboardAdviceData } from '../../domain/ports/outbound/dashboard-advice.ports.js';
 import { ClaudeDashboardAdviceGeneratorAdapter } from './claude-dashboard-advice.generator.adapter.js';
 
-const CONFIG = { model: 'claude-sonnet-5-5', maxTokens: 300 };
+const CONFIG = {
+  apiKey: undefined,
+  model: 'claude-sonnet-5-5',
+  maxTokens: 300,
+  timeoutMs: 10_000,
+  maxRetries: 0,
+};
 
 const INPUT = {
   week: '2026-W45',

@@ -6,10 +6,11 @@ import type {
 import { parseExportMonth } from '../domain/value-objects/export-month.vo.js';
 import { buildMonthExport, type MonthWeek } from './month-export.builder.js';
 
-const NOVEMBER = parseExportMonth('2026-11');
-if (NOVEMBER === null) {
+const NOVEMBER_RANGE = parseExportMonth('2026-11');
+if (NOVEMBER_RANGE === null) {
   throw new Error('mois de test invalide');
 }
+const NOVEMBER = NOVEMBER_RANGE;
 
 // Semaines ISO qui touchent novembre 2026 : W44 (26 oct - 1 nov) à W49 (30 nov - 6 déc).
 const WEEKS: MonthWeek[] = [

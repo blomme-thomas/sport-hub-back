@@ -19,6 +19,8 @@ const DETAIL: ActivityDetailItem = {
   maxHeartRate: 172,
   hrTimeInZone: [600, 1200, 1500, 300, null],
   heartRateSeries: null,
+  perceivedEffort: null,
+  feeling: null,
 };
 
 function readModel(
@@ -28,6 +30,7 @@ function readModel(
     list: async () => ({ items: [], total: 0 }),
     findById: async () => null,
     findDetailById,
+    findFitDocument: async () => null,
   };
 }
 

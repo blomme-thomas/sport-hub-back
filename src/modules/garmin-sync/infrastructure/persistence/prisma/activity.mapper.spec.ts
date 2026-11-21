@@ -97,7 +97,7 @@ describe('ActivityMapper', () => {
 
     const roundTrip = ActivityMapper.toDomain({
       ...record(),
-      ...ActivityMapper.toPersistence(original),
+      ...(ActivityMapper.toPersistence(original) as ReturnType<typeof record>),
     });
 
     expect(roundTrip.hasSameContentAs(original)).toBe(true);

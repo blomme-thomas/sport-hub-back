@@ -15,6 +15,8 @@ describe('GetActivityUseCase', () => {
     const result = await new GetActivityUseCase({
       list: vi.fn(),
       findById,
+      findDetailById: vi.fn(),
+      findFitDocument: vi.fn(),
     }).execute('a1');
 
     expect(findById).toHaveBeenCalledWith('a1');
@@ -25,7 +27,12 @@ describe('GetActivityUseCase', () => {
     const findById = vi.fn().mockResolvedValue(null);
 
     await expect(
-      new GetActivityUseCase({ list: vi.fn(), findById }).execute('inconnue'),
+      new GetActivityUseCase({
+        list: vi.fn(),
+        findById,
+        findDetailById: vi.fn(),
+        findFitDocument: vi.fn(),
+      }).execute('inconnue'),
     ).resolves.toBeNull();
   });
 });

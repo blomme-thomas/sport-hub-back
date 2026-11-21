@@ -61,6 +61,10 @@ class FakeSessionRepository implements ISessionRepository {
     );
   }
 
+  findOccurrenceCandidates(): Promise<Session[]> {
+    return Promise.resolve([...this.sessions.values()]);
+  }
+
   save(session: Session): Promise<void> {
     this.saves += 1;
     this.sessions.set(session.id.toString(), session);

@@ -79,6 +79,10 @@ class FakeSessionRepository implements ISessionRepository {
     );
   }
 
+  findOccurrenceCandidates(): Promise<Session[]> {
+    return Promise.resolve([...this.sessions.values()]);
+  }
+
   save(session: Session): Promise<void> {
     this.sessions.set(session.id.toString(), session);
     return Promise.resolve();
@@ -92,6 +96,10 @@ class FakeSessionRepository implements ISessionRepository {
 
 class FakeDisciplineCatalog implements IDisciplineCatalog {
   constructor(private readonly known: string[]) {}
+
+  listTypeKeys(): Promise<string[]> {
+    return Promise.resolve(this.known);
+  }
 
   exists(typeKey: string): Promise<boolean> {
     return Promise.resolve(this.known.includes(typeKey));
