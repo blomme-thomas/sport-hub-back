@@ -38,7 +38,10 @@ const SEANCE_FIELDS = [
   'disciplineTypeKey',
   'durationMinutes',
   'startTime',
+  'title',
   'description',
+  'targetDistanceMeters',
+  'targetHrZonePercentages',
   'modules',
 ];
 const MODULE_FIELDS = [
@@ -154,6 +157,31 @@ function readNumber(
     return null;
   }
   return value;
+}
+
+/** Répartition cible Z1 à Z5 : liste de 5 nombres, absente ou `null` si non renseignée. Le total (100) est contrôlé par le domaine. */
+function readZonePercentages(
+  fields: Fields,
+  path: string,
+  issues: ImportIssues,
+): number[] | null {
+  const value = fields['targetHrZonePercentages'];
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (
+    !Array.isArray(value) ||
+    value.length !== 5 ||
+    !value.every((item) => typeof item === 'number')
+  ) {
+    issues.add(
+      `${path}.targetHrZonePercentages`,
+      'SESSION_IMPORT_FIELD_TYPE',
+      'doit être une liste de 5 nombres (Z1 à Z5)',
+    );
+    return null;
+  }
+  return value as number[];
 }
 
 function domainIssue(error: unknown, path: string, issues: ImportIssues): null {
@@ -305,7 +333,16 @@ export class ImportSessionsUseCase {
       false,
     );
     const startTime = readText(raw, 'startTime', path, issues, true);
+    const title = readText(raw, 'title', path, issues, true);
     const description = readText(raw, 'description', path, issues, true);
+    const targetDistanceMeters = readNumber(
+      raw,
+      'targetDistanceMeters',
+      path,
+      issues,
+      true,
+    );
+    const targetHrZonePercentages = readZonePercentages(raw, path, issues);
 
     const rawModules = raw.modules;
     if (!Array.isArray(rawModules) || rawModules.length === 0) {
@@ -353,7 +390,10 @@ export class ImportSessionsUseCase {
         disciplineTypeKey,
         durationMinutes,
         startTime,
+        title,
         description,
+        targetDistanceMeters,
+        targetHrZonePercentages,
         modules,
       });
     } catch (error) {

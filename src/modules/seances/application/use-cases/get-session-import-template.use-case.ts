@@ -37,7 +37,10 @@ export class GetSessionImportTemplateUseCase {
             typeKeys.length > 0 ? typeKeys.join(' | ') : '<clé du référentiel>',
           durationMinutes: 60,
           startTime: '18:00',
+          title: 'Fond en aisance',
           description: 'Séance de fond',
+          targetDistanceMeters: 10000,
+          targetHrZonePercentages: [10, 20, 40, 20, 10],
           modules: [
             {
               type: MODULE_TYPES.join(' | '),

@@ -11,7 +11,10 @@ export type SessionImportTemplateSessionDto = {
   disciplineTypeKey: string;
   durationMinutes: number;
   startTime: string;
+  title?: string;
   description: string;
+  targetDistanceMeters?: number;
+  targetHrZonePercentages?: number[];
   modules: SessionImportTemplateModuleDto[];
 };
 

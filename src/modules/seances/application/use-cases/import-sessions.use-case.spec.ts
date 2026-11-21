@@ -256,4 +256,50 @@ describe('ImportSessionsUseCase', () => {
     );
     expect(imports.saved).toBeNull();
   });
+  it('reprend le titre, la distance et la répartition par zone de la séance', async () => {
+    const { imports, useCase } = setup();
+
+    await useCase.execute(
+      plan([
+        seance({
+          title: 'Fond en aisance',
+          targetDistanceMeters: 10000,
+          targetHrZonePercentages: [10, 20, 40, 20, 10],
+        }),
+      ]),
+    );
+
+    expect(imports.saved?.sessions[0]).toMatchObject({
+      title: 'Fond en aisance',
+      targetDistanceMeters: 10000,
+      targetHrZonePercentages: [10, 20, 40, 20, 10],
+    });
+  });
+
+  it('signale une répartition par zone qui ne totalise pas 100 au chemin de la séance', async () => {
+    const { imports, useCase } = setup();
+
+    await expect(
+      useCase.execute(
+        plan([seance({ targetHrZonePercentages: [10, 20, 40, 20, 20] })]),
+      ),
+    ).rejects.toBeInstanceOf(SessionImportInvalidError);
+    expect(imports.saved).toBeNull();
+  });
+
+  it('refuse une répartition par zone qui n’a pas 5 valeurs', async () => {
+    const { useCase } = setup();
+
+    const issues = await invalidIssues(
+      useCase,
+      plan([seance({ targetHrZonePercentages: [50, 50] })]),
+    );
+
+    expect(issues).toEqual([
+      {
+        field: 'seances[0].targetHrZonePercentages',
+        code: 'SESSION_IMPORT_FIELD_TYPE',
+      },
+    ]);
+  });
 });
