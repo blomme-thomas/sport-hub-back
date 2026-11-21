@@ -4760,6 +4760,21 @@
         ]
       }
     },
+    "/api/sessions/disciplines": {
+      "get": {
+        "operationId": "sessionsListSessionDisciplines",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Familles de discipline : { items: [{ typeKey, label }] }"
+          }
+        },
+        "summary": "Liste les disciplines proposées pour une séance : course, vélo et natation. Les types Garmin de chaque famille (road_biking, lap_swimming…) sont regroupés sous ces familles.",
+        "tags": [
+          "seances"
+        ]
+      }
+    },
     "/api/sessions/import": {
       "post": {
         "operationId": "sessionsImportPlan",
