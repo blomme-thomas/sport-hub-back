@@ -11,6 +11,9 @@ export class SessionOccurrenceResponseDto {
   })
   sessionId!: string;
 
+  @ApiProperty({ type: String, nullable: true, example: 'Seuil' })
+  title!: string | null;
+
   @ApiProperty({ type: String, format: 'date', example: '2026-11-23' })
   date!: string;
 

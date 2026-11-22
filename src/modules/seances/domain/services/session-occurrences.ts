@@ -10,6 +10,7 @@ export type OccurrenceStatus = SessionStatus | 'annulee';
 
 export interface SessionOccurrence {
   sessionId: string;
+  title: string | null;
   date: string;
   startTime: string | null;
   durationMinutes: number;
@@ -54,6 +55,7 @@ export function resolveOccurrence(
   const date = exception?.movedDate ?? occurrenceDate;
   return {
     sessionId: session.id.toString(),
+    title: session.title,
     date: formatDate(date),
     startTime: exception?.movedStartTime ?? session.startTime,
     durationMinutes: session.durationMinutes,

@@ -30,7 +30,7 @@ describe('Modèle d’import des séances (e2e)', () => {
     await app.close();
   });
 
-  it('renvoie le modèle avec les clés de discipline du référentiel', async () => {
+  it('renvoie le modèle avec les familles de discipline, quel que soit le référentiel', async () => {
     await prisma.discipline.create({
       data: {
         typeKey: 'swimming',
@@ -50,7 +50,7 @@ describe('Modèle d’import des séances (e2e)', () => {
       schemaVersion: 1,
       seances: [
         {
-          disciplineTypeKey: 'swimming',
+          disciplineTypeKey: 'running | cycling | swimming',
           modules: [
             {
               type: 'echauffement | educatifs | series | retour_au_calme | autre',
@@ -61,14 +61,14 @@ describe('Modèle d’import des séances (e2e)', () => {
     });
   });
 
-  it('renvoie un emplacement pour la clé de discipline quand le référentiel est vide', async () => {
+  it('renvoie les familles de discipline quand le référentiel est vide', async () => {
     const response = await request(app.getHttpServer()).get(
       '/api/sessions/import/template',
     );
 
     expect(response.status).toBe(200);
     expect(response.body.seances[0].disciplineTypeKey).toBe(
-      '<clé du référentiel>',
+      'running | cycling | swimming',
     );
   });
 });

@@ -1968,10 +1968,16 @@
             ],
             "example": "planifiee",
             "type": "string"
+          },
+          "title": {
+            "example": "Seuil",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
           "sessionId",
+          "title",
           "date",
           "startTime",
           "durationMinutes",

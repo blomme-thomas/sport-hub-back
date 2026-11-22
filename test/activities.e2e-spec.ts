@@ -11,6 +11,7 @@ const SUMMARY_KEYS = [
   'averageHeartRate',
   'distanceMeters',
   'durationSeconds',
+  'family',
   'garminActivityId',
   'id',
   'startedAt',

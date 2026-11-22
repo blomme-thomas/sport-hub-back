@@ -64,6 +64,7 @@ describe('Détail d’une activité (e2e)', () => {
       id,
       garminActivityId: '987',
       type: 'running',
+      family: 'running',
       startedAt: '2026-05-01T06:30:00.000Z',
       durationSeconds: 3600,
       distanceMeters: 10000,
