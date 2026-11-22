@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/core/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Activity {
+  id                  String   @id @default(uuid()) @db.Uuid
+  garminActivityId    String   @unique @map("garmin_activity_id")
+  type                String
+  startedAt           DateTime @map("started_at") @db.Timestamptz(3)
+  durationSeconds     Float    @map("duration_seconds")
+  distanceMeters      Float?   @map("distance_meters")
+  calories            Float?
+  elevationGainMeters Float?   @map("elevation_gain_meters")
+  averageHeartRate    Float?   @map("average_heart_rate")
+  hrTimeInZone1       Float?   @map("hr_time_in_zone_1")
+  hrTimeInZone2       Float?   @map("hr_time_in_zone_2")
+  hrTimeInZone3       Float?   @map("hr_time_in_zone_3")
+  hrTimeInZone4       Float?   @map("hr_time_in_zone_4")
+  hrTimeInZone5       Float?   @map("hr_time_in_zone_5")
+  rawPayload          Json     @map("raw_payload") @db.JsonB
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  heartRateSamples ActivityHeartRateSample[]
+  fitDocument      ActivityFitDocument?
+
+  @@index([startedAt])
+  @@index([type, startedAt])
+  @@map("activities")
+}
+
+model ActivityFitDocument {
+  activityId    String   @id @map("activity_id") @db.Uuid
+  formatVersion Int      @map("format_version")
+  document      Json     @db.JsonB
+  activity      Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@map("activity_fit_documents")
+}
+
+model ActivityHeartRateSample {
+  activityId String   @map("activity_id") @db.Uuid
+  occurredAt DateTime @map("occurred_at") @db.Timestamptz(3)
+  bpm        Int
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@id([activityId, occurredAt])
+  @@map("activity_heart_rate_samples")
+}
+
+model Slot {
+  id          String   @id @default(uuid()) @db.Uuid
+  type        String
+  date        DateTime @db.Date
+  startMinute Int      @map("start_minute")
+  endMinute   Int      @map("end_minute")
+  recurrence  String   @default("aucune")
+  timeZone    String   @map("time_zone")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([date])
+  @@index([recurrence, date])
+  @@map("slots")
+}
+
+model Goal {
+  id                String    @id @default(uuid()) @db.Uuid
+  title             String
+  type              String
+  targetDate        DateTime? @map("target_date") @db.Date
+  eventFormat       String?   @map("event_format")
+  targetTimeSeconds Int?      @map("target_time_seconds")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([targetDate])
+  @@map("goals")
+}
+
+model Discipline {
+  id          String   @id @default(uuid()) @db.Uuid
+  typeKey     String   @unique @map("type_key")
+  label       String
+  firstSeenAt DateTime @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt  DateTime @map("last_seen_at") @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("disciplines")
+}
+
+model Session {
+  id                   String                       @id @default(uuid()) @db.Uuid
+  date                 DateTime                     @db.Date
+  disciplineTypeKey    String                       @map("discipline_type_key")
+  durationMinutes      Int                          @map("duration_minutes")
+  startTime            String?                      @map("start_time") @db.VarChar(5)
+  recurrence           String                       @default("aucune") @db.VarChar(20)
+  targetDistanceMeters Float?                       @map("target_distance_meters")
+  targetHrZone1        Int?                         @map("target_hr_zone_1")
+  targetHrZone2        Int?                         @map("target_hr_zone_2")
+  targetHrZone3        Int?                         @map("target_hr_zone_3")
+  targetHrZone4        Int?                         @map("target_hr_zone_4")
+  targetHrZone5        Int?                         @map("target_hr_zone_5")
+  status               String                       @default("planifiee")
+  modifiedManually     Boolean                      @default(false) @map("modified_manually")
+  description          String?
+  title                String?
+  createdAt            DateTime                     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  modules              SessionModule[]
+  changeLogs           SessionChangeLog[]
+  activityLink         SessionActivityLink?
+  occurrenceExceptions SessionOccurrenceException[]
+
+  @@index([date])
+  @@index([status, date])
+  @@map("sessions")
+}
+
+model SessionModule {
+  id              String  @id @default(uuid()) @db.Uuid
+  sessionId       String  @map("session_id") @db.Uuid
+  position        Int
+  type            String
+  durationMinutes Int     @map("duration_minutes")
+  instruction     String
+  targetZones     Json?   @map("target_zones") @db.JsonB
+  perceivedEffort Int?    @map("perceived_effort")
+  session         Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, position])
+  @@map("session_modules")
+}
+
+model SessionChangeLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String   @map("session_id") @db.Uuid
+  changedAt     DateTime @map("changed_at") @db.Timestamptz(3)
+  field         String
+  previousValue String?  @map("previous_value")
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, changedAt])
+  @@map("session_change_logs")
+}
+
+model SessionActivityLink {
+  sessionId  String   @id @map("session_id") @db.Uuid
+  activityId String   @unique @map("activity_id") @db.Uuid
+  origin     String
+  linkedAt   DateTime @map("linked_at") @db.Timestamptz(3)
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_activity_links")
+}
+
+model SessionOccurrenceException {
+  id             String    @id @default(uuid()) @db.Uuid
+  sessionId      String    @map("session_id") @db.Uuid
+  occurrenceDate DateTime  @map("occurrence_date") @db.Date
+  movedDate      DateTime? @map("moved_date") @db.Date
+  movedStartTime String?   @map("moved_start_time") @db.VarChar(5)
+  cancelled      Boolean   @default(false)
+  session        Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, occurrenceDate])
+  @@map("session_occurrence_exceptions")
+}
+
+model ActivityComment {
+  activityId  String   @id @map("activity_id") @db.Uuid
+  text        String
+  source      String
+  model       String?
+  generatedAt DateTime @map("generated_at") @db.Timestamptz(3)
+
+  @@map("activity_comments")
+}
+
+model WeeklyReview {
+  week           String   @id @db.VarChar(8)
+  suivi          String
+  pointAttention String   @map("point_attention")
+  conseil        String
+  source         String
+  model          String?
+  generatedAt    DateTime @map("generated_at") @db.Timestamptz(3)
+
+  @@map("weekly_reviews")
+}
+
+model Pause {
+  id        String   @id @default(uuid()) @db.Uuid
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  reason    String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([startDate, endDate])
+  @@map("pauses")
+}
+
+model DashboardAdvice {
+  week          String   @id @db.VarChar(8)
+  text          String
+  source        String
+  model         String?
+  generatedAt   DateTime @map("generated_at") @db.Timestamptz(3)
+  sourceSummary Json     @map("source_summary") @db.JsonB
+
+  @@map("dashboard_advices")
+}
+
+model SessionImport {
+  id           String   @id @db.Uuid
+  importedAt   DateTime @map("imported_at") @db.Timestamptz(3)
+  sessionCount Int      @map("session_count")
+
+  @@map("session_imports")
+}
+
+/// Réglages de l'application, mono-utilisateur : une seule ligne (id = 1).
+model UserSettings {
+  id                  Int      @id @default(1)
+  weeklyTargetSeconds Int?     @map("weekly_target_seconds")
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("user_settings")
+}

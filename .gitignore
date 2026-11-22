@@ -3,6 +3,10 @@
 /node_modules
 /build
 /tmp
+*.tsbuildinfo
+
+# Client Prisma généré (npm run prisma:generate)
+/src/core/prisma/generated
 
 # Logs
 logs
@@ -22,3 +26,6 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+# Plans d'architecte écrits par ship-feature (.claude/plans/<n°-issue>.md)
+/.claude/plans/

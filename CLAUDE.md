@@ -1,0 +1,40 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Projet
+
+sport-hub-back est une API NestJS (architecture hexagonale / DDD) qui synchronise les données Garmin Connect de l'utilisateur, calcule ses statistiques d'entraînement et génère des séances par IA (Claude). Usage strictement local, un seul utilisateur.
+
+## État actuel
+
+**Six modules : `garmin-sync` (authentification auprès de l'API Garmin Personal, synchronisation manuelle des activités via `POST /api/garmin-sync/run`, consultation paginée de la liste via `GET /api/activities`, nom du compte via `GET /api/profile`, seuils des zones cardiaques via `GET /api/heart-rate-zones`, données de récupération via `GET /api/recovery` ; voir `docs/technique/contextes/garmin-sync.md` et `docs/technique/garmin-personal-api.md`), `training-stats` (statistiques de volume par semaine ou par mois via `GET /api/stats`, indicateurs du tableau de bord via `GET /api/stats/dashboard` ; voir `docs/technique/contextes/training-stats.md`) et `workout-generation` (génération de séance par Claude via `POST /api/workouts/generate`, sans persistance, client Anthropic optionnel via `ANTHROPIC_API_KEY` ; voir `docs/technique/contextes/workout-generation.md` et `docs/technique/decisions/0006-generation-seances-sans-persistance-et-acl-stats.md`), `creneaux` (créneaux libres ou occupés via `/api/slots` ; voir `docs/technique/contextes/creneaux.md`), `objectifs` (objectifs sportifs via `/api/goals` ; voir `docs/technique/contextes/objectifs.md`) et `disciplines` (référentiel des disciplines alimenté par la synchronisation Garmin, via `GET /api/disciplines` et `PATCH /api/disciplines/:typeKey` ; voir `docs/technique/contextes/disciplines.md`).** Le dépôt contient le socle technique : NestJS 12 (ES modules), configuration validée par zod (`src/core/config/`), Prisma 7 avec les modèles `Activity`, `Slot`, `Goal` et `Discipline` et leurs migrations (`prisma/migrations`, voir `docs/technique/donnees.md`), route `GET /api/health`, Swagger (`/swagger`), format d'erreur uniforme RFC 9457 Problem Details (filtre global `src/core/filters/`, middleware de correlation id `src/core/middlewares/`, `DomainError` dans `src/shared/domain/` ; voir `docs/technique/erreurs-api.md`), tests Vitest, CI GitHub Actions et garde-fou d'architecture (`npm run deps:check`). `src/modules/` ne contient que `garmin-sync`, `training-stats`, `workout-generation`, `creneaux`, `objectifs` et `disciplines`, qui suivent l'arborescence par module décrite dans `instructions/` ; le reste (stack, commandes, configuration, tests) décrit l'existant.
+
+## Règles d'architecture : `instructions/`
+
+L'architecture DDD/hexagonale de ce dépôt est documentée **une notion par fichier** dans `instructions/*.instructions.md` (frontmatter `applyTo` indiquant les chemins concernés — à la manière des custom instructions GitHub Copilot). **Claude Code ne charge automatiquement que ce fichier (`CLAUDE.md`)** : il ne filtre pas lui-même par glob. Avant de créer ou modifier un fichier qui correspond à un des `applyTo` ci-dessous, **ouvrir et suivre le fichier d'instructions associé**.
+
+| # | Fichier | Notion | Consulter avant de toucher à... |
+|---|---|---|---|
+| 00 | `00-glossary-and-artifacts.instructions.md` | Glossaire DDD/hexagonal (source de vérité des termes) | Toujours, en cas de doute sur un terme |
+| 01 | `01-ddd-fundamentals.instructions.md` | Subdomains, Bounded Contexts, Ubiquitous Language, Context Map | Création d'un nouveau module/Bounded Context |
+| 02 | `02-domain-model.instructions.md` | Domain Model, invariants, Business Errors | `domain/entities/**`, `domain/value-objects/**`, `domain/ports/**` |
+| 03 | `03-aggregates-and-consistency.instructions.md` | Aggregates, Aggregate Root, cohérence | `domain/entities/**`, `domain/ports/**` |
+| 04 | `04-hexagonal-architecture.instructions.md` | Couches, Ports & Adapters, sens des dépendances | Partout (`**`) — structure générale d'un module |
+| 05 | `05-application-layer.instructions.md` | Use Cases, orchestration, CQRS pragmatique | `application/use-cases/**`, `application/dtos/**` |
+| 06 | `06-persistence-and-repositories.instructions.md` | Repositories, Prisma, mapping, Read Models | `infrastructure/persistence/**`, `domain/ports/outbound/**` |
+| 07 | `07-events-and-messaging.instructions.md` | Domain/Integration Events, messaging (non utilisé à ce jour) | `**/events/**`, `**/messaging/**`, `**/listeners/**` |
+| 08 | `08-api-and-boundaries.instructions.md` | Transport DTOs, validation, erreurs, systèmes externes | `presentation/**`, `infrastructure/adapters/**`, `core/filters/**` |
+| 09 | `09-testing.instructions.md` | Stratégie de test (Domain, Use Cases, intégration) | `test/**`, `src/**/*.spec.ts` |
+| 10 | `10-code-changes-and-review.instructions.md` | Méthode de travail et checklist de revue | Toujours, avant/après tout changement |
+| 11 | `11-repository-conventions.instructions.md` | **Conventions concrètes de ce dépôt** (stack, arborescence, nommage, templates, Garmin/IA) | Toujours — c'est le fichier que tous les autres citent comme « `11` » |
+
+Squelettes de code prêts à copier (un par artefact) : `instructions/templates/*.template.ts` — table complète Artefact → Template dans `11`.
+
+## Repères rapides (détail dans `11`)
+
+- Stack : NestJS + TypeScript, Prisma + PostgreSQL, Redis en cache optionnel, Claude (Anthropic SDK) pour la génération de séances, Garmin Connect comme source externe.
+- Sens des dépendances : `presentation` → `application` → `domain` ← `infrastructure` (les couches externes dépendent des internes, jamais l'inverse).
+- Un module = un Bounded Context : `src/modules/<module>/{domain,application,infrastructure,presentation}`.
+- Pas d'authentification (usage local).
+- Avant tout changement : suivre la démarche de `10` (lire les instructions applicables → identifier le Use Case/la frontière → repérer les invariants existants → clarifier si règle manquante → changer → tester → contrôler → résumer).
