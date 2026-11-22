@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SESSION_DISCIPLINE_FAMILIES } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import { MODULE_TYPES } from '../../domain/value-objects/module-type.vo.js';
 import type { SessionImportTemplateDto } from '../dtos/session-import-template.dto.js';
