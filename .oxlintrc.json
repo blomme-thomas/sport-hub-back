@@ -7,5 +7,18 @@
   "env": {
     "node": true
   },
-  "ignorePatterns": ["src/core/prisma/generated/**"]
+  "ignorePatterns": [
+    "src/core/prisma/generated/**"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.spec.ts",
+        "test/**/*.ts"
+      ],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    }
+  ]
 }

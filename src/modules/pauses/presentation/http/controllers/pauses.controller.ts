@@ -75,7 +75,13 @@ export class PausesController {
     @Param() params: PauseIdParamDto,
     @Body() request: UpdatePauseRequestDto,
   ): Promise<PauseResponseDto> {
-    const dto = await this.updatePause.execute({ id: params.id, ...request });
+    const command = {
+      id: params.id,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      reason: request.reason,
+    };
+    const dto = await this.updatePause.execute(command);
     return PauseResponseDto.fromDto(dto);
   }
 

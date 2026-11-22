@@ -64,12 +64,12 @@ describe('Export calendrier ICS avec heure de début (e2e)', () => {
     const root = new ICAL.Component(ICAL.parse(res.text));
     const event = root.getFirstSubcomponent('vevent');
     expect(event).not.toBeNull();
-    expect(
-      (event?.getFirstPropertyValue('dtstart') as ICAL.Time).toString(),
-    ).toBe('2099-05-04T18:30:00');
-    expect(
-      (event?.getFirstPropertyValue('dtend') as ICAL.Time).toString(),
-    ).toBe('2099-05-04T19:15:00');
+    expect(String(event?.getFirstPropertyValue('dtstart') as ICAL.Time)).toBe(
+      '2099-05-04T18:30:00',
+    );
+    expect(String(event?.getFirstPropertyValue('dtend') as ICAL.Time)).toBe(
+      '2099-05-04T19:15:00',
+    );
   });
 
   it('répond 400 pour une heure de début mal formée', async () => {

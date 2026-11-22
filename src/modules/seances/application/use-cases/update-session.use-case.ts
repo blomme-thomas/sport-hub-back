@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UnknownSessionDisciplineError } from '../../domain/errors/unknown-session-discipline.error.js';
 import {
   SEANCES_CLOCK,
   type SeancesClock,

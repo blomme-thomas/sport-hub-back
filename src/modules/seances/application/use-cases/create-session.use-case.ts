@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Session } from '../../domain/entities/session.entity.js';
-import { UnknownSessionDisciplineError } from '../../domain/errors/unknown-session-discipline.error.js';
 import {
   SESSION_REPOSITORY,
   type ISessionRepository,
