@@ -11,6 +11,10 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # TypeScript 7 ne fournit pas encore l'API du compilateur attendue par Nest CLI : montée à la main.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
