@@ -1,0 +1,50 @@
+name: ci-main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: contains(github.event.head_commit.message, 'release/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Créer le tag et la release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="v$VERSION"
+
+          if git rev-parse -q --verify "refs/tags/$TAG" > /dev/null; then
+            echo "Le tag $TAG existe déjà, rien à faire."
+            exit 0
+          fi
+
+          ESC="${VERSION//./\\.}"
+          : > notes.md
+          START="$(grep -nE "^## \[?v?${ESC}\]?( |$)" CHANGELOG.md | head -n 1 | cut -d: -f1 || true)"
+          if [ -n "$START" ]; then
+            tail -n +"$((START + 1))" CHANGELOG.md | awk '/^## /{exit} {print}' > notes.md
+          fi
+
+          if [ -s notes.md ]; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
+          fi

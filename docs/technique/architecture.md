@@ -1,0 +1,86 @@
+# Architecture
+
+API NestJS (ESM, TypeScript) en architecture hexagonale / DDD. Conventions détaillées : `instructions/11-repository-conventions.instructions.md`.
+
+## État actuel
+
+Le socle technique et les modules livrés sont dans `src/` :
+
+- `main.ts` : démarrage, Swagger (`/swagger`).
+- `swagger.setup.ts` : `buildOpenApiDocument`, construction du document OpenAPI (isolée de `main.ts` pour être testable ; enregistre les modèles d'erreur).
+- `app.setup.ts` : réglages HTTP partagés avec les tests e2e (middleware de correlation id en premier, logger, préfixe global, CORS avec `X-Correlation-Id` exposé, `ValidationPipe` avec `whitelist`, `forbidNonWhitelisted`, `transform` et `exceptionFactory`, filtre global d'erreurs).
+- `app.module.ts` : assemble `AppConfigModule`, `PrismaModule`, `HealthModule`, `GarminSyncModule`, `TrainingStatsModule`, `WorkoutGenerationModule`, `CreneauxModule`, `ObjectifsModule` et `DisciplinesModule`.
+- `src/core/config` : configuration typée (`@nestjs/config`) validée par zod au démarrage ; sections `app`, `database`, `garmin` (`GARMIN_PERSONAL_API_KEY` optionnelle, vide = absente ; `GARMIN_PERSONAL_API_BASE_URL` ; planification `GARMIN_SYNC_CRON_ENABLED` et `GARMIN_SYNC_CRON_EXPRESSION`) et `anthropic` (`ANTHROPIC_API_KEY` optionnelle, vide = absente ; `ANTHROPIC_MODEL`, `ANTHROPIC_MAX_TOKENS`, `ANTHROPIC_TIMEOUT_MS`, `ANTHROPIC_MAX_RETRIES`, voir [Développement](developpement.md#variables-denvironnement)).
+- `src/core/prisma` : `PrismaService` (client Prisma avec adaptateur `pg`) : vérifie la base au démarrage (`onModuleInit`) et lève `DatabaseUnavailableError` si elle ne répond pas, voir [ADR 0003](decisions/0003-connexion-base-au-demarrage.md) ; client généré dans `generated/`.
+- `src/core/health` : route technique `GET /api/health` (200 si la base répond via `DatabaseHealthIndicator`, sinon 503 `SERVICE_UNAVAILABLE`).
+- `src/core/filters` : filtre d'exceptions global `ProblemDetailsExceptionFilter`, table code vers statut HTTP (`error-status.table.ts`), `DependencyUnavailableException` (dépendance technique indisponible, rendue en 503), factory des erreurs de validation, DTO Swagger et décorateur `@ApiProblemResponses()`. Voir [Erreurs de l'API](erreurs-api.md).
+- `src/core/middlewares` : middleware d'identifiant de corrélation et son `AsyncLocalStorage`.
+- `src/core/http` : client HTTP sortant commun (`HttpClientModule` exporte `HttpClientService`), non global ; seul consommateur à ce jour : `GarminSyncModule`. Détail ci-dessous.
+- `src/shared/domain/domain-error.ts` : classe abstraite `DomainError` (base des Business Errors, `code` stable, sans dépendance NestJS ni HTTP). Seul fichier de `src/shared` à ce jour.
+
+Six modules existent dans `src/modules/`, chacun dans les quatre couches (`domain`, `application`, `infrastructure`, `presentation`) :
+
+- `garmin-sync` : il authentifie l'API Garmin Personal (`GarminPersonalApiTokenProvider`, détail : [API Garmin Personal](garmin-personal-api.md)), synchronise les activités dans la base via `POST /api/garmin-sync/run` et les consulte via `GET /api/activities` (détail : [Contexte garmin-sync](contextes/garmin-sync.md)). À chaque synchronisation, il enregistre les types d'activité reçus dans le module `disciplines`, par son adapter ACL `DisciplinesRegistryAdapter`, en important `DisciplinesModule`. Une synchronisation planifiée (story #9) est déclenchée par `GarminSyncScheduler` (`infrastructure/scheduler/`, `CronJob` de `cron` via `SchedulerRegistry`, [ADR 0007](decisions/0007-planification-cronjob-via-scheduler-registry.md)). `GarminSyncModule` importe `HttpClientModule` et `ScheduleModule.forRoot()`, et enregistre les tokens `GARMIN_CONNECT_CLIENT` (adapter `GarminConnectAdapter`), `ACTIVITY_REPOSITORY` (`PrismaActivityRepositoryAdapter`) et `ACTIVITY_LIST_READ_MODEL`.
+- `training-stats` : il calcule le volume d'entraînement par semaine ou par mois via `GET /api/stats` (détail : [Contexte training-stats](contextes/training-stats.md)). Il lit la table `activities` par son propre port de lecture, sans importer `garmin-sync`.
+- `workout-generation` : il génère une séance d'entraînement par Claude via `POST /api/workouts/generate`, sans la persister (détail : [Contexte workout-generation](contextes/workout-generation.md), [ADR 0006](decisions/0006-generation-seances-sans-persistance-et-acl-stats.md)). Il lit les statistiques de `training-stats` par son adapter ACL, en important `TrainingStatsModule`.
+- `creneaux` : il enregistre les créneaux de disponibilité (libres ou occupés, ponctuels ou hebdomadaires) via `/api/slots` et les développe en occurrences par période (détail : [Contexte creneaux](contextes/creneaux.md), [ADR 0009](decisions/0009-creneaux-heure-murale-locale.md)). Il possède sa table `slots`. La génération de séances qui le consommera est une story à venir.
+- `objectifs` : il enregistre les objectifs sportifs (événement avec format et temps cible, volume ou régularité, date cible facultative) via `/api/goals` et les consulte, avec le filtre des objectifs à venir (détail : [Contexte objectifs](contextes/objectifs.md)). Il possède sa table `goals`. Le calcul de progression et la génération de planning sont hors périmètre.
+- `disciplines` : il tient le référentiel des disciplines (clé Garmin, libellé modifiable, dates de première et dernière apparition) via `GET /api/disciplines` et `PATCH /api/disciplines/:typeKey` (détail : [Contexte disciplines](contextes/disciplines.md), [ADR 0010](decisions/0010-referentiel-disciplines-acl-dates-de-synchronisation.md)). Il possède sa table `disciplines`. Il n'exporte qu'un use case, consommé par `garmin-sync`.
+
+## Client HTTP sortant (`src/core/http`)
+
+Réservé aux Adapters d'Infrastructure qui appellent un système externe en HTTP (Garmin). Un adapter importe `HttpClientModule` (de `src/core/http`) et injecte `HttpClientService` ; il n'importe jamais `HttpModule` de `@nestjs/axios`. Le Domain et l'Application ne l'utilisent pas (règle `domain-application-no-http-client` de `deps:check`). L'adapter Anthropic n'utilise pas ce client : il appelle l'API Claude par le SDK `@anthropic-ai/sdk`, avec ses propres réglages de délai et de réessais (`ANTHROPIC_*`).
+
+API : `get(target, url, options?)`, `post(target, url, data?, options?)` et `request(target, { method, url, data?, headers?, timeoutMs? })`. `target` est un libellé du système appelé (utilisé dans les logs et l'erreur). Retour : `{ status, data }` pour un statut 2xx.
+
+Comportement (valeurs par défaut `DEFAULT_HTTP_CLIENT_OPTIONS`, injectées via le token `HTTP_CLIENT_DEFAULTS`) :
+
+- timeout de 10 s par tentative, surchargeable par appel (`timeoutMs`) ;
+- 2 réessais au plus (3 tentatives), backoff exponentiel sans jitter de 200 ms plafonné à 2 s ;
+- réessai uniquement pour les méthodes idempotentes (GET, HEAD, OPTIONS, PUT, DELETE) et pour une erreur réseau, un timeout ou un statut 5xx ; jamais pour POST/PATCH, ni pour un 4xx ;
+- `maxRedirects: 0` : les redirections ne sont pas suivies, un 3xx est donc traité comme un statut hors 2xx (`HTTP_STATUS`, sans réessai) ;
+- tout statut hors 2xx, timeout ou erreur réseau, après les réessais autorisés, lève `ExternalServiceError(target, failure, attempts, upstreamStatus?)` avec `failure` parmi `TIMEOUT`, `NETWORK`, `HTTP_STATUS`. Le message est fixe (`Le service externe "<target>" est indisponible.`) et l'erreur ne porte aucune `cause` : l'`AxiosError` d'origine contient les en-têtes (dont `Authorization`) et ne doit jamais être propagée ;
+- logs `[correlationId] target METHOD origine+chemin -> statut|failure` : ni en-têtes, ni query string, ni identifiants d'URL, ni corps. Le chemin de l'URL est journalisé tel quel : ne pas y placer de secret.
+
+Sécurité : l'URL passée au client ne doit jamais provenir d'une entrée externe (requête utilisateur, donnée renvoyée par un tiers), sous peine de SSRF ; elle est construite par l'adapter à partir d'une base connue.
+
+`ExternalServiceError` n'est pas une `DomainError`. Si un Use Case ou un adapter ne la traduit pas, elle atteint le filtre global et devient un 500 `INTERNAL_ERROR` (voir [Erreurs de l'API](erreurs-api.md)).
+
+## Cible : un module = un Bounded Context
+
+`src/modules/<module>/{domain,application,infrastructure,presentation}`.
+
+Sens des dépendances : `presentation` vers `application` vers `domain`, `infrastructure` vers `domain` (les couches externes dépendent des internes, jamais l'inverse). `src/core` (et `src/shared` s'il est créé) est transverse et ne dépend pas des modules.
+
+## Garde-fou : `npm run deps:check`
+
+dependency-cruiser (`.dependency-cruiser.cjs`) vérifie ces règles sur `src/`, en CI (`ci-branch`). Erreurs :
+
+- pas de dépendance circulaire ;
+- le Domain n'importe ni Application, ni Infrastructure, ni Presentation ;
+- le Domain n'importe ni NestJS, ni client/ORM (pg, express, axios, class-validator, class-transformer, Prisma, Anthropic, garmin-connect, `src/core/prisma`) ;
+- l'Application n'importe ni Infrastructure, ni Presentation, ni client/ORM (`@nestjs/common` reste autorisé) ;
+- la Presentation n'importe pas l'Infrastructure ; l'Infrastructure n'importe pas la Presentation ;
+- `src/shared` et `src/core` n'importent pas les modules ;
+- le Domain et l'Application n'importent pas `src/core/http` (`domain-application-no-http-client`) ;
+- le code de production n'importe ni fichier `.spec.ts`, ni devDependency.
+
+Erreur bloquante : `modules-public-api-only`. Un module n'importe d'un autre que son contrat public, `src/modules/<module>/index.ts` (facade qui ré-exporte les use cases, DTO et modules consommés par les autres modules) ; ses fichiers internes ne sont jamais importés directement. Le client Prisma généré est exclu de l'analyse.
+
+Ces règles s'exercent sur les six modules, `garmin-sync`, `training-stats`, `workout-generation`, `creneaux`, `objectifs` et `disciplines`, dans leurs quatre couches.
+
+## Bounded contexts
+- `garmin-sync` : livré (synchronisation manuelle et planifiée des activités, consultation de la liste et authentification Garmin). Fiche : [Contexte garmin-sync](contextes/garmin-sync.md).
+- `training-stats` : livré (statistiques de volume par semaine ou par mois, `GET /api/stats`). Fiche : [Contexte training-stats](contextes/training-stats.md).
+- `workout-generation` : livré (génération de séance par Claude, `POST /api/workouts/generate`, sans persistance). Fiche : [Contexte workout-generation](contextes/workout-generation.md).
+- `creneaux` : livré (créneaux libres ou occupés, ponctuels ou hebdomadaires, `/api/slots`). Fiche : [Contexte creneaux](contextes/creneaux.md).
+- `objectifs` : livré (objectifs événement, volume ou régularité, `/api/goals`, filtre des objectifs à venir). Fiche : [Contexte objectifs](contextes/objectifs.md).
+- `disciplines` : livré (référentiel des disciplines alimenté par la synchronisation, libellé modifiable, `/api/disciplines`). Fiche : [Contexte disciplines](contextes/disciplines.md).
+
+## Flux entre contextes
+- `garmin-sync` et `training-stats` n'échangent aucun code : `training-stats` lit la table `activities` directement via son propre port de lecture, sans importer `garmin-sync`.
+- `garmin-sync` consomme `disciplines` : son adapter ACL `DisciplinesRegistryAdapter` appelle `RecordDisciplineAppearancesUseCase` (seul export de `DisciplinesModule`) avec les types d'activité reçus, à chaque synchronisation. Le sens est unique : `disciplines` ignore Garmin et n'importe rien de `garmin-sync`. Voir [ADR 0010](decisions/0010-referentiel-disciplines-acl-dates-de-synchronisation.md).
+- `workout-generation` consomme `training-stats` : son adapter `TrainingStatsContextAdapter` (anti-corruption layer) appelle `GetTrainingStatsUseCase`, exporté par `TrainingStatsModule`, en granularité semaine. Le Domain de `workout-generation` ne voit ni le DTO ni le module de statistiques. Il ne lit pas la table `activities`.
+- `creneaux` n'importe aucun autre module et aucun autre module ne l'importe. Il ne fournit aucun port public à ce jour.
+- `objectifs` n'importe aucun autre module et aucun autre module ne l'importe. Il ne fournit aucun port public à ce jour.
+- Le flux interne de chaque contexte (Presentation, use case, ports, adapters) est décrit dans sa fiche.

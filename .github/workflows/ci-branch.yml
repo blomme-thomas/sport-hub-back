@@ -1,0 +1,52 @@
+name: ci-branch
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
+
+concurrency:
+  group: ci-branch-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: postgresql://sporthub:sporthub@localhost:5432/sporthub_test
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Architecture
+        run: npm run deps:check
+
+      - name: Contrat OpenAPI à jour
+        run: |
+          npm run openapi:generate
+          if [ -n "$(git status --porcelain -- docs/api/openapi.json)" ]; then
+            echo "::error::docs/api/openapi.json est périmé : lancer 'npm run openapi:generate' et committer le fichier"
+            exit 1
+          fi
+
+      - name: Audit des dépendances
+        run: npm audit --omit=dev --audit-level=high
