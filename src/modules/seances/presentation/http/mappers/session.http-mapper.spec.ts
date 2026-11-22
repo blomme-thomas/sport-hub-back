@@ -191,6 +191,7 @@ describe('SessionHttpMapper', () => {
         SessionHttpMapper.toOccurrenceListResponse([
           {
             sessionId: SESSION_ID,
+            title: 'Seuil',
             date: '2026-05-04',
             startTime: '18:00',
             durationMinutes: 60,
@@ -203,6 +204,7 @@ describe('SessionHttpMapper', () => {
         items: [
           {
             sessionId: SESSION_ID,
+            title: 'Seuil',
             date: '2026-05-04',
             startTime: '18:00',
             durationMinutes: 60,

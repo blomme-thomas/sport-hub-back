@@ -106,6 +106,7 @@ export class SessionHttpMapper {
   ): SessionOccurrenceResponseDto {
     return {
       sessionId: occurrence.sessionId,
+      title: occurrence.title,
       date: occurrence.date,
       startTime: occurrence.startTime,
       durationMinutes: occurrence.durationMinutes,
@@ -121,6 +122,7 @@ export class SessionHttpMapper {
     return {
       items: occurrences.map((occurrence) => ({
         sessionId: occurrence.sessionId,
+        title: occurrence.title,
         date: occurrence.date,
         startTime: occurrence.startTime,
         durationMinutes: occurrence.durationMinutes,

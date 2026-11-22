@@ -29,6 +29,7 @@ describe('expandOccurrences', () => {
     expect(occurrences).toEqual([
       {
         sessionId: session.id.toString(),
+        title: session.title,
         date: '2026-11-16',
         startTime: '18:00',
         durationMinutes: 60,
