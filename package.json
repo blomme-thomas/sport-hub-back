@@ -1,6 +1,6 @@
 {
   "name": "sport-hub-back",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "API NestJS (architecture hexagonale / DDD) qui synchronise les données Garmin Connect, calcule les statistiques d'entraînement et génère des séances par IA.",
   "author": "",
   "private": true,
