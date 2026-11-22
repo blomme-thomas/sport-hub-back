@@ -60,7 +60,7 @@
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.0.0",
-    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/coverage-v8": "^5.1.1",
     "dependency-cruiser": "^18.8.0",
     "ical.js": "^2.2.1",
     "oxlint": "^1.94.0",
