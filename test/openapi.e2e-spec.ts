@@ -154,6 +154,7 @@ describe('OpenAPI (e2e)', () => {
       'averageHeartRate',
       'distanceMeters',
       'durationSeconds',
+      'family',
       'garminActivityId',
       'id',
       'startedAt',

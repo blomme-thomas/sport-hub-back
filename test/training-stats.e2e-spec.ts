@@ -529,7 +529,7 @@ describe('Tableau de bord des statistiques (e2e)', () => {
       },
     });
 
-    const res = await dashboard('7d').expect(200);
+    const res = await dashboard('week').expect(200);
 
     expect(res.body.daily).toHaveLength(7);
     expect(res.body.totals.calories).toBe(4450);
@@ -562,7 +562,7 @@ describe('Tableau de bord des statistiques (e2e)', () => {
       },
     });
 
-    const res = await dashboard('7d').expect(200);
+    const res = await dashboard('week').expect(200);
 
     expect(res.body.totals.calories).toBeNull();
     expect(
@@ -581,7 +581,7 @@ describe('Tableau de bord des statistiques (e2e)', () => {
       },
     });
 
-    const res = await dashboard('7d').expect(503);
+    const res = await dashboard('week').expect(503);
 
     expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
     expect(res.body).toMatchObject({ code: 'GARMIN_UNAVAILABLE' });
@@ -591,7 +591,7 @@ describe('Tableau de bord des statistiques (e2e)', () => {
   it('renvoie_502_GARMIN_ACCESS_DENIED_quand_Garmin_refuse_la_cle', async () => {
     garmin.failure = new GarminAccessDeniedError();
 
-    const res = await dashboard('30d').expect(502);
+    const res = await dashboard('month').expect(502);
 
     expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
     expect(res.body).toMatchObject({ code: 'GARMIN_ACCESS_DENIED' });
