@@ -49,3 +49,18 @@ Erreurs : `RECIPE_NOT_FOUND` (404), `INVALID_RECIPE` (400). Tables `recipes` et 
 - Un item est ignoré et signalé dans `ignored` (`quantity-missing` ou `nutrition-missing`) s'il n'a pas de quantité, ou si une de ses valeurs nutritionnelles est vide. Hypothèse : à valider.
 - Une recette sans item renvoie une synthèse nulle, sans erreur.
 - Code : `domain/services/summarize-recipe-nutrition.ts` (fonction pure, testée unitairement).
+
+## Planning des repas
+
+- Un repas planifié référence une recette, une date (`AAAA-MM-JJ`) et un repas (`matin`, `midi`, `soir`). Plusieurs repas par jour et par repas sont possibles ; une même recette peut être placée plusieurs fois, chaque placement a son identifiant.
+- Pas de génération automatique du planning.
+
+Endpoints :
+- `GET /api/meal-plan?week=AAAA-Www` : repas d'une semaine ISO (lundi à dimanche), triés par date puis par repas.
+- `POST /api/meal-plan` : ajoute un repas (`recipeId`, `date`, `mealTag`).
+- `PATCH /api/meal-plan/:id` : déplace un repas (nouvelle date ou nouveau repas, identifiant conservé).
+- `DELETE /api/meal-plan/:id` : retire un repas, sans toucher aux autres placements.
+
+Suppression d'une recette planifiée : refusée en `409 RECIPE_IN_USE` par défaut ; `DELETE /api/recipes/:id?confirm=true` retire aussi ses repas. Hypothèse : à valider.
+
+Erreurs : `PLANNED_MEAL_NOT_FOUND` (404), `INVALID_PLANNED_MEAL` (400), `RECIPE_IN_USE` (409). Table `planned_meals` (migration `20261130120300_create_planned_meals`).

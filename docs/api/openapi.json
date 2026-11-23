@@ -432,6 +432,37 @@
         ],
         "type": "object"
       },
+      "CreatePlannedMealRequestDto": {
+        "properties": {
+          "date": {
+            "description": "Date du repas, au format AAAA-MM-JJ",
+            "example": "2026-11-25",
+            "format": "date",
+            "type": "string"
+          },
+          "mealTag": {
+            "enum": [
+              "matin",
+              "midi",
+              "soir"
+            ],
+            "example": "midi",
+            "type": "string"
+          },
+          "recipeId": {
+            "description": "Recette à placer",
+            "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recipeId",
+          "date",
+          "mealTag"
+        ],
+        "type": "object"
+      },
       "CreateRecipeRequestDto": {
         "properties": {
           "items": {
@@ -1451,6 +1482,26 @@
         ],
         "type": "object"
       },
+      "MovePlannedMealRequestDto": {
+        "properties": {
+          "date": {
+            "description": "Nouvelle date ; absente = inchangée",
+            "example": "2026-11-26",
+            "format": "date",
+            "type": "string"
+          },
+          "mealTag": {
+            "description": "Nouveau repas ; absent = inchangé",
+            "enum": [
+              "matin",
+              "midi",
+              "soir"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "MoveSessionOccurrenceRequestDto": {
         "properties": {
           "date": {
@@ -1563,6 +1614,41 @@
         ],
         "type": "object"
       },
+      "PlannedMealResponseDto": {
+        "properties": {
+          "date": {
+            "example": "2026-11-25",
+            "format": "date",
+            "type": "string"
+          },
+          "id": {
+            "example": "3f2c9a4e-8b1d-4c7a-9e2f-6a5b4c3d2e1f",
+            "format": "uuid",
+            "type": "string"
+          },
+          "mealTag": {
+            "enum": [
+              "matin",
+              "midi",
+              "soir"
+            ],
+            "example": "midi",
+            "type": "string"
+          },
+          "recipeId": {
+            "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "recipeId",
+          "date",
+          "mealTag"
+        ],
+        "type": "object"
+      },
       "PreviousPeriodResponseDto": {
         "properties": {
           "byType": {
@@ -1596,7 +1682,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `RECIPE_NOT_FOUND` : 404\n- `INVALID_RECIPE` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `RECIPE_NOT_FOUND` : 404\n- `INVALID_RECIPE` : 400\n- `PLANNED_MEAL_NOT_FOUND` : 404\n- `INVALID_PLANNED_MEAL` : 400\n- `RECIPE_IN_USE` : 409\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -1622,6 +1708,9 @@
           "INVALID_FOOD",
           "RECIPE_NOT_FOUND",
           "INVALID_RECIPE",
+          "PLANNED_MEAL_NOT_FOUND",
+          "INVALID_PLANNED_MEAL",
+          "RECIPE_IN_USE",
           "GOAL_INVALID",
           "GOAL_TARGET_TIME_INVALID",
           "SETTINGS_WEEKLY_TARGET_INVALID",
@@ -1688,7 +1777,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `RECIPE_NOT_FOUND` : 404\n- `INVALID_RECIPE` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `RECIPE_NOT_FOUND` : 404\n- `INVALID_RECIPE` : 400\n- `PLANNED_MEAL_NOT_FOUND` : 404\n- `INVALID_PLANNED_MEAL` : 400\n- `RECIPE_IN_USE` : 409\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -4964,6 +5053,251 @@
         ]
       }
     },
+    "/api/meal-plan": {
+      "get": {
+        "operationId": "mealPlanList",
+        "parameters": [
+          {
+            "description": "Semaine ISO au format AAAA-Www",
+            "in": "query",
+            "name": "week",
+            "required": true,
+            "schema": {
+              "example": "2026-W48",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlannedMealResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Liste les repas planifiés d’une semaine ISO (du lundi au dimanche), triés par date puis par repas",
+        "tags": [
+          "aliments"
+        ]
+      },
+      "post": {
+        "operationId": "mealPlanCreate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlannedMealRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedMealResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Place une recette à une date et pour un repas ; la même recette peut être placée plusieurs fois",
+        "tags": [
+          "aliments"
+        ]
+      }
+    },
+    "/api/meal-plan/{id}": {
+      "delete": {
+        "operationId": "mealPlanRemove",
+        "parameters": [
+          {
+            "description": "Identifiant du repas planifié",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3f2c9a4e-8b1d-4c7a-9e2f-6a5b4c3d2e1f",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Repas retiré du planning"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Retire un repas du planning ; les autres placements ne sont pas touchés",
+        "tags": [
+          "aliments"
+        ]
+      },
+      "patch": {
+        "operationId": "mealPlanMove",
+        "parameters": [
+          {
+            "description": "Identifiant du repas planifié",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3f2c9a4e-8b1d-4c7a-9e2f-6a5b4c3d2e1f",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovePlannedMealRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedMealResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Déplace un repas planifié vers une autre date ou un autre repas",
+        "tags": [
+          "aliments"
+        ]
+      }
+    },
     "/api/pauses": {
       "get": {
         "operationId": "pausesList",
@@ -5434,6 +5768,19 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "true = confirme la suppression d’une recette planifiée et retire ses repas du planning",
+            "in": "query",
+            "name": "confirm",
+            "required": false,
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5459,6 +5806,16 @@
               }
             },
             "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "500": {
             "content": {
