@@ -27,6 +27,7 @@ import {
   UpdateRecipeRequestDto,
 } from '../dtos/recipe.request.dto.js';
 import { RecipeIdParamDto } from '../dtos/recipe-id.param.dto.js';
+import { RecipeDetailResponseDto } from '../dtos/recipe-detail.response.dto.js';
 import { RecipeResponseDto } from '../dtos/recipe.response.dto.js';
 import { RecipeHttpMapper } from '../mappers/recipe.http-mapper.js';
 
@@ -51,11 +52,13 @@ export class RecipesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Renvoie une recette avec sa composition' })
-  @ApiOkResponse({ type: RecipeResponseDto })
+  @ApiOkResponse({ type: RecipeDetailResponseDto })
   @ApiProblemResponses(400, 404)
-  async get(@Param() params: RecipeIdParamDto): Promise<RecipeResponseDto> {
+  async get(
+    @Param() params: RecipeIdParamDto,
+  ): Promise<RecipeDetailResponseDto> {
     const dto = await this.getRecipe.execute({ id: params.id });
-    return RecipeHttpMapper.toResponse(dto);
+    return RecipeHttpMapper.toDetailResponse(dto);
   }
 
   @Post()
