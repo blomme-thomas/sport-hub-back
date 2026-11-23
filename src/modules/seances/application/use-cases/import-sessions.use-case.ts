@@ -16,6 +16,11 @@ import {
   type ISessionImportRepository,
 } from '../../domain/ports/outbound/session-import.repository.port.js';
 import { SessionModule } from '../../domain/value-objects/session-module.vo.js';
+import {
+  isSessionCarbsUnit,
+  SESSION_CARBS_UNITS,
+  type SessionCarbsUnit,
+} from '../../domain/value-objects/session-nutrition.vo.js';
 import type { TargetZonesInput } from '../../domain/value-objects/target-zones.vo.js';
 import {
   type ImportSessionsCommand,
@@ -23,7 +28,7 @@ import {
 } from '../dtos/session-import.dto.js';
 import {
   SESSION_IMPORT_KIND,
-  SESSION_IMPORT_SCHEMA_VERSION,
+  SESSION_IMPORT_SUPPORTED_VERSIONS,
 } from '../session-import-format.js';
 import { toCalendarDate } from '../session-inputs.js';
 
@@ -41,6 +46,8 @@ const SEANCE_FIELDS = [
   'targetHrZonePercentages',
   'modules',
 ];
+const NUTRITION_FIELDS = ['carbsGrams', 'carbsUnit', 'hydrationMilliliters'];
+const SESSION_NUTRITION_SCHEMA_VERSION = 2;
 const MODULE_FIELDS = [
   'type',
   'durationMinutes',
@@ -181,6 +188,40 @@ function readZonePercentages(
   return value as number[];
 }
 
+/** Glucides (grammes et unité) et hydratation, facultatifs, à partir de la version 2 du format. */
+function readNutrition(
+  fields: Fields,
+  path: string,
+  issues: ImportIssues,
+): {
+  carbsGrams: number | null;
+  carbsUnit: SessionCarbsUnit | null;
+  hydrationMilliliters: number | null;
+} {
+  const carbsGrams = readNumber(fields, 'carbsGrams', path, issues, true);
+  const rawUnit = readText(fields, 'carbsUnit', path, issues, true);
+  let carbsUnit: SessionCarbsUnit | null = null;
+  if (rawUnit !== null) {
+    if (isSessionCarbsUnit(rawUnit)) {
+      carbsUnit = rawUnit;
+    } else {
+      issues.add(
+        `${path}.carbsUnit`,
+        'SESSION_IMPORT_FIELD_VALUE',
+        `doit être ${SESSION_CARBS_UNITS.join(' ou ')}`,
+      );
+    }
+  }
+  const hydrationMilliliters = readNumber(
+    fields,
+    'hydrationMilliliters',
+    path,
+    issues,
+    true,
+  );
+  return { carbsGrams, carbsUnit, hydrationMilliliters };
+}
+
 function domainIssue(error: unknown, path: string, issues: ImportIssues): null {
   if (error instanceof DomainError) {
     issues.add(path, error.code, error.message);
@@ -215,11 +256,15 @@ export class ImportSessionsUseCase {
         `doit être ${SESSION_IMPORT_KIND}`,
       );
     }
-    if (command.schemaVersion !== SESSION_IMPORT_SCHEMA_VERSION) {
+    if (
+      !SESSION_IMPORT_SUPPORTED_VERSIONS.includes(
+        command.schemaVersion as number,
+      )
+    ) {
       envelope.add(
         'schemaVersion',
         'SESSION_IMPORT_VERSION_UNKNOWN',
-        `doit être ${SESSION_IMPORT_SCHEMA_VERSION}`,
+        `doit être ${SESSION_IMPORT_SUPPORTED_VERSIONS.join(' ou ')}`,
       );
     }
     if (
@@ -251,6 +296,7 @@ export class ImportSessionsUseCase {
     const issues = new ImportIssues();
     const sessions = await this.buildSessions(
       command.seances as unknown[],
+      command.schemaVersion as number,
       issues,
     );
     if (issues.count > 0) {
@@ -270,11 +316,17 @@ export class ImportSessionsUseCase {
 
   private async buildSessions(
     rawSeances: unknown[],
+    schemaVersion: number,
     issues: ImportIssues,
   ): Promise<Session[]> {
     const sessions: Session[] = [];
     for (const [index, raw] of rawSeances.entries()) {
-      const session = await this.buildSession(raw, `seances[${index}]`, issues);
+      const session = await this.buildSession(
+        raw,
+        `seances[${index}]`,
+        schemaVersion,
+        issues,
+      );
       if (session !== null) {
         sessions.push(session);
       }
@@ -285,6 +337,7 @@ export class ImportSessionsUseCase {
   private async buildSession(
     raw: unknown,
     path: string,
+    schemaVersion: number,
     issues: ImportIssues,
   ): Promise<Session | null> {
     if (!isRecord(raw)) {
@@ -296,7 +349,13 @@ export class ImportSessionsUseCase {
       return null;
     }
     const before = issues.count;
-    rejectUnknownFields(raw, SEANCE_FIELDS, path, issues);
+    const withNutrition = schemaVersion >= SESSION_NUTRITION_SCHEMA_VERSION;
+    rejectUnknownFields(
+      raw,
+      withNutrition ? [...SEANCE_FIELDS, ...NUTRITION_FIELDS] : SEANCE_FIELDS,
+      path,
+      issues,
+    );
 
     const date = readText(raw, 'date', path, issues, false);
     if (date !== null && !isCalendarDate(date)) {
@@ -331,6 +390,9 @@ export class ImportSessionsUseCase {
       true,
     );
     const targetHrZonePercentages = readZonePercentages(raw, path, issues);
+    const nutrition = withNutrition
+      ? readNutrition(raw, path, issues)
+      : { carbsGrams: null, carbsUnit: null, hydrationMilliliters: null };
 
     const rawModules = raw.modules;
     if (!Array.isArray(rawModules) || rawModules.length === 0) {
@@ -384,6 +446,7 @@ export class ImportSessionsUseCase {
         targetDistanceMeters,
         targetHrZonePercentages,
         modules,
+        ...nutrition,
       });
     } catch (error) {
       return domainIssue(error, path, issues);

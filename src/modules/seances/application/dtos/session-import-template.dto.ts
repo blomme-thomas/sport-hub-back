@@ -15,6 +15,9 @@ export type SessionImportTemplateSessionDto = {
   description: string;
   targetDistanceMeters?: number;
   targetHrZonePercentages?: number[];
+  carbsGrams?: number;
+  carbsUnit?: string;
+  hydrationMilliliters?: number;
   modules: SessionImportTemplateModuleDto[];
 };
 

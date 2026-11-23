@@ -6,7 +6,7 @@ describe('GetSessionImportTemplateUseCase', () => {
     const template = await new GetSessionImportTemplateUseCase().execute();
 
     expect(template.kind).toBe('plan-seances');
-    expect(template.schemaVersion).toBe(1);
+    expect(template.schemaVersion).toBe(2);
   });
 
   it('liste les familles de discipline au champ disciplineTypeKey', async () => {

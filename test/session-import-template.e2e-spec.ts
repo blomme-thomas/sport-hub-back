@@ -47,10 +47,13 @@ describe('Modèle d’import des séances (e2e)', () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       kind: 'plan-seances',
-      schemaVersion: 1,
+      schemaVersion: 2,
       seances: [
         {
           disciplineTypeKey: 'running | cycling | swimming',
+          carbsGrams: 60,
+          carbsUnit: 'par_heure | pour_la_seance',
+          hydrationMilliliters: 500,
           modules: [
             {
               type: 'echauffement | educatifs | series | retour_au_calme | autre',
