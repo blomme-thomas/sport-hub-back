@@ -502,6 +502,22 @@
       },
       "CreateSessionRequestDto": {
         "properties": {
+          "carbsGrams": {
+            "description": "Cible de glucides en grammes, facultative ; exige carbsUnit",
+            "example": 60,
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "number"
+          },
+          "carbsUnit": {
+            "description": "Unité de la cible de glucides ; exige carbsGrams",
+            "enum": [
+              "par_heure",
+              "pour_la_seance"
+            ],
+            "example": "par_heure",
+            "type": "string"
+          },
           "date": {
             "description": "Jour de la séance (YYYY-MM-DD)",
             "example": "2026-05-04",
@@ -523,6 +539,13 @@
             "description": "Durée totale prévue en minutes",
             "example": 60,
             "maximum": 1440,
+            "minimum": 1,
+            "type": "number"
+          },
+          "hydrationMilliliters": {
+            "description": "Hydratation visée en millilitres pour la séance, facultative",
+            "example": 500,
+            "maximum": 20000,
             "minimum": 1,
             "type": "number"
           },
@@ -2531,6 +2554,22 @@
             "nullable": true,
             "type": "object"
           },
+          "carbsGrams": {
+            "description": "Cible de glucides en grammes, ou null",
+            "example": 60,
+            "nullable": true,
+            "type": "number"
+          },
+          "carbsUnit": {
+            "description": "Unité de la cible de glucides, ou null",
+            "enum": [
+              "par_heure",
+              "pour_la_seance"
+            ],
+            "example": "par_heure",
+            "nullable": true,
+            "type": "string"
+          },
           "changeLog": {
             "description": "Journal des modifications manuelles, par ordre chronologique",
             "items": {
@@ -2554,6 +2593,12 @@
           },
           "durationMinutes": {
             "example": 60,
+            "type": "number"
+          },
+          "hydrationMilliliters": {
+            "description": "Hydratation visée en millilitres pour la séance, ou null",
+            "example": 500,
+            "nullable": true,
             "type": "number"
           },
           "id": {
@@ -2624,6 +2669,9 @@
         "required": [
           "targetDistanceMeters",
           "targetHrZonePercentages",
+          "carbsGrams",
+          "carbsUnit",
+          "hydrationMilliliters",
           "achievement",
           "id",
           "date",
@@ -3171,6 +3219,24 @@
       },
       "UpdateSessionRequestDto": {
         "properties": {
+          "carbsGrams": {
+            "description": "Nouvelle cible de glucides en grammes, absent = inchangée, null = effacée (avec carbsUnit)",
+            "example": 60,
+            "maximum": 1000,
+            "minimum": 1,
+            "nullable": true,
+            "type": "number"
+          },
+          "carbsUnit": {
+            "description": "Nouvelle unité de glucides, absent = inchangée, null = effacée (avec carbsGrams)",
+            "enum": [
+              "par_heure",
+              "pour_la_seance"
+            ],
+            "example": "par_heure",
+            "nullable": true,
+            "type": "string"
+          },
           "date": {
             "description": "Nouvelle date (YYYY-MM-DD), absent = inchangée",
             "example": "2026-05-05",
@@ -3195,6 +3261,14 @@
             "example": 45,
             "maximum": 1440,
             "minimum": 1,
+            "type": "number"
+          },
+          "hydrationMilliliters": {
+            "description": "Nouvelle hydratation en millilitres, absent = inchangée, null = effacée",
+            "example": 500,
+            "maximum": 20000,
+            "minimum": 1,
+            "nullable": true,
             "type": "number"
           },
           "recurrence": {

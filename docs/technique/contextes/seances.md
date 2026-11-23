@@ -179,3 +179,11 @@ Hypothèses :
 - Le rapprochement séance ↔ activité compare la famille de la séance à `sportFamilyOf(type Garmin)` de l'activité : `road_biking`, `indoor_cycling` ou `virtual_ride` comptent comme vélo.
 - Migration `20261128120000_session_discipline_family` : convertit les séances existantes de leur type Garmin vers la famille. Un type hors des trois familles (ex. `hiking`) n'est pas converti et doit être corrigé à la main.
 - Le référentiel des disciplines (`/api/disciplines`) n'est plus consulté par le contexte séances.
+
+## Glucides et hydratation (facultatifs)
+
+- Une séance peut porter une cible de glucides (`carbsGrams` en grammes entiers de 1 à 1000, et `carbsUnit` : `par_heure` ou `pour_la_seance`) et une hydratation (`hydrationMilliliters`).
+- Glucides : la valeur et son unité sont renseignées ensemble ou absentes ensemble. Pas de cible journalière.
+- Les champs sont acceptés à la création et à la modification, et renvoyés à la lecture. Une séance existante reste valide sans ces champs.
+- Migration `20261130120000_add_session_nutrition` : ajoute les trois colonnes, nullables.
+- Hors périmètre : autres nutriments et import JSON (story B8).
