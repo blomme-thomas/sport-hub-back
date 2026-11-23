@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiCreatedResponse,
@@ -26,6 +27,7 @@ import {
   CreateRecipeRequestDto,
   UpdateRecipeRequestDto,
 } from '../dtos/recipe.request.dto.js';
+import { DeleteRecipeQueryDto } from '../dtos/recipe-delete.query.dto.js';
 import { RecipeIdParamDto } from '../dtos/recipe-id.param.dto.js';
 import { RecipeDetailResponseDto } from '../dtos/recipe-detail.response.dto.js';
 import { RecipeResponseDto } from '../dtos/recipe.response.dto.js';
@@ -98,8 +100,18 @@ export class RecipesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Supprime une recette et ses items' })
   @ApiNoContentResponse({ description: 'Recette supprimée' })
-  @ApiProblemResponses(400, 404)
-  async remove(@Param() params: RecipeIdParamDto): Promise<void> {
-    await this.deleteRecipe.execute({ id: params.id });
+  @ApiProblemResponses(400, 404, 409)
+  @ApiOperation({
+    summary:
+      'Supprime une recette ; si elle est planifiée, confirm=true est requis et retire aussi ces repas',
+  })
+  async remove(
+    @Param() params: RecipeIdParamDto,
+    @Query() query: DeleteRecipeQueryDto,
+  ): Promise<void> {
+    await this.deleteRecipe.execute({
+      id: params.id,
+      confirm: query.confirm === 'true',
+    });
   }
 }
