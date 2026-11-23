@@ -64,3 +64,12 @@ Endpoints :
 Suppression d'une recette planifiée : refusée en `409 RECIPE_IN_USE` par défaut ; `DELETE /api/recipes/:id?confirm=true` retire aussi ses repas. Hypothèse : à valider.
 
 Erreurs : `PLANNED_MEAL_NOT_FOUND` (404), `INVALID_PLANNED_MEAL` (400), `RECIPE_IN_USE` (409). Table `planned_meals` (migration `20261130120300_create_planned_meals`).
+
+## Liste de courses d'une période
+
+- `GET /api/shopping-list?from=AAAA-MM-JJ&to=AAAA-MM-JJ` : calcul à la demande, non sauvegardé et non cochable.
+- Chaque repas planifié compte pour une fois sa recette : une recette placée deux fois compte deux fois.
+- Quantités additionnées par aliment (unité unique). Un aliment dont une occurrence n'a pas de quantité est signalé `quantityMissing` ; sa quantité est la somme des quantités connues.
+- Tri par catégorie (`proteine`, `legume`, `feculent`, `autre`), puis par nom. Un aliment multi-catégories est classé selon la première catégorie de cet ordre.
+- Période sans repas : liste vide. Fin antérieure au début : `SHOPPING_LIST_PERIOD_INVALID` (400).
+- Code : `domain/services/build-shopping-list.ts` (fonction pure), `application/use-cases/get-shopping-list.use-case.ts`.
