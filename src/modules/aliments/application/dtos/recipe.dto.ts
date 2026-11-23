@@ -1,4 +1,10 @@
 import type { Recipe } from '../../domain/entities/recipe.entity.js';
+import type { RecipeNutritionSummary } from '../../domain/services/summarize-recipe-nutrition.js';
+
+export interface RecipeDetailDto {
+  recipe: RecipeDto;
+  nutrition: RecipeNutritionSummary;
+}
 
 export interface RecipeItemCommand {
   foodId: string;

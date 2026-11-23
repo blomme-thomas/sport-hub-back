@@ -180,4 +180,61 @@ describe('Recettes (e2e)', () => {
       'Zucchini',
     ]);
   });
+
+  it('renvoie la synthèse nutritionnelle recalculée à la lecture, avec les items ignorés', async () => {
+    const pouletValeurs = await createFood({
+      name: 'Poulet valeurs',
+      unit: 'g',
+      categories: ['proteine'],
+      calories: 165,
+      proteins: 31,
+      carbohydrates: 0,
+      fats: 3.6,
+      sugars: 0,
+    });
+    const rizValeurs = await createFood({
+      name: 'Riz valeurs',
+      unit: 'g',
+      categories: ['feculent'],
+      calories: 130,
+      proteins: 2.7,
+      carbohydrates: 28,
+      fats: 0.3,
+      sugars: 0.1,
+    });
+    const created = await create({
+      name: 'Riz au poulet',
+      mealTags: ['midi'],
+      items: [
+        { foodId: pouletValeurs, component: 'proteine', quantity: 150 },
+        { foodId: rizValeurs, component: 'feculent', quantity: 80 },
+        { foodId: brocoli, component: 'legume', quantity: null },
+      ],
+    });
+
+    const res = await get(created.body.id as string);
+
+    expect(res.status).toBe(200);
+    expect(res.body.nutrition.totals).toEqual({
+      calories: 351.5,
+      proteins: 48.7,
+      carbohydrates: 22.4,
+      fats: 5.6,
+      sugars: 0.1,
+    });
+    expect(res.body.nutrition.byComponent.proteine.calories).toBe(247.5);
+    expect(res.body.nutrition.ignored).toEqual([
+      { foodId: brocoli, reason: 'quantity-missing' },
+    ]);
+  });
+
+  it('renvoie une synthèse nulle pour une recette sans aliment', async () => {
+    const created = await create({ name: 'Vide', mealTags: ['soir'] });
+
+    const res = await get(created.body.id as string);
+
+    expect(res.status).toBe(200);
+    expect(res.body.nutrition.totals.calories).toBe(0);
+    expect(res.body.nutrition.ignored).toEqual([]);
+  });
 });
