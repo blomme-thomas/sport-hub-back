@@ -105,6 +105,7 @@ describe('Import des séances (e2e)', () => {
         date: new Date('2099-11-30T00:00:00.000Z'),
         disciplineTypeKey: 'swimming',
         durationMinutes: 45,
+        startTime: '08:00',
         status: 'realisee',
         description: 'Déjà là',
       },

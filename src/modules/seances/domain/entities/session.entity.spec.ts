@@ -42,6 +42,7 @@ function createProps(overrides: Record<string, unknown> = {}) {
     date: day('2026-05-04'),
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
+    startTime: '08:00',
     ...overrides,
   };
 }
@@ -54,6 +55,7 @@ function reconstituted(overrides: Partial<ReconstituteProps> = {}): Session {
     date: day('2026-05-04'),
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
+    startTime: '08:00',
     status: 'planifiee',
     modifiedManually: false,
     description: null,
@@ -373,6 +375,7 @@ describe('Session', () => {
           date: day('2026-05-04'),
           disciplineTypeKey: 'swimming',
           durationMinutes: 60,
+          startTime: '08:00',
           description: '  Endurance  ',
         },
         NOW,

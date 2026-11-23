@@ -7,11 +7,14 @@ const BASE = {
   date: new Date('2026-11-12T00:00:00.000Z'),
   disciplineTypeKey: 'running',
   durationMinutes: 45,
+  startTime: '08:00',
 };
 
 describe('Session : heure de début', () => {
-  it('est absente par défaut', () => {
-    expect(Session.create(BASE).startTime).toBeNull();
+  it('est obligatoire : la création sans heure est refusée', () => {
+    expect(() =>
+      Session.create({ ...BASE, startTime: null as unknown as string }),
+    ).toThrow(InvalidSessionError);
   });
 
   it('accepte une heure au format HH:MM', () => {
@@ -34,11 +37,11 @@ describe('Session : heure de début', () => {
     expect(changed.startTime).toBe('18:00');
     expect(changed.modifiedManually).toBe(true);
     expect(changed.changeLog).toEqual([
-      { changedAt: NOW, field: 'startTime', previousValue: null },
+      { changedAt: NOW, field: 'startTime', previousValue: '08:00' },
     ]);
   });
 
-  it('efface l’heure avec null', () => {
+  it('refuse d’effacer l’heure avec null', () => {
     const session = Session.reconstitute({
       id: Session.create(BASE).id,
       date: BASE.date,
@@ -52,6 +55,8 @@ describe('Session : heure de début', () => {
       changeLog: [],
     });
 
-    expect(session.change({ startTime: null }, NOW).startTime).toBeNull();
+    expect(() =>
+      session.change({ startTime: null as unknown as string }, NOW),
+    ).toThrow(InvalidSessionError);
   });
 });

@@ -95,14 +95,13 @@ export class UpdateSessionRequestDto {
 
   @ApiPropertyOptional({
     type: String,
-    nullable: true,
     example: '18:00',
     description:
-      'Heure de début (HH:MM) ; null efface l’heure, absent = inchangée',
+      'Heure de début (HH:MM) ; absente = inchangée, null refusé (une heure est obligatoire)',
   })
-  @ValidateIf(isTextProvided)
+  @ValidateIf(isProvided)
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  startTime?: string | null;
+  startTime?: string;
 
   @ApiPropertyOptional({
     enum: SESSION_RECURRENCES,

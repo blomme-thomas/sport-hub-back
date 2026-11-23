@@ -29,6 +29,7 @@ function seance(): Session {
     date: day('2099-05-04'),
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
+    startTime: '08:00',
     modules: [module(1, 'Échauffement'), module(2, 'Série')],
   });
 }
@@ -124,6 +125,7 @@ describe('SessionRepository (e2e)', () => {
           date: day('2099-06-01'),
           disciplineTypeKey: 'swimming',
           durationMinutes: 30,
+          startTime: '08:00',
         }),
       );
       await repository.save(
@@ -131,6 +133,7 @@ describe('SessionRepository (e2e)', () => {
           date: day('2099-08-01'),
           disciplineTypeKey: 'swimming',
           durationMinutes: 30,
+          startTime: '08:00',
         }),
       );
 

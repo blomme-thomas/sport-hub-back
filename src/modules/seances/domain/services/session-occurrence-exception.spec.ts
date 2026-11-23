@@ -51,6 +51,7 @@ describe('isSeriesOccurrence', () => {
       date: new Date('2026-11-16T00:00:00.000Z'),
       disciplineTypeKey: 'swimming',
       durationMinutes: 60,
+      startTime: '08:00',
     });
 
     expect(

@@ -7,6 +7,7 @@ function seance(status?: 'planifiee' | 'realisee' | 'manquee'): Session {
     date: new Date('2026-11-12T00:00:00.000Z'),
     disciplineTypeKey: 'running',
     durationMinutes: 45,
+    startTime: '08:00',
   });
   return status && status !== 'planifiee'
     ? planned.change({ status }, NOW)

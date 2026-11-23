@@ -6,6 +6,7 @@ const VALID = {
   date: '2026-05-04',
   disciplineTypeKey: 'swimming',
   durationMinutes: 60,
+  startTime: '18:00',
   targetHrZonePercentages: [10, 20, 40, 20, 10],
 };
 
@@ -23,6 +24,17 @@ async function failedProperties(plain: Record<string, unknown>) {
 }
 
 describe('CreateSessionRequestDto', () => {
+  it('refuse une création sans heure de début', async () => {
+    const { startTime: _omitted, ...withoutTime } = VALID;
+    await expect(failedProperties(withoutTime)).resolves.toContain('startTime');
+  });
+
+  it('refuse une heure de début nulle', async () => {
+    await expect(
+      failedProperties({ ...VALID, startTime: null }),
+    ).resolves.toContain('startTime');
+  });
+
   it('refuse une création sans répartition par zone', async () => {
     const { targetHrZonePercentages: _omitted, ...withoutZones } = VALID;
     await expect(failedProperties(withoutZones)).resolves.toContain(

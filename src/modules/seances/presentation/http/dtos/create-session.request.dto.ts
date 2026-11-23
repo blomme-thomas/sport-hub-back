@@ -85,15 +85,14 @@ export class CreateSessionRequestDto {
   @Max(1440)
   durationMinutes!: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: String,
-    nullable: true,
     example: '18:00',
-    description: 'Heure de début (HH:MM), facultative',
+    description: 'Heure de début (HH:MM), obligatoire',
   })
-  @IsOptional()
+  @IsString()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  startTime?: string | null;
+  startTime!: string;
 
   @ApiPropertyOptional({
     enum: SESSION_RECURRENCES,

@@ -410,9 +410,8 @@
             "type": "string"
           },
           "startTime": {
-            "description": "Heure de début (HH:MM), facultative",
+            "description": "Heure de début (HH:MM), obligatoire",
             "example": "18:00",
-            "nullable": true,
             "type": "string"
           },
           "targetDistanceMeters": {
@@ -448,7 +447,8 @@
           "targetHrZonePercentages",
           "date",
           "disciplineTypeKey",
-          "durationMinutes"
+          "durationMinutes",
+          "startTime"
         ],
         "type": "object"
       },
@@ -1267,9 +1267,8 @@
             "type": "string"
           },
           "startTime": {
-            "description": "Nouvelle heure de début (HH:MM) ; absente = heure de la série conservée, null = pas d’heure",
+            "description": "Nouvelle heure de début (HH:MM) ; absente = heure de la série conservée",
             "example": "07:00",
-            "nullable": true,
             "type": "string"
           }
         },
@@ -1957,7 +1956,6 @@
           },
           "startTime": {
             "example": "18:00",
-            "nullable": true,
             "type": "string"
           },
           "status": {
@@ -2059,9 +2057,8 @@
             "type": "string"
           },
           "startTime": {
-            "description": "Heure de début (HH:MM), absente si la séance n’a pas d’heure",
+            "description": "Heure de début (HH:MM)",
             "example": "18:00",
-            "nullable": true,
             "type": "string"
           },
           "status": {
@@ -2548,9 +2545,8 @@
             "type": "string"
           },
           "startTime": {
-            "description": "Heure de début (HH:MM) ; null efface l’heure, absent = inchangée",
+            "description": "Heure de début (HH:MM) ; absente = inchangée, null refusé (une heure est obligatoire)",
             "example": "18:00",
-            "nullable": true,
             "type": "string"
           },
           "status": {

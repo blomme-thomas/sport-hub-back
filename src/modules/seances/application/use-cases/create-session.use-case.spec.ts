@@ -48,6 +48,7 @@ const NATATION: CreateSessionCommand = {
   date: '2026-05-04',
   disciplineTypeKey: 'swimming',
   durationMinutes: 60,
+  startTime: '08:00',
 };
 
 class FakeSessionRepository implements ISessionRepository {
@@ -121,7 +122,7 @@ describe('CreateSessionUseCase', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
-        startTime: null,
+        startTime: '08:00',
         recurrence: 'aucune',
         targetDistanceMeters: null,
         targetHrZonePercentages: null,

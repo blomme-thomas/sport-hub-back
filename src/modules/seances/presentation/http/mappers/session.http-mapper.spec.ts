@@ -22,7 +22,7 @@ function sessionDto(overrides: Partial<SessionDto> = {}): SessionDto {
     date: '2026-05-04',
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
-    startTime: null,
+    startTime: '08:00',
     recurrence: 'aucune',
     status: 'planifiee',
     modifiedManually: true,
@@ -68,6 +68,7 @@ describe('SessionHttpMapper', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
+        startTime: '08:00',
         description: 'Endurance',
         modules: [MODULE],
       });
@@ -76,6 +77,7 @@ describe('SessionHttpMapper', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
+        startTime: '08:00',
         description: 'Endurance',
         modules: [MODULE],
       });
@@ -86,6 +88,7 @@ describe('SessionHttpMapper', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
+        startTime: '08:00',
       });
 
       const command = SessionHttpMapper.toCreateCommand(request);
@@ -142,7 +145,7 @@ describe('SessionHttpMapper', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
-        startTime: null,
+        startTime: '08:00',
         recurrence: 'aucune',
         status: 'planifiee',
         modifiedManually: true,

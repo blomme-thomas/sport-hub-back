@@ -61,6 +61,7 @@ function seance(): Session {
     date: new Date('2026-11-12T00:00:00.000Z'),
     disciplineTypeKey: 'running',
     durationMinutes: 45,
+    startTime: '08:00',
   });
 }
 
