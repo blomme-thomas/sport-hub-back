@@ -108,6 +108,66 @@ describe('SessionRepository (e2e)', () => {
       expect(await prisma.sessionChangeLog.count()).toBe(1);
     });
 
+    it('persiste et relit glucides, unité et hydratation', async () => {
+      const created = Session.create({
+        date: day('2099-05-04'),
+        disciplineTypeKey: 'swimming',
+        durationMinutes: 60,
+        startTime: '08:00',
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+      await repository.save(created);
+
+      const found = await repository.findById(created.id);
+
+      expect(found!.carbsGrams).toBe(60);
+      expect(found!.carbsUnit).toBe('par_heure');
+      expect(found!.hydrationMilliliters).toBe(500);
+    });
+
+    it('relit une nutrition à null pour une séance enregistrée sans nutrition', async () => {
+      const created = seance();
+      await repository.save(created);
+
+      const found = await repository.findById(created.id);
+
+      expect(found!.carbsGrams).toBeNull();
+      expect(found!.carbsUnit).toBeNull();
+      expect(found!.hydrationMilliliters).toBeNull();
+    });
+
+    it('efface la nutrition persistée après une modification à null', async () => {
+      const created = Session.create({
+        date: day('2099-05-04'),
+        disciplineTypeKey: 'swimming',
+        durationMinutes: 60,
+        startTime: '08:00',
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+      await repository.save(created);
+
+      await repository.save(
+        created.change(
+          { carbsGrams: null, carbsUnit: null, hydrationMilliliters: null },
+          new Date('2099-05-01T10:00:00.000Z'),
+        ),
+      );
+
+      const found = await repository.findById(created.id);
+      expect(found!.carbsGrams).toBeNull();
+      expect(found!.carbsUnit).toBeNull();
+      expect(found!.hydrationMilliliters).toBeNull();
+      expect(found!.changeLog.map((entry) => entry.field).sort()).toEqual([
+        'carbsGrams',
+        'carbsUnit',
+        'hydrationMilliliters',
+      ]);
+    });
+
     it('renvoie null pour une séance inconnue', async () => {
       const found = await repository.findById(
         SessionId.create('3f2504e0-4f89-41d3-9a0c-0305e82c3301'),

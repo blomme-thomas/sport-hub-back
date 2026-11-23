@@ -24,6 +24,9 @@ function record(overrides: Record<string, unknown> = {}) {
     targetHrZone3: null,
     targetHrZone4: null,
     targetHrZone5: null,
+    carbsGrams: null,
+    carbsUnit: null,
+    hydrationMilliliters: null,
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
     modules: [
@@ -94,6 +97,43 @@ describe('SessionMapper', () => {
       expect(session.pendingLogEntries).toEqual([]);
     });
 
+    it('reconstitue la nutrition renseignée', () => {
+      const session = SessionMapper.toDomain(
+        record({
+          carbsGrams: 60,
+          carbsUnit: 'pour_la_seance',
+          hydrationMilliliters: 500,
+        }),
+      );
+
+      expect(session.carbsGrams).toBe(60);
+      expect(session.carbsUnit).toBe('pour_la_seance');
+      expect(session.hydrationMilliliters).toBe(500);
+    });
+
+    it('reconstitue une nutrition à null quand les colonnes sont nulles', () => {
+      const session = SessionMapper.toDomain(record());
+
+      expect(session.carbsGrams).toBeNull();
+      expect(session.carbsUnit).toBeNull();
+      expect(session.hydrationMilliliters).toBeNull();
+    });
+
+    it('reconstitue une nutrition à null quand les colonnes sont absentes de l’enregistrement', () => {
+      const {
+        carbsGrams: _grams,
+        carbsUnit: _unit,
+        hydrationMilliliters: _hydration,
+        ...legacy
+      } = record();
+
+      const session = SessionMapper.toDomain(legacy as never);
+
+      expect(session.carbsGrams).toBeNull();
+      expect(session.carbsUnit).toBeNull();
+      expect(session.hydrationMilliliters).toBeNull();
+    });
+
     it('reconstitue une séance sans champs facultatifs ni module', () => {
       const session = SessionMapper.toDomain(
         record({
@@ -120,6 +160,9 @@ describe('SessionMapper', () => {
         recurrence: 'aucune',
         targetDistanceMeters: null,
         targetHrZonePercentages: null,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
         status: 'realisee',
         modifiedManually: false,
         description: 'Endurance',
@@ -150,6 +193,9 @@ describe('SessionMapper', () => {
         targetHrZone3: null,
         targetHrZone4: null,
         targetHrZone5: null,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
         status: 'realisee',
         modifiedManually: false,
         description: 'Endurance',
@@ -181,6 +227,37 @@ describe('SessionMapper', () => {
       });
     });
 
+    it('traduit la nutrition renseignée en colonnes de persistance', () => {
+      const session = SessionMapper.toDomain(
+        record({
+          carbsGrams: 60,
+          carbsUnit: 'par_heure',
+          hydrationMilliliters: 500,
+        }),
+      );
+
+      expect(SessionMapper.toPersistence(session)).toMatchObject({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+    });
+
+    it('traduit une nutrition absente en null', () => {
+      const session = Session.create({
+        date: new Date('2026-05-04T00:00:00.000Z'),
+        disciplineTypeKey: 'swimming',
+        durationMinutes: 60,
+        startTime: '08:00',
+      });
+
+      expect(SessionMapper.toPersistence(session)).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+    });
+
     it('n’inclut ni journal, ni horodatages de persistance', () => {
       const data = SessionMapper.toPersistence(
         SessionMapper.toDomain(record()),
@@ -191,6 +268,26 @@ describe('SessionMapper', () => {
       expect(data).not.toHaveProperty('createdAt');
       expect(data).not.toHaveProperty('updatedAt');
     });
+  });
+
+  it('restitue la nutrition après un aller-retour', () => {
+    const original = SessionMapper.toDomain(
+      record({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      }),
+    );
+
+    const roundTrip = SessionMapper.toDomain({
+      ...record(),
+      ...SessionMapper.toPersistence(original),
+      changeLogs: record().changeLogs,
+    });
+
+    expect(roundTrip.carbsGrams).toBe(60);
+    expect(roundTrip.carbsUnit).toBe('par_heure');
+    expect(roundTrip.hydrationMilliliters).toBe(500);
   });
 
   it('restitue une séance équivalente après un aller-retour', () => {

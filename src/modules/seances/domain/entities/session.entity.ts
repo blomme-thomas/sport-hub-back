@@ -5,6 +5,11 @@ import { SessionAlreadyCompletedError } from '../errors/session-already-complete
 import { SessionId } from '../value-objects/session-id.vo.js';
 import { SessionModule } from '../value-objects/session-module.vo.js';
 import {
+  type SessionCarbsUnit,
+  assertCarbs,
+  assertHydration,
+} from '../value-objects/session-nutrition.vo.js';
+import {
   type SessionRecurrence,
   isSessionRecurrence,
 } from '../value-objects/session-recurrence.vo.js';
@@ -48,6 +53,9 @@ export interface SessionProps {
   modules?: SessionModule[];
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[] | null;
+  carbsGrams?: number | null;
+  carbsUnit?: SessionCarbsUnit | null;
+  hydrationMilliliters?: number | null;
 }
 
 export interface SessionReconstitutionProps {
@@ -66,6 +74,9 @@ export interface SessionReconstitutionProps {
   activityLink?: SessionActivityLink | null;
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[] | null;
+  carbsGrams?: number | null;
+  carbsUnit?: SessionCarbsUnit | null;
+  hydrationMilliliters?: number | null;
 }
 
 export interface SessionChanges {
@@ -79,6 +90,9 @@ export interface SessionChanges {
   title?: string | null;
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[] | null;
+  carbsGrams?: number | null;
+  carbsUnit?: SessionCarbsUnit | null;
+  hydrationMilliliters?: number | null;
 }
 
 interface SessionFieldsInput {
@@ -92,6 +106,9 @@ interface SessionFieldsInput {
   title: string | null;
   targetDistanceMeters: number | null;
   targetHrZonePercentages: number[] | null;
+  carbsGrams: number | null;
+  carbsUnit: string | null;
+  hydrationMilliliters: number | null;
 }
 
 interface SessionFields {
@@ -105,6 +122,9 @@ interface SessionFields {
   title: string | null;
   targetDistanceMeters: number | null;
   targetHrZonePercentages: number[] | null;
+  carbsGrams: number | null;
+  carbsUnit: SessionCarbsUnit | null;
+  hydrationMilliliters: number | null;
 }
 
 interface SessionState extends SessionFields {
@@ -133,6 +153,9 @@ export class Session {
       recurrence: props.recurrence ?? 'aucune',
       targetDistanceMeters: props.targetDistanceMeters ?? null,
       targetHrZonePercentages: props.targetHrZonePercentages ?? null,
+      carbsGrams: props.carbsGrams ?? null,
+      carbsUnit: props.carbsUnit ?? null,
+      hydrationMilliliters: props.hydrationMilliliters ?? null,
       status: 'planifiee',
       description: props.description ?? null,
       title: props.title ?? null,
@@ -162,6 +185,9 @@ export class Session {
       recurrence: props.recurrence ?? 'aucune',
       targetDistanceMeters: props.targetDistanceMeters ?? null,
       targetHrZonePercentages: props.targetHrZonePercentages ?? null,
+      carbsGrams: props.carbsGrams ?? null,
+      carbsUnit: props.carbsUnit ?? null,
+      hydrationMilliliters: props.hydrationMilliliters ?? null,
       status: props.status,
       description: props.description,
       title: props.title ?? null,
@@ -209,6 +235,18 @@ export class Session {
     return this.state.targetHrZonePercentages === null
       ? null
       : [...this.state.targetHrZonePercentages];
+  }
+
+  get carbsGrams(): number | null {
+    return this.state.carbsGrams;
+  }
+
+  get carbsUnit(): SessionCarbsUnit | null {
+    return this.state.carbsUnit;
+  }
+
+  get hydrationMilliliters(): number | null {
+    return this.state.hydrationMilliliters;
   }
 
   get status(): SessionStatus {
@@ -268,6 +306,16 @@ export class Session {
         changes.targetHrZonePercentages === undefined
           ? current.targetHrZonePercentages
           : changes.targetHrZonePercentages,
+      carbsGrams:
+        changes.carbsGrams === undefined
+          ? current.carbsGrams
+          : changes.carbsGrams,
+      carbsUnit:
+        changes.carbsUnit === undefined ? current.carbsUnit : changes.carbsUnit,
+      hydrationMilliliters:
+        changes.hydrationMilliliters === undefined
+          ? current.hydrationMilliliters
+          : changes.hydrationMilliliters,
       status: changes.status ?? current.status,
       description:
         changes.description === undefined
@@ -383,6 +431,11 @@ function validateFields(input: SessionFieldsInput): SessionFields {
       'le statut doit être planifiee, realisee ou manquee',
     );
   }
+  const carbsUnit = input.carbsUnit as SessionCarbsUnit | null;
+  assertCarbs(input.carbsGrams, carbsUnit);
+  if (input.hydrationMilliliters !== null) {
+    assertHydration(input.hydrationMilliliters);
+  }
   return {
     date: new Date(input.date.getTime()),
     disciplineTypeKey,
@@ -393,6 +446,9 @@ function validateFields(input: SessionFieldsInput): SessionFields {
     targetHrZonePercentages: normalizeTargetZones(
       input.targetHrZonePercentages,
     ),
+    carbsGrams: input.carbsGrams,
+    carbsUnit,
+    hydrationMilliliters: input.hydrationMilliliters,
     status: input.status,
     description: normalizeText(
       input.description,
@@ -505,6 +561,31 @@ function changedEntries(
         current.targetHrZonePercentages === null
           ? null
           : JSON.stringify(current.targetHrZonePercentages),
+    });
+  }
+  if (next.carbsGrams !== current.carbsGrams) {
+    entries.push({
+      changedAt: now,
+      field: 'carbsGrams',
+      previousValue:
+        current.carbsGrams === null ? null : String(current.carbsGrams),
+    });
+  }
+  if (next.carbsUnit !== current.carbsUnit) {
+    entries.push({
+      changedAt: now,
+      field: 'carbsUnit',
+      previousValue: current.carbsUnit,
+    });
+  }
+  if (next.hydrationMilliliters !== current.hydrationMilliliters) {
+    entries.push({
+      changedAt: now,
+      field: 'hydrationMilliliters',
+      previousValue:
+        current.hydrationMilliliters === null
+          ? null
+          : String(current.hydrationMilliliters),
     });
   }
   if (next.recurrence !== current.recurrence) {

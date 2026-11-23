@@ -4,6 +4,7 @@ import type {
   SessionChangeLogEntry,
 } from '../../domain/entities/session.entity.js';
 import type { ModuleType } from '../../domain/value-objects/module-type.vo.js';
+import type { SessionCarbsUnit } from '../../domain/value-objects/session-nutrition.vo.js';
 import type { SessionRecurrence } from '../../domain/value-objects/session-recurrence.vo.js';
 import type { SessionStatus } from '../../domain/value-objects/session-status.vo.js';
 import type { TargetZonesInput } from '../../domain/value-objects/target-zones.vo.js';
@@ -19,6 +20,9 @@ export interface SessionModuleInput {
 export interface CreateSessionCommand {
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[];
+  carbsGrams?: number | null;
+  carbsUnit?: SessionCarbsUnit | null;
+  hydrationMilliliters?: number | null;
   date: string;
   disciplineTypeKey: string;
   durationMinutes: number;
@@ -33,6 +37,9 @@ export interface UpdateSessionCommand {
   id: string;
   targetDistanceMeters?: number | null;
   targetHrZonePercentages?: number[];
+  carbsGrams?: number | null;
+  carbsUnit?: SessionCarbsUnit | null;
+  hydrationMilliliters?: number | null;
   date?: string;
   disciplineTypeKey?: string;
   durationMinutes?: number;
@@ -99,6 +106,9 @@ export class SessionDto {
     readonly activity: SessionActivityLinkDto | null,
     readonly targetDistanceMeters: number | null,
     readonly targetHrZonePercentages: number[] | null,
+    readonly carbsGrams: number | null,
+    readonly carbsUnit: SessionCarbsUnit | null,
+    readonly hydrationMilliliters: number | null,
     readonly achievement: SessionAchievement | null,
   ) {}
 
@@ -125,6 +135,9 @@ export class SessionDto {
         : { id: link.activityId, origin: link.origin, linkedAt: link.linkedAt },
       session.targetDistanceMeters,
       session.targetHrZonePercentages,
+      session.carbsGrams,
+      session.carbsUnit,
+      session.hydrationMilliliters,
       achievement,
     );
   }

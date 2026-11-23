@@ -16,6 +16,10 @@ import {
   ValidateIf,
 } from 'class-validator';
 import {
+  SESSION_CARBS_UNITS,
+  type SessionCarbsUnit,
+} from '../../../domain/value-objects/session-nutrition.vo.js';
+import {
   SESSION_RECURRENCES,
   type SessionRecurrence,
 } from '../../../domain/value-objects/session-recurrence.vo.js';
@@ -57,6 +61,47 @@ export class UpdateSessionRequestDto {
   @Max(100, { each: true })
   @SumsTo100
   targetHrZonePercentages?: number[];
+
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    minimum: 1,
+    maximum: 1000,
+    example: 60,
+    description:
+      'Nouvelle cible de glucides en grammes, absent = inchangée, null = effacée (avec carbsUnit)',
+  })
+  @ValidateIf(isTextProvided)
+  @IsInt()
+  @Min(1)
+  @Max(1000)
+  carbsGrams?: number | null;
+
+  @ApiPropertyOptional({
+    enum: SESSION_CARBS_UNITS,
+    nullable: true,
+    example: 'par_heure',
+    description:
+      'Nouvelle unité de glucides, absent = inchangée, null = effacée (avec carbsGrams)',
+  })
+  @ValidateIf(isTextProvided)
+  @IsIn(SESSION_CARBS_UNITS)
+  carbsUnit?: SessionCarbsUnit | null;
+
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    minimum: 1,
+    maximum: 20000,
+    example: 500,
+    description:
+      'Nouvelle hydratation en millilitres, absent = inchangée, null = effacée',
+  })
+  @ValidateIf(isTextProvided)
+  @IsInt()
+  @Min(1)
+  @Max(20000)
+  hydrationMilliliters?: number | null;
 
   @ApiPropertyOptional({
     type: String,

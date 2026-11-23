@@ -91,6 +91,7 @@ describe('Bilans hebdomadaires (e2e)', () => {
         date: '2026-11-04',
         disciplineTypeKey: 'running',
         durationMinutes: 45,
+        startTime: '08:00',
       })
       .expect(201);
   }

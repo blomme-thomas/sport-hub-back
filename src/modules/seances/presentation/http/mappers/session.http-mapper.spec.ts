@@ -30,6 +30,9 @@ function sessionDto(overrides: Partial<SessionDto> = {}): SessionDto {
     title: null,
     targetDistanceMeters: null,
     targetHrZonePercentages: null,
+    carbsGrams: null,
+    carbsUnit: null,
+    hydrationMilliliters: null,
     achievement: null,
     modules: [
       {
@@ -97,6 +100,82 @@ describe('SessionHttpMapper', () => {
       expect(command.description).toBeUndefined();
     });
 
+    it('traduit la nutrition de la création en commande applicative', () => {
+      const request = plainToInstance(CreateSessionRequestDto, {
+        date: '2026-05-04',
+        disciplineTypeKey: 'swimming',
+        durationMinutes: 60,
+        startTime: '08:00',
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      expect(SessionHttpMapper.toCreateCommand(request)).toMatchObject({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+    });
+
+    it('laisse la nutrition absente de la commande de création quand elle n’est pas fournie', () => {
+      const request = plainToInstance(CreateSessionRequestDto, {
+        date: '2026-05-04',
+        disciplineTypeKey: 'swimming',
+        durationMinutes: 60,
+        startTime: '08:00',
+      });
+
+      const command = SessionHttpMapper.toCreateCommand(request);
+
+      expect(command.carbsGrams).toBeUndefined();
+      expect(command.carbsUnit).toBeUndefined();
+      expect(command.hydrationMilliliters).toBeUndefined();
+    });
+
+    it('traduit la nutrition de la modification en commande applicative', () => {
+      const request = plainToInstance(UpdateSessionRequestDto, {
+        carbsGrams: 80,
+        carbsUnit: 'pour_la_seance',
+        hydrationMilliliters: 750,
+      });
+
+      expect(
+        SessionHttpMapper.toUpdateCommand(SESSION_ID, request),
+      ).toMatchObject({
+        id: SESSION_ID,
+        carbsGrams: 80,
+        carbsUnit: 'pour_la_seance',
+        hydrationMilliliters: 750,
+      });
+    });
+
+    it('traduit l’effacement de la nutrition par des null dans la commande de modification', () => {
+      const request = plainToInstance(UpdateSessionRequestDto, {
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+
+      const command = SessionHttpMapper.toUpdateCommand(SESSION_ID, request);
+
+      expect(command.carbsGrams).toBeNull();
+      expect(command.carbsUnit).toBeNull();
+      expect(command.hydrationMilliliters).toBeNull();
+    });
+
+    it('laisse la nutrition indéfinie dans la commande de modification quand elle est absente', () => {
+      const request = plainToInstance(UpdateSessionRequestDto, {
+        durationMinutes: 45,
+      });
+
+      const command = SessionHttpMapper.toUpdateCommand(SESSION_ID, request);
+
+      expect(command.carbsGrams).toBeUndefined();
+      expect(command.carbsUnit).toBeUndefined();
+      expect(command.hydrationMilliliters).toBeUndefined();
+    });
+
     it('traduit la modification en commande portant l’identifiant et les champs effacés à null', () => {
       const request = plainToInstance(UpdateSessionRequestDto, {
         durationMinutes: 45,
@@ -154,6 +233,9 @@ describe('SessionHttpMapper', () => {
         title: null,
         targetDistanceMeters: null,
         targetHrZonePercentages: null,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
         modules: [
           {
             position: 1,
@@ -180,6 +262,22 @@ describe('SessionHttpMapper', () => {
           },
         ],
         activity: null,
+      });
+    });
+
+    it('restitue la nutrition renseignée de la séance', () => {
+      const response = SessionHttpMapper.toResponse(
+        sessionDto({
+          carbsGrams: 60,
+          carbsUnit: 'par_heure',
+          hydrationMilliliters: 500,
+        }),
+      );
+
+      expect(response).toMatchObject({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
       });
     });
 
