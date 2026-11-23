@@ -28,6 +28,47 @@ describe('UpdateSessionRequestDto', () => {
     ).resolves.toEqual([]);
   });
 
+  it('accepte glucides, unité et hydratation renseignés', async () => {
+    await expect(
+      failedProperties({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      }),
+    ).resolves.toEqual([]);
+  });
+
+  it('accepte glucides, unité et hydratation nuls pour les effacer', async () => {
+    await expect(
+      failedProperties({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      }),
+    ).resolves.toEqual([]);
+  });
+
+  it.each([
+    ['glucides nuls', { carbsGrams: 0 }, 'carbsGrams'],
+    ['glucides négatifs', { carbsGrams: -5 }, 'carbsGrams'],
+    ['glucides décimaux', { carbsGrams: 60.5 }, 'carbsGrams'],
+    ['glucides au-delà de 1000', { carbsGrams: 1001 }, 'carbsGrams'],
+    ['unité de glucides inconnue', { carbsUnit: 'par_minute' }, 'carbsUnit'],
+    ['hydratation nulle', { hydrationMilliliters: 0 }, 'hydrationMilliliters'],
+    [
+      'hydratation décimale',
+      { hydrationMilliliters: 500.5 },
+      'hydrationMilliliters',
+    ],
+    [
+      'hydratation au-delà de 20000',
+      { hydrationMilliliters: 20001 },
+      'hydrationMilliliters',
+    ],
+  ])('refuse %s', async (_label, plain, property) => {
+    await expect(failedProperties(plain)).resolves.toContain(property);
+  });
+
   it('accepte un statut de la liste autorisée', async () => {
     await expect(failedProperties({ status: 'manquee' })).resolves.toEqual([]);
   });

@@ -71,6 +71,85 @@ describe('CreateSessionRequestDto', () => {
     ).resolves.toEqual([]);
   });
 
+  it('accepte une création avec glucides, unité et hydratation', async () => {
+    await expect(
+      failedProperties({
+        ...VALID,
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      }),
+    ).resolves.toEqual([]);
+  });
+
+  it('accepte les bornes de glucides et d’hydratation', async () => {
+    await expect(
+      failedProperties({
+        ...VALID,
+        carbsGrams: 1000,
+        carbsUnit: 'pour_la_seance',
+        hydrationMilliliters: 20000,
+      }),
+    ).resolves.toEqual([]);
+    await expect(
+      failedProperties({
+        ...VALID,
+        carbsGrams: 1,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 1,
+      }),
+    ).resolves.toEqual([]);
+  });
+
+  it.each([
+    ['glucides nuls', { carbsGrams: 0, carbsUnit: 'par_heure' }, 'carbsGrams'],
+    [
+      'glucides négatifs',
+      { carbsGrams: -5, carbsUnit: 'par_heure' },
+      'carbsGrams',
+    ],
+    [
+      'glucides décimaux',
+      { carbsGrams: 60.5, carbsUnit: 'par_heure' },
+      'carbsGrams',
+    ],
+    [
+      'glucides au-delà de 1000',
+      { carbsGrams: 1001, carbsUnit: 'par_heure' },
+      'carbsGrams',
+    ],
+    [
+      'glucides textuels',
+      { carbsGrams: '60', carbsUnit: 'par_heure' },
+      'carbsGrams',
+    ],
+    [
+      'unité de glucides inconnue',
+      { carbsGrams: 60, carbsUnit: 'par_minute' },
+      'carbsUnit',
+    ],
+    ['hydratation nulle', { hydrationMilliliters: 0 }, 'hydrationMilliliters'],
+    [
+      'hydratation négative',
+      { hydrationMilliliters: -100 },
+      'hydrationMilliliters',
+    ],
+    [
+      'hydratation décimale',
+      { hydrationMilliliters: 500.5 },
+      'hydrationMilliliters',
+    ],
+    [
+      'hydratation au-delà de 20000',
+      { hydrationMilliliters: 20001 },
+      'hydrationMilliliters',
+    ],
+  ])('refuse %s', async (_label, overrides, property) => {
+    await expect(
+      failedProperties({ ...VALID, ...overrides }),
+    ).resolves.toContain(property);
+  });
+
   it('accepte trente modules', async () => {
     await expect(
       failedProperties({

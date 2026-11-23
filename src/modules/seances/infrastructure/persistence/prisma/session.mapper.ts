@@ -4,6 +4,7 @@ import {
 } from '../../../domain/entities/session.entity.js';
 import { SessionId } from '../../../domain/value-objects/session-id.vo.js';
 import type { SessionRecurrence } from '../../../domain/value-objects/session-recurrence.vo.js';
+import type { SessionCarbsUnit } from '../../../domain/value-objects/session-nutrition.vo.js';
 import {
   SessionModule,
   type SessionModulePrimitives,
@@ -44,6 +45,9 @@ export interface SessionRecord {
   targetHrZone3?: number | null;
   targetHrZone4?: number | null;
   targetHrZone5?: number | null;
+  carbsGrams?: number | null;
+  carbsUnit?: string | null;
+  hydrationMilliliters?: number | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -66,6 +70,9 @@ export interface SessionPersistence {
   targetHrZone3: number | null;
   targetHrZone4: number | null;
   targetHrZone5: number | null;
+  carbsGrams: number | null;
+  carbsUnit: string | null;
+  hydrationMilliliters: number | null;
   status: string;
   modifiedManually: boolean;
   description: string | null;
@@ -85,6 +92,9 @@ export class SessionMapper {
       recurrence: record.recurrence as SessionRecurrence,
       targetDistanceMeters: record.targetDistanceMeters ?? null,
       targetHrZonePercentages: zonesOf(record),
+      carbsGrams: record.carbsGrams ?? null,
+      carbsUnit: (record.carbsUnit ?? null) as SessionCarbsUnit | null,
+      hydrationMilliliters: record.hydrationMilliliters ?? null,
       status: record.status,
       modifiedManually: record.modifiedManually,
       activityLink: record.activityLink
@@ -124,6 +134,9 @@ export class SessionMapper {
       recurrence: session.recurrence,
       targetDistanceMeters: session.targetDistanceMeters,
       ...zoneColumnsOf(session.targetHrZonePercentages),
+      carbsGrams: session.carbsGrams,
+      carbsUnit: session.carbsUnit,
+      hydrationMilliliters: session.hydrationMilliliters,
       status: session.status,
       modifiedManually: session.modifiedManually,
       description: session.description,

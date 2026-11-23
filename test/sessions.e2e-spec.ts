@@ -43,6 +43,7 @@ const SEANCE_NATATION = {
   date: '2099-05-04',
   disciplineTypeKey: 'swimming',
   durationMinutes: 60,
+  startTime: '08:00',
   description: 'Séance de fond',
   targetHrZonePercentages: [10, 20, 40, 20, 10],
   modules: MODULES_NATATION,
@@ -496,6 +497,235 @@ describe('Séances (e2e)', () => {
       const res = await patch(UNKNOWN_ID, { durationMinutes: 30 }).expect(404);
 
       expect(res.body.code).toBe('SESSION_NOT_FOUND');
+    });
+  });
+
+  describe('nutrition de séance', () => {
+    const NUTRITION = {
+      carbsGrams: 60,
+      carbsUnit: 'par_heure',
+      hydrationMilliliters: 500,
+    };
+
+    it('crée une séance sans nutrition avec trois champs à null', async () => {
+      const res = await create(SEANCE_NATATION).expect(201);
+
+      expect(res.body).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+    });
+
+    it('crée une séance avec nutrition et la relit à l’identique', async () => {
+      const res = await create({ ...SEANCE_NATATION, ...NUTRITION }).expect(
+        201,
+      );
+
+      expect(res.body).toMatchObject(NUTRITION);
+      const fetched = await get(res.body.id).expect(200);
+      expect(fetched.body).toMatchObject(NUTRITION);
+    });
+
+    it('crée une séance avec hydratation seule', async () => {
+      const res = await create({
+        ...SEANCE_NATATION,
+        hydrationMilliliters: 750,
+      }).expect(201);
+
+      expect(res.body).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: 750,
+      });
+    });
+
+    it('crée une séance avec glucides pour la séance entière', async () => {
+      const res = await create({
+        ...SEANCE_NATATION,
+        carbsGrams: 90,
+        carbsUnit: 'pour_la_seance',
+      }).expect(201);
+
+      expect(res.body).toMatchObject({
+        carbsGrams: 90,
+        carbsUnit: 'pour_la_seance',
+      });
+    });
+
+    it('refuse des glucides sans unité avec SESSION_INVALID', async () => {
+      const res = await create({ ...SEANCE_NATATION, carbsGrams: 60 }).expect(
+        400,
+      );
+
+      expect(res.headers['content-type']).toMatch(PROBLEM_JSON);
+      expect(res.body.code).toBe('SESSION_INVALID');
+    });
+
+    it('refuse une unité sans glucides avec SESSION_INVALID', async () => {
+      const res = await create({
+        ...SEANCE_NATATION,
+        carbsUnit: 'par_heure',
+      }).expect(400);
+
+      expect(res.body.code).toBe('SESSION_INVALID');
+    });
+
+    it.each([
+      ['unité inconnue', { carbsGrams: 60, carbsUnit: 'par_minute' }],
+      ['glucides nuls', { carbsGrams: 0, carbsUnit: 'par_heure' }],
+      ['glucides négatifs', { carbsGrams: -5, carbsUnit: 'par_heure' }],
+      ['glucides décimaux', { carbsGrams: 60.5, carbsUnit: 'par_heure' }],
+      [
+        'glucides au-delà de 1000',
+        { carbsGrams: 1001, carbsUnit: 'par_heure' },
+      ],
+      ['hydratation nulle', { hydrationMilliliters: 0 }],
+      ['hydratation négative', { hydrationMilliliters: -100 }],
+      ['hydratation décimale', { hydrationMilliliters: 500.5 }],
+      ['hydratation au-delà de 20000', { hydrationMilliliters: 20001 }],
+    ])('refuse à la création : %s', async (_label, body) => {
+      const res = await create({ ...SEANCE_NATATION, ...body }).expect(400);
+
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('ajoute la nutrition à une séance qui n’en avait pas et journalise', async () => {
+      const id = await createNatation();
+
+      const res = await patch(id, NUTRITION).expect(200);
+
+      expect(res.body).toMatchObject({ ...NUTRITION, modifiedManually: true });
+      const fields = res.body.changeLog.map(
+        (entry: { field: string }) => entry.field,
+      );
+      expect(fields).toEqual(
+        expect.arrayContaining([
+          'carbsGrams',
+          'carbsUnit',
+          'hydrationMilliliters',
+        ]),
+      );
+      const fetched = await get(id).expect(200);
+      expect(fetched.body).toMatchObject(NUTRITION);
+    });
+
+    it('change la nutrition et journalise les valeurs précédentes', async () => {
+      const id = (
+        await create({ ...SEANCE_NATATION, ...NUTRITION }).expect(201)
+      ).body.id as string;
+
+      const res = await patch(id, {
+        carbsGrams: 80,
+        carbsUnit: 'pour_la_seance',
+        hydrationMilliliters: 750,
+      }).expect(200);
+
+      expect(res.body).toMatchObject({
+        carbsGrams: 80,
+        carbsUnit: 'pour_la_seance',
+        hydrationMilliliters: 750,
+      });
+      expect(res.body.changeLog).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ field: 'carbsGrams', previousValue: '60' }),
+          expect.objectContaining({
+            field: 'carbsUnit',
+            previousValue: 'par_heure',
+          }),
+          expect.objectContaining({
+            field: 'hydrationMilliliters',
+            previousValue: '500',
+          }),
+        ]),
+      );
+    });
+
+    it('efface la nutrition quand les champs valent null', async () => {
+      const id = (
+        await create({ ...SEANCE_NATATION, ...NUTRITION }).expect(201)
+      ).body.id as string;
+
+      const res = await patch(id, {
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      }).expect(200);
+
+      expect(res.body).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+      const fetched = await get(id).expect(200);
+      expect(fetched.body).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+    });
+
+    it('conserve la nutrition quand elle est absente de la modification', async () => {
+      const id = (
+        await create({ ...SEANCE_NATATION, ...NUTRITION }).expect(201)
+      ).body.id as string;
+
+      const res = await patch(id, { durationMinutes: 45 }).expect(200);
+
+      expect(res.body).toMatchObject(NUTRITION);
+    });
+
+    it('modifie une séance sans nutrition sans erreur', async () => {
+      const id = await createNatation();
+
+      const res = await patch(id, { durationMinutes: 45 }).expect(200);
+
+      expect(res.body).toMatchObject({
+        durationMinutes: 45,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+    });
+
+    it('refuse de modifier les glucides sans unité sur une séance sans glucides', async () => {
+      const id = await createNatation();
+
+      const res = await patch(id, { carbsGrams: 60 }).expect(400);
+
+      expect(res.body.code).toBe('SESSION_INVALID');
+    });
+
+    it('refuse d’effacer les glucides sans effacer leur unité', async () => {
+      const id = (
+        await create({ ...SEANCE_NATATION, ...NUTRITION }).expect(201)
+      ).body.id as string;
+
+      const res = await patch(id, { carbsGrams: null }).expect(400);
+
+      expect(res.body.code).toBe('SESSION_INVALID');
+    });
+
+    it.each([
+      ['unité inconnue', { carbsUnit: 'par_minute' }],
+      ['glucides décimaux', { carbsGrams: 60.5 }],
+      ['hydratation nulle', { hydrationMilliliters: 0 }],
+      ['hydratation au-delà de 20000', { hydrationMilliliters: 20001 }],
+    ])('refuse à la modification : %s', async (_label, body) => {
+      const id = await createNatation();
+
+      const res = await patch(id, body).expect(400);
+
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('renvoie 409 SESSION_ALREADY_COMPLETED pour la nutrition d’une séance réalisée', async () => {
+      const id = await createNatation();
+      await patch(id, { status: 'realisee' }).expect(200);
+
+      const res = await patch(id, { hydrationMilliliters: 500 }).expect(409);
+
+      expect(res.body.code).toBe('SESSION_ALREADY_COMPLETED');
     });
   });
 

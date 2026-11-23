@@ -126,6 +126,9 @@ describe('CreateSessionUseCase', () => {
         recurrence: 'aucune',
         targetDistanceMeters: null,
         targetHrZonePercentages: null,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
         achievement: null,
         status: 'planifiee',
         modifiedManually: false,
@@ -190,6 +193,53 @@ describe('CreateSessionUseCase', () => {
       });
     });
 
+    it('renvoie et persiste les glucides, leur unité et l’hydratation fournis', async () => {
+      const result = await useCase.execute({
+        ...NATATION,
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      expect(result).toMatchObject({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+      const persisted = repository.sessions.get(result.id);
+      expect(persisted?.carbsGrams).toBe(60);
+      expect(persisted?.carbsUnit).toBe('par_heure');
+      expect(persisted?.hydrationMilliliters).toBe(500);
+    });
+
+    it('crée une séance avec hydratation seule', async () => {
+      const result = await useCase.execute({
+        ...NATATION,
+        hydrationMilliliters: 750,
+      });
+
+      expect(result).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: 750,
+      });
+    });
+
+    it('renvoie la nutrition à null quand elle est fournie à null', async () => {
+      const result = await useCase.execute({
+        ...NATATION,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+
+      expect(result).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+    });
+
     it('attribue un identifiant distinct à chaque séance créée', async () => {
       const first = await useCase.execute(NATATION);
       const second = await useCase.execute(NATATION);
@@ -235,6 +285,30 @@ describe('CreateSessionUseCase', () => {
 
       expect(error).toBeInstanceOf(InvalidSessionModuleError);
       expect(error).toMatchObject({ code: 'SESSION_MODULE_INVALID' });
+      expect(repository.sessions.size).toBe(0);
+    });
+
+    it('refuse des glucides sans unité avec SESSION_INVALID et ne persiste rien', async () => {
+      await expect(
+        useCase.execute({ ...NATATION, carbsGrams: 60 }),
+      ).rejects.toMatchObject({ code: 'SESSION_INVALID' });
+
+      expect(repository.sessions.size).toBe(0);
+    });
+
+    it('refuse une unité sans glucides avec SESSION_INVALID et ne persiste rien', async () => {
+      await expect(
+        useCase.execute({ ...NATATION, carbsUnit: 'par_heure' }),
+      ).rejects.toMatchObject({ code: 'SESSION_INVALID' });
+
+      expect(repository.sessions.size).toBe(0);
+    });
+
+    it('refuse une hydratation nulle avec SESSION_INVALID et ne persiste rien', async () => {
+      await expect(
+        useCase.execute({ ...NATATION, hydrationMilliliters: 0 }),
+      ).rejects.toMatchObject({ code: 'SESSION_INVALID' });
+
       expect(repository.sessions.size).toBe(0);
     });
 

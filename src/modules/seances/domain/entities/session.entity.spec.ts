@@ -527,6 +527,287 @@ describe('Session', () => {
     });
   });
 
+  describe('nutrition', () => {
+    it('crée une séance sans glucides ni hydratation par défaut', () => {
+      const session = Session.create(createProps());
+
+      expect(session.carbsGrams).toBeNull();
+      expect(session.carbsUnit).toBeNull();
+      expect(session.hydrationMilliliters).toBeNull();
+    });
+
+    it('crée une séance avec glucides, unité et hydratation', () => {
+      const session = Session.create(
+        createProps({
+          carbsGrams: 60,
+          carbsUnit: 'par_heure',
+          hydrationMilliliters: 500,
+        }),
+      );
+
+      expect(session.carbsGrams).toBe(60);
+      expect(session.carbsUnit).toBe('par_heure');
+      expect(session.hydrationMilliliters).toBe(500);
+    });
+
+    it('crée une séance avec hydratation seule', () => {
+      const session = Session.create(
+        createProps({ hydrationMilliliters: 750 }),
+      );
+
+      expect(session.hydrationMilliliters).toBe(750);
+      expect(session.carbsGrams).toBeNull();
+    });
+
+    it('crée une séance avec glucides pour la séance entière', () => {
+      const session = Session.create(
+        createProps({ carbsGrams: 90, carbsUnit: 'pour_la_seance' }),
+      );
+
+      expect(session.carbsUnit).toBe('pour_la_seance');
+    });
+
+    it.each([
+      ['glucides sans unité', { carbsGrams: 60 }],
+      ['unité sans glucides', { carbsUnit: 'par_heure' }],
+      ['glucides nuls avec unité', { carbsGrams: 0, carbsUnit: 'par_heure' }],
+      ['glucides négatifs', { carbsGrams: -10, carbsUnit: 'par_heure' }],
+      ['glucides décimaux', { carbsGrams: 60.5, carbsUnit: 'par_heure' }],
+      [
+        'glucides au-delà de 1000',
+        { carbsGrams: 1001, carbsUnit: 'par_heure' },
+      ],
+      ['unité inconnue', { carbsGrams: 60, carbsUnit: 'par_minute' }],
+      ['hydratation nulle', { hydrationMilliliters: 0 }],
+      ['hydratation négative', { hydrationMilliliters: -1 }],
+      ['hydratation décimale', { hydrationMilliliters: 500.5 }],
+      ['hydratation au-delà de 20000', { hydrationMilliliters: 20001 }],
+    ])('refuse à la création : %s', (_label, overrides) => {
+      expect(() => Session.create(createProps(overrides))).toThrow(
+        InvalidSessionError,
+      );
+    });
+
+    it('reconstitue une séance avec nutrition à null', () => {
+      const session = reconstituted({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+
+      expect(session.carbsGrams).toBeNull();
+      expect(session.carbsUnit).toBeNull();
+      expect(session.hydrationMilliliters).toBeNull();
+    });
+
+    it('reconstitue une séance avec nutrition renseignée', () => {
+      const session = reconstituted({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      expect(session.carbsGrams).toBe(60);
+      expect(session.carbsUnit).toBe('par_heure');
+      expect(session.hydrationMilliliters).toBe(500);
+    });
+
+    it('laisse la nutrition inchangée quand les champs sont absents de la modification', () => {
+      const session = reconstituted({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      const changed = session.change({ durationMinutes: 45 }, NOW);
+
+      expect(changed.carbsGrams).toBe(60);
+      expect(changed.carbsUnit).toBe('par_heure');
+      expect(changed.hydrationMilliliters).toBe(500);
+      expect(changed.changeLog.map((entry) => entry.field)).toEqual([
+        'durationMinutes',
+      ]);
+    });
+
+    it('ajoute glucides et hydratation à une séance qui n’en avait pas et journalise les valeurs précédentes à null', () => {
+      const changed = reconstituted().change(
+        {
+          carbsGrams: 60,
+          carbsUnit: 'par_heure',
+          hydrationMilliliters: 500,
+        },
+        NOW,
+      );
+
+      expect(changed.carbsGrams).toBe(60);
+      expect(changed.carbsUnit).toBe('par_heure');
+      expect(changed.hydrationMilliliters).toBe(500);
+      expect(changed.modifiedManually).toBe(true);
+      expect(changed.changeLog).toEqual([
+        { changedAt: NOW, field: 'carbsGrams', previousValue: null },
+        { changedAt: NOW, field: 'carbsUnit', previousValue: null },
+        { changedAt: NOW, field: 'hydrationMilliliters', previousValue: null },
+      ]);
+    });
+
+    it('journalise la valeur précédente quand les glucides changent', () => {
+      const session = reconstituted({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+      });
+
+      const changed = session.change({ carbsGrams: 80 }, NOW);
+
+      expect(changed.carbsGrams).toBe(80);
+      expect(changed.carbsUnit).toBe('par_heure');
+      expect(changed.changeLog).toEqual([
+        { changedAt: NOW, field: 'carbsGrams', previousValue: '60' },
+      ]);
+    });
+
+    it('journalise la valeur précédente quand l’unité des glucides change', () => {
+      const session = reconstituted({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+      });
+
+      const changed = session.change({ carbsUnit: 'pour_la_seance' }, NOW);
+
+      expect(changed.carbsUnit).toBe('pour_la_seance');
+      expect(changed.changeLog).toEqual([
+        { changedAt: NOW, field: 'carbsUnit', previousValue: 'par_heure' },
+      ]);
+    });
+
+    it('journalise la valeur précédente quand l’hydratation change', () => {
+      const session = reconstituted({ hydrationMilliliters: 500 });
+
+      const changed = session.change({ hydrationMilliliters: 750 }, NOW);
+
+      expect(changed.hydrationMilliliters).toBe(750);
+      expect(changed.changeLog).toEqual([
+        { changedAt: NOW, field: 'hydrationMilliliters', previousValue: '500' },
+      ]);
+    });
+
+    it('efface les glucides quand grammes et unité sont mis à null', () => {
+      const session = reconstituted({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+      });
+
+      const changed = session.change(
+        { carbsGrams: null, carbsUnit: null },
+        NOW,
+      );
+
+      expect(changed.carbsGrams).toBeNull();
+      expect(changed.carbsUnit).toBeNull();
+      expect(changed.changeLog).toEqual([
+        { changedAt: NOW, field: 'carbsGrams', previousValue: '60' },
+        { changedAt: NOW, field: 'carbsUnit', previousValue: 'par_heure' },
+      ]);
+    });
+
+    it('efface l’hydratation quand elle est mise à null', () => {
+      const session = reconstituted({ hydrationMilliliters: 500 });
+
+      const changed = session.change({ hydrationMilliliters: null }, NOW);
+
+      expect(changed.hydrationMilliliters).toBeNull();
+      expect(changed.changeLog).toEqual([
+        { changedAt: NOW, field: 'hydrationMilliliters', previousValue: '500' },
+      ]);
+    });
+
+    it('ne journalise rien quand la nutrition envoyée est identique', () => {
+      const session = reconstituted({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      const unchanged = session.change(
+        {
+          carbsGrams: 60,
+          carbsUnit: 'par_heure',
+          hydrationMilliliters: 500,
+        },
+        NOW,
+      );
+
+      expect(unchanged.changeLog).toEqual([]);
+      expect(unchanged.modifiedManually).toBe(false);
+    });
+
+    it('ne journalise rien quand on efface une nutrition déjà absente', () => {
+      const unchanged = reconstituted().change(
+        { carbsGrams: null, carbsUnit: null, hydrationMilliliters: null },
+        NOW,
+      );
+
+      expect(unchanged.changeLog).toEqual([]);
+      expect(unchanged.modifiedManually).toBe(false);
+    });
+
+    it.each([
+      [
+        'glucides sans unité sur une séance sans glucides',
+        {},
+        { carbsGrams: 60 },
+      ],
+      [
+        'unité seule sur une séance sans glucides',
+        {},
+        { carbsUnit: 'par_heure' },
+      ],
+      [
+        'effacement des grammes sans l’unité',
+        { carbsGrams: 60, carbsUnit: 'par_heure' },
+        { carbsGrams: null },
+      ],
+      [
+        'effacement de l’unité sans les grammes',
+        { carbsGrams: 60, carbsUnit: 'par_heure' },
+        { carbsUnit: null },
+      ],
+      [
+        'unité inconnue',
+        { carbsGrams: 60, carbsUnit: 'par_heure' },
+        { carbsUnit: 'par_minute' },
+      ],
+      [
+        'glucides au-delà de 1000',
+        { carbsGrams: 60, carbsUnit: 'par_heure' },
+        { carbsGrams: 1001 },
+      ],
+      [
+        'glucides décimaux',
+        { carbsGrams: 60, carbsUnit: 'par_heure' },
+        { carbsGrams: 60.5 },
+      ],
+      ['hydratation nulle', {}, { hydrationMilliliters: 0 }],
+      ['hydratation au-delà de 20000', {}, { hydrationMilliliters: 20001 }],
+    ])('refuse à la modification : %s', (_label, initial, changes) => {
+      const session = reconstituted(initial as Partial<ReconstituteProps>);
+
+      expect(() => session.change(changes as never, NOW)).toThrow(
+        InvalidSessionError,
+      );
+      expect(session.changeLog).toEqual([]);
+    });
+
+    it('refuse de modifier la nutrition d’une séance réalisée avec SESSION_ALREADY_COMPLETED', () => {
+      const session = reconstituted({ status: 'realisee' });
+
+      const error = captureError(() =>
+        session.change({ hydrationMilliliters: 500 }, NOW),
+      );
+
+      expect(error).toBeInstanceOf(SessionAlreadyCompletedError);
+    });
+  });
+
   describe('remplacement des modules', () => {
     it('remplace la liste et renumérote les positions selon l’ordre fourni', () => {
       const session = reconstituted({

@@ -108,6 +108,9 @@ model Session {
   targetHrZone3        Int?                         @map("target_hr_zone_3")
   targetHrZone4        Int?                         @map("target_hr_zone_4")
   targetHrZone5        Int?                         @map("target_hr_zone_5")
+  carbsGrams           Int?                         @map("carbs_grams")
+  carbsUnit            String?                      @map("carbs_unit") @db.VarChar(20)
+  hydrationMilliliters Int?                         @map("hydration_milliliters")
   status               String                       @default("planifiee")
   modifiedManually     Boolean                      @default(false) @map("modified_manually")
   description          String?

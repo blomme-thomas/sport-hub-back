@@ -166,6 +166,79 @@ describe('UpdateSessionUseCase', () => {
       ]);
     });
 
+    it('ajoute glucides, unité et hydratation à une séance sans nutrition', async () => {
+      const result = await useCase.execute({
+        id,
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      expect(result).toMatchObject({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+        modifiedManually: true,
+      });
+      expect(result.changeLog.map((entry) => entry.field)).toEqual([
+        'carbsGrams',
+        'carbsUnit',
+        'hydrationMilliliters',
+      ]);
+      expect(repository.sessions.get(id)?.carbsGrams).toBe(60);
+    });
+
+    it('efface la nutrition quand glucides, unité et hydratation valent null', async () => {
+      await useCase.execute({
+        id,
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      const result = await useCase.execute({
+        id,
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+
+      expect(result).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+      expect(repository.sessions.get(id)?.carbsGrams).toBeNull();
+      expect(repository.sessions.get(id)?.hydrationMilliliters).toBeNull();
+    });
+
+    it('conserve la nutrition quand elle est absente de la modification', async () => {
+      await useCase.execute({
+        id,
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+
+      const result = await useCase.execute({ id, durationMinutes: 45 });
+
+      expect(result).toMatchObject({
+        carbsGrams: 60,
+        carbsUnit: 'par_heure',
+        hydrationMilliliters: 500,
+      });
+    });
+
+    it('modifie une séance sans nutrition sans la rendre invalide', async () => {
+      const result = await useCase.execute({ id, durationMinutes: 45 });
+
+      expect(result).toMatchObject({
+        carbsGrams: null,
+        carbsUnit: null,
+        hydrationMilliliters: null,
+      });
+    });
+
     it('passe la séance au statut manquee et le journalise', async () => {
       const result = await useCase.execute({ id, status: 'manquee' });
 
@@ -226,6 +299,25 @@ describe('UpdateSessionUseCase', () => {
 
       expect(repository.saves).toBe(saves);
       expect(repository.sessions.get(id)?.durationMinutes).toBe(60);
+    });
+
+    it('refuse des glucides sans unité avec SESSION_INVALID et ne persiste rien', async () => {
+      const saves = repository.saves;
+
+      await expect(
+        useCase.execute({ id, carbsGrams: 60 }),
+      ).rejects.toMatchObject({ code: 'SESSION_INVALID' });
+
+      expect(repository.saves).toBe(saves);
+      expect(repository.sessions.get(id)?.carbsGrams).toBeNull();
+    });
+
+    it('refuse la modification de la nutrition d’une séance réalisée avec SESSION_ALREADY_COMPLETED', async () => {
+      await seed({ status: 'realisee' });
+
+      await expect(
+        useCase.execute({ id, hydrationMilliliters: 500 }),
+      ).rejects.toBeInstanceOf(SessionAlreadyCompletedError);
     });
 
     it('refuse un statut hors valeurs avec SESSION_INVALID', async () => {

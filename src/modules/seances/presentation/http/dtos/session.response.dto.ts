@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SESSION_CARBS_UNITS } from '../../../domain/value-objects/session-nutrition.vo.js';
 import { SESSION_RECURRENCES } from '../../../domain/value-objects/session-recurrence.vo.js';
 import { SESSION_STATUSES } from '../../../domain/value-objects/session-status.vo.js';
 import { MODULE_TYPES } from '../../../domain/value-objects/module-type.vo.js';
@@ -109,6 +110,30 @@ export class SessionResponseDto {
     description: 'Répartition cible du temps par zone de FC (Z1 à Z5)',
   })
   targetHrZonePercentages!: number[] | null;
+
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    example: 60,
+    description: 'Cible de glucides en grammes, ou null',
+  })
+  carbsGrams!: number | null;
+
+  @ApiProperty({
+    enum: SESSION_CARBS_UNITS,
+    nullable: true,
+    example: 'par_heure',
+    description: 'Unité de la cible de glucides, ou null',
+  })
+  carbsUnit!: string | null;
+
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    example: 500,
+    description: 'Hydratation visée en millilitres pour la séance, ou null',
+  })
+  hydrationMilliliters!: number | null;
 
   @ApiProperty({ type: SessionAchievementResponseDto, nullable: true })
   achievement!: SessionAchievementResponseDto | null;
