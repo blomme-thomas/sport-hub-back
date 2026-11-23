@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SESSION_DISCIPLINE_FAMILIES } from '../../../../shared/domain/value-objects/sport-family.vo.js';
 import { MODULE_TYPES } from '../../domain/value-objects/module-type.vo.js';
+import { SESSION_CARBS_UNITS } from '../../domain/value-objects/session-nutrition.vo.js';
 import type { SessionImportTemplateDto } from '../dtos/session-import-template.dto.js';
 import {
   SESSION_IMPORT_KIND,
@@ -31,6 +32,9 @@ export class GetSessionImportTemplateUseCase {
           description: 'Séance de fond',
           targetDistanceMeters: 10000,
           targetHrZonePercentages: [10, 20, 40, 20, 10],
+          carbsGrams: 60,
+          carbsUnit: SESSION_CARBS_UNITS.join(' | '),
+          hydrationMilliliters: 500,
           modules: [
             {
               type: MODULE_TYPES.join(' | '),

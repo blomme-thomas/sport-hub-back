@@ -187,3 +187,10 @@ Hypothèses :
 - Les champs sont acceptés à la création et à la modification, et renvoyés à la lecture. Une séance existante reste valide sans ces champs.
 - Migration `20261130120000_add_session_nutrition` : ajoute les trois colonnes, nullables.
 - Hors périmètre : autres nutriments et import JSON (story B8).
+
+## Format d'import plan-seances, version 2
+
+- Le modèle publié (`GET /api/sessions/import/template`) et l'import sont en `schemaVersion` 2 : chaque séance peut porter `carbsGrams`, `carbsUnit` (`par_heure` ou `pour_la_seance`) et `hydrationMilliliters`, tous facultatifs.
+- La version 1 reste acceptée (hypothèse à valider) ; elle ne porte pas ces champs, qui y sont refusés comme champs inconnus.
+- Une valeur invalide renvoie une erreur au chemin JSON du champ, par exemple `seances[0].carbsUnit` (`SESSION_IMPORT_FIELD_VALUE`).
+- Les exports ne sont pas modifiés.

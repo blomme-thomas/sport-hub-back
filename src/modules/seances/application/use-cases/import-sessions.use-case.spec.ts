@@ -210,7 +210,7 @@ describe('ImportSessionsUseCase', () => {
     const issues = await invalidIssues(useCase, {
       ...plan(),
       kind: 'autre',
-      schemaVersion: 2,
+      schemaVersion: 3,
     });
 
     expect(issues).toEqual([
@@ -294,6 +294,57 @@ describe('ImportSessionsUseCase', () => {
       {
         field: 'seances[0].targetHrZonePercentages',
         code: 'SESSION_IMPORT_FIELD_TYPE',
+      },
+    ]);
+  });
+  it('importe la cible de glucides et l’hydratation de la version 2', async () => {
+    const { imports, useCase } = setup();
+
+    await useCase.execute({
+      ...plan([
+        seance({
+          carbsGrams: 60,
+          carbsUnit: 'par_heure',
+          hydrationMilliliters: 500,
+        }),
+      ]),
+      schemaVersion: 2,
+    });
+
+    const [session] = imports.saved?.sessions ?? [];
+    expect(session?.carbsGrams).toBe(60);
+    expect(session?.carbsUnit).toBe('par_heure');
+    expect(session?.hydrationMilliliters).toBe(500);
+  });
+
+  it('refuse les glucides et l’hydratation dans un fichier de version 1', async () => {
+    const { useCase } = setup();
+
+    const issues = await invalidIssues(
+      useCase,
+      plan([seance({ carbsGrams: 60 })]),
+    );
+
+    expect(issues).toEqual([
+      {
+        field: 'seances[0].carbsGrams',
+        code: 'SESSION_IMPORT_UNKNOWN_FIELD',
+      },
+    ]);
+  });
+
+  it('refuse une unité de glucides inconnue, avec son chemin', async () => {
+    const { useCase } = setup();
+
+    const issues = await invalidIssues(useCase, {
+      ...plan([seance({ carbsGrams: 60, carbsUnit: 'par_jour' })]),
+      schemaVersion: 2,
+    });
+
+    expect(issues).toEqual([
+      {
+        field: 'seances[0].carbsUnit',
+        code: 'SESSION_IMPORT_FIELD_VALUE',
       },
     ]);
   });
