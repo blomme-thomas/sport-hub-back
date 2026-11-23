@@ -29,3 +29,15 @@ Table `foods` (migration `20261130120100_create_foods`). Le seed Ciqual, les rec
 - Source : table Ciqual de l'ANSES, licence Etalab 2.0. Code : `src/modules/aliments/infrastructure/seed/`.
 - Contenu : 14 aliments de base, valeurs pour 100 g.
 - Hypothèse : valeurs arrondies, à valider contre ciqual.anses.fr avant usage. Import intégral hors périmètre.
+
+## Recettes
+
+- Une recette a un nom (1 à 200 caractères) et des tags de repas `matin`, `midi`, `soir` (au moins un, doublons retirés).
+- Composition : liste d'items `{ aliment, composant facultatif, quantité facultative }`. Composants : `proteine`, `legume`, `feculent`. Un composant exige que l'aliment porte cette catégorie. Sans composant, l'item est une sélection libre (petit-déjeuner). Aucun composant n'est obligatoire.
+- Quantité : strictement positive, dans l'unité de l'aliment ; absente ou `null` = vide.
+- Modification : une composition fournie remplace l'ensemble des items.
+- Notes facultatives : absentes du cadrage, non implémentées (à confirmer).
+
+Endpoints : `GET /api/recipes`, `GET /api/recipes/:id`, `POST /api/recipes`, `PATCH /api/recipes/:id`, `DELETE /api/recipes/:id` (204).
+
+Erreurs : `RECIPE_NOT_FOUND` (404), `INVALID_RECIPE` (400). Tables `recipes` et `recipe_items` (migration `20261130120200_create_recipes`). Un aliment utilisé par une recette ne peut pas être supprimé (contrainte `RESTRICT`).

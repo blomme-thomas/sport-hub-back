@@ -249,6 +249,33 @@ model Food {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  recipeItems RecipeItem[]
+
   @@index([name])
   @@map("foods")
+}
+
+model Recipe {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String
+  mealTags  String[]     @map("meal_tags")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  items     RecipeItem[]
+
+  @@map("recipes")
+}
+
+model RecipeItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  recipeId  String   @map("recipe_id") @db.Uuid
+  foodId    String   @map("food_id") @db.Uuid
+  component String?  @db.VarChar(20)
+  quantity  Decimal? @db.Decimal(10, 2)
+  position  Int
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  food      Food     @relation(fields: [foodId], references: [id])
+
+  @@index([recipeId])
+  @@map("recipe_items")
 }

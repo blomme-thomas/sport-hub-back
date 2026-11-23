@@ -432,6 +432,43 @@
         ],
         "type": "object"
       },
+      "CreateRecipeRequestDto": {
+        "properties": {
+          "items": {
+            "description": "Composition facultative ; aucun composant n’est obligatoire",
+            "items": {
+              "$ref": "#/components/schemas/RecipeItemRequestDto"
+            },
+            "type": "array"
+          },
+          "mealTags": {
+            "description": "Un ou plusieurs repas ; les doublons sont retirés",
+            "example": [
+              "midi",
+              "soir"
+            ],
+            "items": {
+              "enum": [
+                "matin",
+                "midi",
+                "soir"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "Nom de la recette (1 à 200 caractères)",
+            "example": "Riz au poulet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "mealTags"
+        ],
+        "type": "object"
+      },
       "CreateSessionRequestDto": {
         "properties": {
           "date": {
@@ -1538,7 +1575,7 @@
         "type": "object"
       },
       "ProblemCode": {
-        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
+        "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `RECIPE_NOT_FOUND` : 404\n- `INVALID_RECIPE` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
         "enum": [
           "VALIDATION_FAILED",
           "BAD_REQUEST",
@@ -1562,6 +1599,8 @@
           "SLOT_INVALID",
           "FOOD_NOT_FOUND",
           "INVALID_FOOD",
+          "RECIPE_NOT_FOUND",
+          "INVALID_RECIPE",
           "GOAL_INVALID",
           "GOAL_TARGET_TIME_INVALID",
           "SETTINGS_WEEKLY_TARGET_INVALID",
@@ -1628,7 +1667,7 @@
                 "$ref": "#/components/schemas/ProblemCode"
               }
             ],
-            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
+            "description": "Code stable de l'erreur. Statut associé :\n- `VALIDATION_FAILED` : 400\n- `BAD_REQUEST` : 400\n- `MALFORMED_REQUEST_BODY` : 400\n- `NOT_FOUND` : 404\n- `PAYLOAD_TOO_LARGE` : 413\n- `CLIENT_ERROR` : statut 4xx d'origine (401, 403, 405, 409, 415, 429...)\n- `INTERNAL_ERROR` : 500\n- `SERVICE_UNAVAILABLE` : 503\n- `GARMIN_ACCESS_DENIED` : 502\n- `GARMIN_UNAVAILABLE` : 503\n- `STATS_RANGE_INVALID` : 400\n- `STATS_RANGE_TOO_LARGE` : 400\n- `WORKOUT_GENERATION_UNAVAILABLE` : 503\n- `WORKOUT_GENERATION_ACCESS_DENIED` : 502\n- `WORKOUT_GENERATION_INVALID_OUTPUT` : 502\n- `SLOT_END_NOT_AFTER_START` : 400\n- `SLOT_PERIOD_INVALID` : 400\n- `SLOT_PERIOD_TOO_LARGE` : 400\n- `SLOT_NOT_FOUND` : 404\n- `SLOT_INVALID` : 400\n- `FOOD_NOT_FOUND` : 404\n- `INVALID_FOOD` : 400\n- `RECIPE_NOT_FOUND` : 404\n- `INVALID_RECIPE` : 400\n- `GOAL_INVALID` : 400\n- `GOAL_TARGET_TIME_INVALID` : 400\n- `SETTINGS_WEEKLY_TARGET_INVALID` : 400\n- `SETTINGS_WEEK_INVALID` : 400\n- `GOAL_NOT_FOUND` : 404\n- `DISCIPLINE_INVALID` : 400\n- `DISCIPLINE_LABEL_INVALID` : 400\n- `DISCIPLINE_NOT_FOUND` : 404\n- `SESSION_INVALID` : 400\n- `SESSION_MODULE_INVALID` : 400\n- `SESSION_DISCIPLINE_UNKNOWN` : 400\n- `SESSION_IMPORT_INVALID` : 400\n- `SESSION_IMPORT_ALREADY_DONE` : 409\n- `EXPORT_WEEK_INVALID` : 400\n- `EXPORT_MONTH_INVALID` : 400\n- `SESSION_NOT_FOUND` : 404\n- `SESSION_OCCURRENCE_NOT_FOUND` : 404\n- `SESSION_ALREADY_COMPLETED` : 409\n- `SESSION_ACTIVITY_NOT_FOUND` : 404\n- `SESSION_ACTIVITY_ALREADY_LINKED` : 409\n- `PLANNING_PERIOD_INVALID` : 400\n- `PLANNING_INVALID_OUTPUT` : 502\n- `PLANNING_GENERATION_UNAVAILABLE` : 503\n- `PLANNING_GENERATION_ACCESS_DENIED` : 502\n- `PAUSE_INVALID` : 400\n- `PAUSE_NOT_FOUND` : 404\n- `ACTIVITY_NOT_FOUND` : 404\n- `ACTIVITY_FIT_DATA_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_NOT_FOUND` : 404\n- `ACTIVITY_COMMENT_INVALID_OUTPUT` : 502\n- `ACTIVITY_COMMENT_UNAVAILABLE` : 503\n- `ACTIVITY_COMMENT_ACCESS_DENIED` : 502\n- `WEEKLY_REVIEW_INVALID_WEEK` : 400\n- `WEEKLY_REVIEW_NOT_FOUND` : 404\n- `WEEKLY_REVIEW_INVALID_OUTPUT` : 502\n- `WEEKLY_REVIEW_UNAVAILABLE` : 503\n- `WEEKLY_REVIEW_ACCESS_DENIED` : 502\n- `DASHBOARD_ADVICE_NOT_FOUND` : 404\n- `DASHBOARD_ADVICE_INVALID_OUTPUT` : 502\n- `DASHBOARD_ADVICE_UNAVAILABLE` : 503\n- `DASHBOARD_ADVICE_ACCESS_DENIED` : 502\n\nUne Business Error non mappée répond 422.",
             "example": "VALIDATION_FAILED"
           },
           "correlationId": {
@@ -1671,6 +1710,108 @@
           "instance",
           "code",
           "correlationId"
+        ],
+        "type": "object"
+      },
+      "RecipeItemRequestDto": {
+        "properties": {
+          "component": {
+            "description": "Composant de la recette (absent ou null = sélection libre, ex. petit-déjeuner). L’aliment doit appartenir à cette famille",
+            "enum": [
+              "proteine",
+              "legume",
+              "feculent"
+            ],
+            "example": "feculent",
+            "nullable": true,
+            "type": "string"
+          },
+          "foodId": {
+            "description": "Identifiant de l’aliment",
+            "example": "3f2c9a4e-8b1d-4c7a-9e2f-6a5b4c3d2e1f",
+            "format": "uuid",
+            "type": "string"
+          },
+          "quantity": {
+            "description": "Quantité, dans l’unité de l’aliment ; absente ou null = vide",
+            "example": 120,
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "foodId"
+        ],
+        "type": "object"
+      },
+      "RecipeItemResponseDto": {
+        "properties": {
+          "component": {
+            "enum": [
+              "proteine",
+              "legume",
+              "feculent"
+            ],
+            "example": "feculent",
+            "nullable": true,
+            "type": "string"
+          },
+          "foodId": {
+            "example": "3f2c9a4e-8b1d-4c7a-9e2f-6a5b4c3d2e1f",
+            "format": "uuid",
+            "type": "string"
+          },
+          "quantity": {
+            "example": 120,
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "foodId",
+          "component",
+          "quantity"
+        ],
+        "type": "object"
+      },
+      "RecipeResponseDto": {
+        "properties": {
+          "id": {
+            "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+            "format": "uuid",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecipeItemResponseDto"
+            },
+            "type": "array"
+          },
+          "mealTags": {
+            "example": [
+              "midi",
+              "soir"
+            ],
+            "items": {
+              "enum": [
+                "matin",
+                "midi",
+                "soir"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "example": "Riz au poulet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mealTags",
+          "items"
         ],
         "type": "object"
       },
@@ -2701,6 +2842,34 @@
             "description": "Nouveau premier jour (AAAA-MM-JJ) ; absent = inchangé",
             "example": "2026-12-22",
             "format": "date",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateRecipeRequestDto": {
+        "properties": {
+          "items": {
+            "description": "Remplace l’ensemble de la composition",
+            "items": {
+              "$ref": "#/components/schemas/RecipeItemRequestDto"
+            },
+            "type": "array"
+          },
+          "mealTags": {
+            "description": "Remplace les tags de repas",
+            "items": {
+              "enum": [
+                "matin",
+                "midi",
+                "soir"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "example": "Riz au poulet",
             "type": "string"
           }
         },
@@ -5016,6 +5185,272 @@
         "summary": "Nom affiché du compte Garmin courant",
         "tags": [
           "garmin-sync"
+        ]
+      }
+    },
+    "/api/recipes": {
+      "get": {
+        "operationId": "recipesList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecipeResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Liste les recettes, triées par nom",
+        "tags": [
+          "aliments"
+        ]
+      },
+      "post": {
+        "operationId": "recipesCreate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecipeRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Crée une recette avec un nom et au moins un tag de repas ; la composition est facultative",
+        "tags": [
+          "aliments"
+        ]
+      }
+    },
+    "/api/recipes/{id}": {
+      "delete": {
+        "operationId": "recipesRemove",
+        "parameters": [
+          {
+            "description": "Identifiant de la recette",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Recette supprimée"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Supprime une recette et ses items",
+        "tags": [
+          "aliments"
+        ]
+      },
+      "get": {
+        "operationId": "recipesGet",
+        "parameters": [
+          {
+            "description": "Identifiant de la recette",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Renvoie une recette avec sa composition",
+        "tags": [
+          "aliments"
+        ]
+      },
+      "patch": {
+        "operationId": "recipesUpdate",
+        "parameters": [
+          {
+            "description": "Identifiant de la recette",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecipeRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Modifie une recette ; une composition fournie remplace l’ensemble des items",
+        "tags": [
+          "aliments"
         ]
       }
     },
