@@ -17,6 +17,7 @@ function seance(date: string): Session {
     date: day(date),
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
+    startTime: '08:00',
   });
 }
 
@@ -140,6 +141,7 @@ describe('ListSessionsUseCase', () => {
           date: '2026-05-15',
           disciplineTypeKey: 'swimming',
           durationMinutes: 60,
+          startTime: '08:00',
           status: 'planifiee',
           modifiedManually: false,
           modules: [],

@@ -17,8 +17,8 @@ export class SessionOccurrenceResponseDto {
   @ApiProperty({ type: String, format: 'date', example: '2026-11-23' })
   date!: string;
 
-  @ApiProperty({ type: String, nullable: true, example: '18:00' })
-  startTime!: string | null;
+  @ApiProperty({ type: String, example: '18:00' })
+  startTime!: string;
 
   @ApiProperty({ type: Number, example: 60 })
   durationMinutes!: number;

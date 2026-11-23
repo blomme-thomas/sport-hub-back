@@ -41,7 +41,7 @@ export interface SessionProps {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime?: string | null;
+  startTime: string;
   recurrence?: SessionRecurrence;
   description?: string | null;
   title?: string | null;
@@ -55,7 +55,7 @@ export interface SessionReconstitutionProps {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime?: string | null;
+  startTime: string;
   recurrence?: SessionRecurrence;
   status: string;
   modifiedManually: boolean;
@@ -72,7 +72,7 @@ export interface SessionChanges {
   date?: Date;
   disciplineTypeKey?: string;
   durationMinutes?: number;
-  startTime?: string | null;
+  startTime?: string;
   recurrence?: SessionRecurrence;
   status?: string;
   description?: string | null;
@@ -85,7 +85,7 @@ interface SessionFieldsInput {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime: string | null;
+  startTime: string;
   recurrence: string;
   status: string;
   description: string | null;
@@ -98,7 +98,7 @@ interface SessionFields {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime: string | null;
+  startTime: string;
   recurrence: SessionRecurrence;
   status: SessionStatus;
   description: string | null;
@@ -129,7 +129,7 @@ export class Session {
       date: props.date,
       disciplineTypeKey: props.disciplineTypeKey,
       durationMinutes: props.durationMinutes,
-      startTime: props.startTime ?? null,
+      startTime: props.startTime,
       recurrence: props.recurrence ?? 'aucune',
       targetDistanceMeters: props.targetDistanceMeters ?? null,
       targetHrZonePercentages: props.targetHrZonePercentages ?? null,
@@ -158,7 +158,7 @@ export class Session {
       date: props.date,
       disciplineTypeKey: props.disciplineTypeKey,
       durationMinutes: props.durationMinutes,
-      startTime: props.startTime ?? null,
+      startTime: props.startTime,
       recurrence: props.recurrence ?? 'aucune',
       targetDistanceMeters: props.targetDistanceMeters ?? null,
       targetHrZonePercentages: props.targetHrZonePercentages ?? null,
@@ -193,7 +193,7 @@ export class Session {
     return this.state.durationMinutes;
   }
 
-  get startTime(): string | null {
+  get startTime(): string {
     return this.state.startTime;
   }
 
@@ -423,10 +423,7 @@ function normalizeText(
 
 const START_TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-function normalizeStartTime(value: string | null): string | null {
-  if (value === null) {
-    return null;
-  }
+function normalizeStartTime(value: string): string {
   if (!START_TIME_PATTERN.test(value)) {
     throw new InvalidSessionError("l'heure de début doit être au format HH:MM");
   }

@@ -71,6 +71,7 @@ describe('UpdateSessionUseCase', () => {
       date: new Date('2026-05-04T00:00:00.000Z'),
       disciplineTypeKey: 'swimming',
       durationMinutes: 60,
+      startTime: '08:00',
       description: overrides.description ?? 'Endurance',
     });
     session = overrides.status
@@ -79,6 +80,7 @@ describe('UpdateSessionUseCase', () => {
           date: base.date,
           disciplineTypeKey: base.disciplineTypeKey,
           durationMinutes: base.durationMinutes,
+          startTime: '08:00',
           status: overrides.status,
           modifiedManually: false,
           description: base.description,
@@ -179,6 +181,7 @@ describe('UpdateSessionUseCase', () => {
       expect(result).toMatchObject({
         disciplineTypeKey: 'swimming',
         durationMinutes: 50,
+        startTime: '08:00',
       });
     });
 

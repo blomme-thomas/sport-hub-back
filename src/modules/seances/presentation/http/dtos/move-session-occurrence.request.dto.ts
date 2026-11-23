@@ -2,8 +2,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Matches, ValidateIf } from 'class-validator';
 import { IsCalendarDate } from '../validators/session.validators.js';
 
-const isTextProvided = (_object: object, value: unknown): boolean =>
-  value !== undefined && value !== null;
+const isProvided = (_object: object, value: unknown): boolean =>
+  value !== undefined;
 
 export class MoveSessionOccurrenceRequestDto {
   @ApiProperty({
@@ -17,12 +17,11 @@ export class MoveSessionOccurrenceRequestDto {
 
   @ApiPropertyOptional({
     type: String,
-    nullable: true,
     example: '07:00',
     description:
-      'Nouvelle heure de début (HH:MM) ; absente = heure de la série conservée, null = pas d’heure',
+      'Nouvelle heure de début (HH:MM) ; absente = heure de la série conservée',
   })
-  @ValidateIf(isTextProvided)
+  @ValidateIf(isProvided)
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  startTime?: string | null;
+  startTime?: string;
 }

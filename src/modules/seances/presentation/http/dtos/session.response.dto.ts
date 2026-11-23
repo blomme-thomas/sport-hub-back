@@ -131,11 +131,10 @@ export class SessionResponseDto {
 
   @ApiProperty({
     type: String,
-    nullable: true,
     example: '18:00',
-    description: 'Heure de début (HH:MM), absente si la séance n’a pas d’heure',
+    description: 'Heure de début (HH:MM)',
   })
-  startTime!: string | null;
+  startTime!: string;
 
   @ApiProperty({ enum: SESSION_RECURRENCES, example: 'aucune' })
   recurrence!: string;

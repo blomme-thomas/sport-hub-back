@@ -36,7 +36,7 @@ export interface SessionRecord {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime?: string | null;
+  startTime: string;
   recurrence: string;
   targetDistanceMeters?: number | null;
   targetHrZone1?: number | null;
@@ -58,7 +58,7 @@ export interface SessionPersistence {
   date: Date;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime?: string | null;
+  startTime: string;
   recurrence: string;
   targetDistanceMeters: number | null;
   targetHrZone1: number | null;

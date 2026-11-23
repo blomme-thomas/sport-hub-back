@@ -97,6 +97,7 @@ describe('ReplaceSessionModulesUseCase', () => {
       date: new Date('2026-05-04T00:00:00.000Z'),
       disciplineTypeKey: 'swimming',
       durationMinutes: 60,
+      startTime: '08:00',
       status,
       modifiedManually: false,
       description: null,
@@ -203,6 +204,7 @@ describe('ReplaceSessionModulesUseCase', () => {
         date: '2026-05-04',
         disciplineTypeKey: 'swimming',
         durationMinutes: 60,
+        startTime: '08:00',
         status: 'planifiee',
       });
     });

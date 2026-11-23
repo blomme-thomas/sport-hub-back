@@ -12,7 +12,7 @@ export interface SessionOccurrence {
   sessionId: string;
   title: string | null;
   date: string;
-  startTime: string | null;
+  startTime: string;
   durationMinutes: number;
   disciplineTypeKey: string;
   recurrence: SessionRecurrence;

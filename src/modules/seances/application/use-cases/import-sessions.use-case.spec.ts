@@ -113,6 +113,18 @@ describe('ImportSessionsUseCase', () => {
     expect(imports.saved).toBeNull();
   });
 
+  it('refuse une séance sans heure de début, au champ startTime', async () => {
+    const { imports, useCase } = setup();
+    const { startTime: _omitted, ...withoutTime } = seance();
+
+    const issues = await invalidIssues(useCase, plan([withoutTime]));
+
+    expect(issues).toEqual([
+      { field: 'seances[0].startTime', code: 'SESSION_IMPORT_FIELD_MISSING' },
+    ]);
+    expect(imports.saved).toBeNull();
+  });
+
   it('signale une discipline qui n’est pas une famille, au chemin de la séance', async () => {
     const { useCase } = setup();
 

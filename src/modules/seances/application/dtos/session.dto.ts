@@ -22,7 +22,7 @@ export interface CreateSessionCommand {
   date: string;
   disciplineTypeKey: string;
   durationMinutes: number;
-  startTime?: string | null;
+  startTime: string;
   recurrence?: SessionRecurrence;
   description?: string | null;
   title?: string | null;
@@ -36,7 +36,7 @@ export interface UpdateSessionCommand {
   date?: string;
   disciplineTypeKey?: string;
   durationMinutes?: number;
-  startTime?: string | null;
+  startTime?: string;
   recurrence?: SessionRecurrence;
   status?: string;
   description?: string | null;
@@ -88,7 +88,7 @@ export class SessionDto {
     readonly date: string,
     readonly disciplineTypeKey: string,
     readonly durationMinutes: number,
-    readonly startTime: string | null,
+    readonly startTime: string,
     readonly recurrence: SessionRecurrence,
     readonly status: SessionStatus,
     readonly modifiedManually: boolean,

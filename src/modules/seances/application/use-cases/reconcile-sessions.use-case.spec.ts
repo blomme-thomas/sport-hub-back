@@ -51,6 +51,7 @@ function seance(): Session {
     date: new Date('2026-11-12T00:00:00.000Z'),
     disciplineTypeKey: 'running',
     durationMinutes: 45,
+    startTime: '08:00',
   });
 }
 
@@ -109,6 +110,7 @@ describe('ReconcileSessionsUseCase', () => {
       date: new Date('2026-11-12T00:00:00.000Z'),
       disciplineTypeKey: 'cycling',
       durationMinutes: 90,
+      startTime: '08:00',
     });
     repository.sessions.set(planned.id.toString(), planned);
     const useCase = new ReconcileSessionsUseCase(

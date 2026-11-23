@@ -49,6 +49,7 @@ function seance(): Session {
     date: new Date('2026-05-04T00:00:00.000Z'),
     disciplineTypeKey: 'swimming',
     durationMinutes: 60,
+    startTime: '08:00',
   });
 }
 
@@ -95,6 +96,7 @@ describe('DeleteSessionUseCase', () => {
       date: new Date('2026-05-04T00:00:00.000Z'),
       disciplineTypeKey: 'swimming',
       durationMinutes: 60,
+      startTime: '08:00',
       status: 'realisee',
       modifiedManually: false,
       description: null,

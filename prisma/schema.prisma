@@ -100,7 +100,7 @@ model Session {
   date                 DateTime                     @db.Date
   disciplineTypeKey    String                       @map("discipline_type_key")
   durationMinutes      Int                          @map("duration_minutes")
-  startTime            String?                      @map("start_time") @db.VarChar(5)
+  startTime            String                       @map("start_time") @db.VarChar(5)
   recurrence           String                       @default("aucune") @db.VarChar(20)
   targetDistanceMeters Float?                       @map("target_distance_meters")
   targetHrZone1        Int?                         @map("target_hr_zone_1")

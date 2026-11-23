@@ -320,7 +320,7 @@ export class ImportSessionsUseCase {
       issues,
       false,
     );
-    const startTime = readText(raw, 'startTime', path, issues, true);
+    const startTime = readText(raw, 'startTime', path, issues, false);
     const title = readText(raw, 'title', path, issues, true);
     const description = readText(raw, 'description', path, issues, true);
     const targetDistanceMeters = readNumber(
@@ -359,7 +359,8 @@ export class ImportSessionsUseCase {
     if (
       date === null ||
       disciplineTypeKey === null ||
-      durationMinutes === null
+      durationMinutes === null ||
+      startTime === null
     ) {
       return null;
     }
