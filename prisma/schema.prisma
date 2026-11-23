@@ -235,3 +235,20 @@ model UserSettings {
 
   @@map("user_settings")
 }
+
+model Food {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  unit          String
+  categories    String[]
+  calories      Decimal? @db.Decimal(8, 2)
+  proteins      Decimal? @db.Decimal(8, 2)
+  carbohydrates Decimal? @db.Decimal(8, 2)
+  fats          Decimal? @db.Decimal(8, 2)
+  sugars        Decimal? @db.Decimal(8, 2)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([name])
+  @@map("foods")
+}
