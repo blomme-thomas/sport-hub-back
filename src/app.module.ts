@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppConfigModule } from './core/config/app-config.module.js';
 import { HealthModule } from './core/health/health.module.js';
 import { CreneauxModule } from './modules/creneaux/creneaux.module.js';
+import { AlimentsModule } from './modules/aliments/aliments.module.js';
 import { DisciplinesModule } from './modules/disciplines/disciplines.module.js';
 import { ObjectifsModule } from './modules/objectifs/objectifs.module.js';
 import { GarminSyncModule } from './modules/garmin-sync/garmin-sync.module.js';
@@ -25,6 +26,7 @@ import { ReglagesModule } from './modules/reglages/reglages.module.js';
     TrainingStatsModule,
     WorkoutGenerationModule,
     CreneauxModule,
+    AlimentsModule,
     ObjectifsModule,
     ReglagesModule,
     DisciplinesModule,

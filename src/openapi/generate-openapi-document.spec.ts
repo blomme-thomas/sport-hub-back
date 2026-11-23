@@ -55,6 +55,7 @@ describe('generateOpenApiDocument', () => {
         'workout-generation',
         'creneaux',
         'objectifs',
+        'aliments',
       ]),
     );
   });
