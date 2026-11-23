@@ -26,6 +26,7 @@ describe('Recettes (e2e)', () => {
     await app.init();
 
     prisma = app.get(PrismaService);
+    await prisma.plannedMeal.deleteMany();
     await prisma.recipeItem.deleteMany();
     await prisma.recipe.deleteMany();
     await prisma.food.deleteMany();
@@ -48,6 +49,7 @@ describe('Recettes (e2e)', () => {
   });
 
   afterEach(async () => {
+    await prisma.plannedMeal.deleteMany();
     await prisma.recipeItem.deleteMany();
     await prisma.recipe.deleteMany();
     await prisma.food.deleteMany();

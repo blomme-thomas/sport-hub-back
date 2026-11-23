@@ -256,12 +256,13 @@ model Food {
 }
 
 model Recipe {
-  id        String       @id @default(uuid()) @db.Uuid
-  name      String
-  mealTags  String[]     @map("meal_tags")
-  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
-  items     RecipeItem[]
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  mealTags     String[]      @map("meal_tags")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  items        RecipeItem[]
+  plannedMeals PlannedMeal[]
 
   @@map("recipes")
 }
@@ -278,4 +279,18 @@ model RecipeItem {
 
   @@index([recipeId])
   @@map("recipe_items")
+}
+
+model PlannedMeal {
+  id        String   @id @default(uuid()) @db.Uuid
+  recipeId  String   @map("recipe_id") @db.Uuid
+  date      DateTime @db.Date
+  mealTag   String   @map("meal_tag") @db.VarChar(10)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+
+  @@index([date])
+  @@index([recipeId])
+  @@map("planned_meals")
 }
