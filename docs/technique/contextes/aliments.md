@@ -41,3 +41,11 @@ Table `foods` (migration `20261130120100_create_foods`). Le seed Ciqual, les rec
 Endpoints : `GET /api/recipes`, `GET /api/recipes/:id`, `POST /api/recipes`, `PATCH /api/recipes/:id`, `DELETE /api/recipes/:id` (204).
 
 Erreurs : `RECIPE_NOT_FOUND` (404), `INVALID_RECIPE` (400). Tables `recipes` et `recipe_items` (migration `20261130120200_create_recipes`). Un aliment utilisé par une recette ne peut pas être supprimé (contrainte `RESTRICT`).
+
+## Synthèse nutritionnelle d'une recette
+
+- `GET /api/recipes/:id` renvoie `nutrition` : totaux (calories, protéines, glucides, lipides, sucres), totaux par composant (`proteine`, `legume`, `feculent`, `libre` pour les items sans composant) et `ignored`.
+- Calcul : valeur pour 100 g × quantité / 100, sommé par aliment. Recalculé à chaque lecture, jamais stocké. Arrondi à 0,1 en fin de calcul.
+- Un item est ignoré et signalé dans `ignored` (`quantity-missing` ou `nutrition-missing`) s'il n'a pas de quantité, ou si une de ses valeurs nutritionnelles est vide. Hypothèse : à valider.
+- Une recette sans item renvoie une synthèse nulle, sans erreur.
+- Code : `domain/services/summarize-recipe-nutrition.ts` (fonction pure, testée unitairement).

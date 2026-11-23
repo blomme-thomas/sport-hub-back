@@ -1336,6 +1336,27 @@
         ],
         "type": "object"
       },
+      "IgnoredNutritionLineResponseDto": {
+        "properties": {
+          "foodId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Raison de l’exclusion du total : quantité absente ou valeur nutritionnelle vide",
+            "enum": [
+              "quantity-missing",
+              "nutrition-missing"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "foodId",
+          "reason"
+        ],
+        "type": "object"
+      },
       "ImportSessionsRequestDto": {
         "properties": {
           "importId": {
@@ -1713,6 +1734,51 @@
         ],
         "type": "object"
       },
+      "RecipeDetailResponseDto": {
+        "properties": {
+          "id": {
+            "example": "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e",
+            "format": "uuid",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecipeItemResponseDto"
+            },
+            "type": "array"
+          },
+          "mealTags": {
+            "example": [
+              "midi",
+              "soir"
+            ],
+            "items": {
+              "enum": [
+                "matin",
+                "midi",
+                "soir"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "example": "Riz au poulet",
+            "type": "string"
+          },
+          "nutrition": {
+            "$ref": "#/components/schemas/RecipeNutritionResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mealTags",
+          "items",
+          "nutrition"
+        ],
+        "type": "object"
+      },
       "RecipeItemRequestDto": {
         "properties": {
           "component": {
@@ -1771,6 +1837,97 @@
           "foodId",
           "component",
           "quantity"
+        ],
+        "type": "object"
+      },
+      "RecipeNutritionResponseDto": {
+        "properties": {
+          "byComponent": {
+            "description": "Totaux par composant ; les items sans composant sont regroupés sous « libre »",
+            "example": {
+              "feculent": {
+                "calories": 104,
+                "carbohydrates": 22.4,
+                "fats": 0.2,
+                "proteins": 2.2,
+                "sugars": 0.1
+              },
+              "legume": {
+                "calories": 0,
+                "carbohydrates": 0,
+                "fats": 0,
+                "proteins": 0,
+                "sugars": 0
+              },
+              "libre": {
+                "calories": 0,
+                "carbohydrates": 0,
+                "fats": 0,
+                "proteins": 0,
+                "sugars": 0
+              },
+              "proteine": {
+                "calories": 247.5,
+                "carbohydrates": 0,
+                "fats": 5.4,
+                "proteins": 46.5,
+                "sugars": 0
+              }
+            },
+            "type": "object"
+          },
+          "ignored": {
+            "description": "Items ignorés dans les totaux (sans quantité ou sans valeur nutritionnelle)",
+            "items": {
+              "$ref": "#/components/schemas/IgnoredNutritionLineResponseDto"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecipeNutritionTotalsResponseDto"
+              }
+            ],
+            "description": "Totaux de la recette (valeurs pour la quantité indiquée)"
+          }
+        },
+        "required": [
+          "totals",
+          "byComponent",
+          "ignored"
+        ],
+        "type": "object"
+      },
+      "RecipeNutritionTotalsResponseDto": {
+        "properties": {
+          "calories": {
+            "example": 351.5,
+            "type": "number"
+          },
+          "carbohydrates": {
+            "example": 22.4,
+            "type": "number"
+          },
+          "fats": {
+            "example": 5.6,
+            "type": "number"
+          },
+          "proteins": {
+            "example": 48.7,
+            "type": "number"
+          },
+          "sugars": {
+            "example": 0.1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "calories",
+          "proteins",
+          "carbohydrates",
+          "fats",
+          "sugars"
         ],
         "type": "object"
       },
@@ -5339,7 +5496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecipeResponseDto"
+                  "$ref": "#/components/schemas/RecipeDetailResponseDto"
                 }
               }
             },
