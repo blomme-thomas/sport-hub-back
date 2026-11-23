@@ -27,7 +27,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:migrate:reset": "prisma migrate reset",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "seed:foods": "nest build && node --env-file=.env dist/modules/aliments/infrastructure/seed/seed-foods.cli.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.10.0",
