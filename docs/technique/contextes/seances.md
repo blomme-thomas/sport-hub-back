@@ -114,9 +114,9 @@ Hypothèse : le rapprochement n'est pas déclenché par la synchronisation Garmi
 
 ## Heure de début (issue #44)
 
-- Une séance peut porter une heure de début `startTime` au format `HH:MM` (00:00 à 23:59), facultative. `null` ou absente : la séance n'a pas d'heure.
+- Une séance porte une heure de début `startTime` au format `HH:MM` (00:00 à 23:59), obligatoire : création, import et modification refusent une heure absente ou `null` (migration `20261129120000_session_start_time_required`, qui a donné 08:00 aux séances existantes sans heure). Le déplacement d'une occurrence garde l'heure de la série si elle est absente, mais refuse `null`.
 - La fin n'est pas stockée : elle vaut début + `durationMinutes`.
-- Création : `POST /api/sessions` accepte `startTime`. Modification : `PATCH /api/sessions/:id` accepte `startTime` ; `null` efface l'heure.
+- Création : `POST /api/sessions` exige `startTime`. Modification : `PATCH /api/sessions/:id` accepte `startTime` s'il est envoyé, sans valeur `null`. Import : une séance sans `startTime` est refusée (`SESSION_IMPORT_FIELD_MISSING`).
 - Une modification d'heure est journalisée (champ `startTime`) et positionne `modifiedManually`, comme les autres champs.
 - L'heure est exportée par le calendrier ICS (`GET /api/calendar.ics`, voir [calendrier](calendrier.md)).
 
