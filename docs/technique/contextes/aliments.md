@@ -15,8 +15,9 @@ Base alimentaire : aliments, leur unité unique et leurs valeurs nutritionnelles
 - `GET /api/foods/:id` : lecture.
 - `POST /api/foods` : création.
 - `PATCH /api/foods/:id` : modification des valeurs et des catégories.
+- `DELETE /api/foods/:id` : suppression (204). Refusée en `409 FOOD_IN_USE` si une recette contient l'aliment.
 
-Erreurs au format RFC 9457 (`FOOD_NOT_FOUND` 404, `INVALID_FOOD` 400).
+Erreurs au format RFC 9457 (`FOOD_NOT_FOUND` 404, `INVALID_FOOD` 400, `FOOD_IN_USE` 409).
 
 ## Persistance
 
@@ -38,7 +39,7 @@ Table `foods` (migration `20261130120100_create_foods`). Le seed Ciqual, les rec
 - Modification : une composition fournie remplace l'ensemble des items.
 - Notes facultatives : absentes du cadrage, non implémentées (à confirmer).
 
-Endpoints : `GET /api/recipes`, `GET /api/recipes/:id`, `POST /api/recipes`, `PATCH /api/recipes/:id`, `DELETE /api/recipes/:id` (204).
+Endpoints : `GET /api/recipes`, `GET /api/recipes/:id`, `POST /api/recipes`, `POST /api/recipes/preview` (synthèse d'une composition non enregistrée, aperçu en direct), `PATCH /api/recipes/:id`, `DELETE /api/recipes/:id` (204).
 
 Erreurs : `RECIPE_NOT_FOUND` (404), `INVALID_RECIPE` (400). Tables `recipes` et `recipe_items` (migration `20261130120200_create_recipes`). Un aliment utilisé par une recette ne peut pas être supprimé (contrainte `RESTRICT`).
 
@@ -56,6 +57,7 @@ Erreurs : `RECIPE_NOT_FOUND` (404), `INVALID_RECIPE` (400). Tables `recipes` et 
 - Pas de génération automatique du planning.
 
 Endpoints :
+
 - `GET /api/meal-plan?week=AAAA-Www` : repas d'une semaine ISO (lundi à dimanche), triés par date puis par repas.
 - `POST /api/meal-plan` : ajoute un repas (`recipeId`, `date`, `mealTag`).
 - `PATCH /api/meal-plan/:id` : déplace un repas (nouvelle date ou nouveau repas, identifiant conservé).
