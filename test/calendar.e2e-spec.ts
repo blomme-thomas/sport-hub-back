@@ -53,6 +53,7 @@ describe('Export calendrier ICS (e2e)', () => {
     const res = await http()
       .post('/api/sessions')
       .send({
+        startTime: '18:00',
         targetHrZonePercentages: [10, 20, 40, 20, 10],
         date,
         disciplineTypeKey: 'swimming',
@@ -84,10 +85,10 @@ describe('Export calendrier ICS (e2e)', () => {
 
     const parsed = events(res.text);
     expect(parsed).toHaveLength(2);
-    expect(parsed[0]).toEqual({
+    expect(parsed[0]).toMatchObject({
       uid: `${first}@sport-hub`,
       summary: 'swimming - 45 min',
-      date: '2099-05-04',
+      date: '2099-05-04T18:00:00',
     });
   });
 

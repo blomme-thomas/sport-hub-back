@@ -35,6 +35,14 @@ class FakeFoodRepository implements IFoodRepository {
     this.foods.set(food.id.toString(), food);
     return Promise.resolve();
   }
+
+  isUsedInRecipe(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
+  delete(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 describe('CreateFoodUseCase', () => {

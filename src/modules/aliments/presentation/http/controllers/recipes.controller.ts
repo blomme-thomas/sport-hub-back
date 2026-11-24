@@ -22,16 +22,25 @@ import { CreateRecipeUseCase } from '../../../application/use-cases/create-recip
 import { DeleteRecipeUseCase } from '../../../application/use-cases/delete-recipe.use-case.js';
 import { GetRecipeUseCase } from '../../../application/use-cases/get-recipe.use-case.js';
 import { ListRecipesUseCase } from '../../../application/use-cases/list-recipes.use-case.js';
+import { PreviewRecipeNutritionUseCase } from '../../../application/use-cases/preview-recipe-nutrition.use-case.js';
 import { UpdateRecipeUseCase } from '../../../application/use-cases/update-recipe.use-case.js';
 import {
   CreateRecipeRequestDto,
+  PreviewRecipeNutritionRequestDto,
   UpdateRecipeRequestDto,
 } from '../dtos/recipe.request.dto.js';
 import { DeleteRecipeQueryDto } from '../dtos/recipe-delete.query.dto.js';
 import { RecipeIdParamDto } from '../dtos/recipe-id.param.dto.js';
-import { RecipeDetailResponseDto } from '../dtos/recipe-detail.response.dto.js';
+import {
+  RecipeDetailResponseDto,
+  RecipeNutritionResponseDto,
+} from '../dtos/recipe-detail.response.dto.js';
 import { RecipeResponseDto } from '../dtos/recipe.response.dto.js';
-import { RecipeHttpMapper } from '../mappers/recipe.http-mapper.js';
+import {
+  RecipeHttpMapper,
+  toItemCommands,
+  toNutritionResponse,
+} from '../mappers/recipe.http-mapper.js';
 
 @ApiTags('aliments')
 @Controller('recipes')
@@ -42,6 +51,7 @@ export class RecipesController {
     private readonly getRecipe: GetRecipeUseCase,
     private readonly listRecipes: ListRecipesUseCase,
     private readonly deleteRecipe: DeleteRecipeUseCase,
+    private readonly previewRecipeNutrition: PreviewRecipeNutritionUseCase,
   ) {}
 
   @Get()
@@ -77,6 +87,23 @@ export class RecipesController {
       RecipeHttpMapper.toCreateCommand(request),
     );
     return RecipeHttpMapper.toResponse(dto);
+  }
+
+  @Post('preview')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Calcule la synthèse nutritionnelle d’une composition sans rien enregistrer (aperçu en direct)',
+  })
+  @ApiOkResponse({ type: RecipeNutritionResponseDto })
+  @ApiProblemResponses(400)
+  async preview(
+    @Body() request: PreviewRecipeNutritionRequestDto,
+  ): Promise<RecipeNutritionResponseDto> {
+    const summary = await this.previewRecipeNutrition.execute({
+      items: toItemCommands(request.items) ?? [],
+    });
+    return toNutritionResponse(summary);
   }
 
   @Patch(':id')

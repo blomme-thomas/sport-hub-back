@@ -3,11 +3,13 @@ import { CreateFoodUseCase } from './application/use-cases/create-food.use-case.
 import { GetFoodUseCase } from './application/use-cases/get-food.use-case.js';
 import { ListFoodsUseCase } from './application/use-cases/list-foods.use-case.js';
 import { UpdateFoodUseCase } from './application/use-cases/update-food.use-case.js';
+import { DeleteFoodUseCase } from './application/use-cases/delete-food.use-case.js';
 import { FOOD_REPOSITORY } from './domain/ports/outbound/food.repository.port.js';
 import { CreateRecipeUseCase } from './application/use-cases/create-recipe.use-case.js';
 import { DeleteRecipeUseCase } from './application/use-cases/delete-recipe.use-case.js';
 import { GetRecipeUseCase } from './application/use-cases/get-recipe.use-case.js';
 import { ListRecipesUseCase } from './application/use-cases/list-recipes.use-case.js';
+import { PreviewRecipeNutritionUseCase } from './application/use-cases/preview-recipe-nutrition.use-case.js';
 import { UpdateRecipeUseCase } from './application/use-cases/update-recipe.use-case.js';
 import { RECIPE_REPOSITORY } from './domain/ports/outbound/recipe.repository.port.js';
 import { PrismaRecipeRepositoryAdapter } from './infrastructure/persistence/prisma/recipe.repository.adapter.js';
@@ -36,6 +38,7 @@ import { FoodsController } from './presentation/http/controllers/foods.controlle
   providers: [
     CreateFoodUseCase,
     UpdateFoodUseCase,
+    DeleteFoodUseCase,
     GetFoodUseCase,
     ListFoodsUseCase,
     CreateRecipeUseCase,
@@ -43,6 +46,7 @@ import { FoodsController } from './presentation/http/controllers/foods.controlle
     GetRecipeUseCase,
     ListRecipesUseCase,
     DeleteRecipeUseCase,
+    PreviewRecipeNutritionUseCase,
     ListPlannedMealsUseCase,
     AddPlannedMealUseCase,
     MovePlannedMealUseCase,

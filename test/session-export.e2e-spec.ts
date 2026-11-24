@@ -67,6 +67,7 @@ describe('Export de séance (e2e)', () => {
     const res = await http()
       .post('/api/sessions')
       .send({
+        startTime: '18:00',
         targetDistanceMeters: 8000,
         targetHrZonePercentages: [10, 20, 40, 20, 10],
         date: '2099-05-04',

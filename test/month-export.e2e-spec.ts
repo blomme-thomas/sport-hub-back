@@ -10,6 +10,7 @@ const PROBLEM_JSON = /application\/problem\+json/;
 
 const SEANCE = {
   date: '2026-11-01',
+  startTime: '18:00',
   disciplineTypeKey: 'running',
   durationMinutes: 60,
   targetDistanceMeters: 10000,

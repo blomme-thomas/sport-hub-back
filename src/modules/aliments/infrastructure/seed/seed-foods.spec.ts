@@ -50,9 +50,10 @@ describe('seedFoods', () => {
       updated: 0,
     });
     expect(rows).toHaveLength(CIQUAL_SEED_FOODS.length);
-    expect(
-      rows.find((row) => row.name === 'Lentilles cuites')?.categories,
-    ).toEqual(['proteine', 'feculent']);
+    expect(rows.find((row) => row.name === 'Lentilles')?.categories).toEqual([
+      'proteine',
+      'feculent',
+    ]);
   });
 
   it('ne crée aucun doublon à la seconde exécution', async () => {

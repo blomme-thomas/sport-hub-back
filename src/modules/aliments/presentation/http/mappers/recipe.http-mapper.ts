@@ -25,7 +25,7 @@ import {
   RecipeResponseDto,
 } from '../dtos/recipe.response.dto.js';
 
-function toItemCommands(
+export function toItemCommands(
   items: RecipeItemRequestDto[] | undefined,
 ): RecipeItemCommand[] | undefined {
   return items?.map((item) => ({
@@ -41,7 +41,7 @@ function toTotalsResponse(
   return Object.assign(new RecipeNutritionTotalsResponseDto(), totals);
 }
 
-function toNutritionResponse(
+export function toNutritionResponse(
   summary: RecipeNutritionSummary,
 ): RecipeNutritionResponseDto {
   return Object.assign(new RecipeNutritionResponseDto(), {

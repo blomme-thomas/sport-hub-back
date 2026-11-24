@@ -7,6 +7,12 @@ export interface IFoodRepository {
 
   /** Enregistre l'aliment : crée s'il est nouveau, met à jour sinon (même identifiant). */
   save(food: Food): Promise<void>;
+
+  /** Vrai si au moins une recette contient cet aliment. */
+  isUsedInRecipe(id: FoodId): Promise<boolean>;
+
+  /** Supprime l'aliment ; sans effet s'il n'existe pas. */
+  delete(id: FoodId): Promise<void>;
 }
 
 export const FOOD_REPOSITORY = Symbol('FOOD_REPOSITORY');

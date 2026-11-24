@@ -19,21 +19,6 @@ export interface SessionOccurrence {
   status: OccurrenceStatus;
 }
 
-/**
- * Renvoie les occurrences d'une séance dont la date tombe entre `from` et `to` (bornes incluses), sans exception.
- * Une séance non récurrente n'a qu'une occurrence, à sa date. Une séance hebdomadaire se répète chaque semaine à partir de sa date, sans fin.
- * Chaque occurrence reprend l'heure, la durée, la discipline et le statut de la série.
- */
-export function expandOccurrences(
-  session: Session,
-  from: Date,
-  to: Date,
-): SessionOccurrence[] {
-  return occurrenceTimes(session, from, to).map((time) =>
-    resolveOccurrence(session, new Date(time), null),
-  );
-}
-
 /** Vrai si la date est une date de programmation de la série (même jour de la semaine, à partir de la date de départ). */
 export function isSeriesOccurrence(session: Session, date: Date): boolean {
   const offset = date.getTime() - session.date.getTime();
