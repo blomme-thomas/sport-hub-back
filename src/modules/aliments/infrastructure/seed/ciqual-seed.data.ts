@@ -19,7 +19,7 @@ export interface SeedFood {
  */
 export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
   {
-    name: 'Poulet, blanc, cuit',
+    name: 'Poulet',
     unit: 'g',
     categories: ['proteine'],
     nutrition: {
@@ -31,7 +31,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Œuf entier, cru',
+    name: 'Œuf entier',
     unit: 'g',
     categories: ['proteine'],
     nutrition: {
@@ -43,7 +43,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Thon au naturel, égoutté',
+    name: 'Thon au naturel',
     unit: 'g',
     categories: ['proteine'],
     nutrition: {
@@ -55,7 +55,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Lentilles cuites',
+    name: 'Lentilles',
     unit: 'g',
     categories: ['proteine', 'feculent'],
     nutrition: {
@@ -67,7 +67,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Riz blanc, cuit',
+    name: 'Riz',
     unit: 'g',
     categories: ['feculent'],
     nutrition: {
@@ -79,7 +79,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Pâtes, cuites',
+    name: 'Pâtes',
     unit: 'g',
     categories: ['feculent'],
     nutrition: {
@@ -91,7 +91,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Pomme de terre, cuite à l’eau',
+    name: 'Pomme de terre',
     unit: 'g',
     categories: ['feculent'],
     nutrition: {
@@ -115,7 +115,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Brocoli, cuit',
+    name: 'Brocoli',
     unit: 'g',
     categories: ['legume'],
     nutrition: {
@@ -127,7 +127,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Carotte, crue',
+    name: 'Carotte',
     unit: 'g',
     categories: ['legume'],
     nutrition: {
@@ -139,7 +139,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Tomate, crue',
+    name: 'Tomate',
     unit: 'g',
     categories: ['legume'],
     nutrition: {
@@ -151,7 +151,7 @@ export const CIQUAL_SEED_FOODS: readonly SeedFood[] = [
     },
   },
   {
-    name: 'Épinard, cru',
+    name: 'Épinard',
     unit: 'g',
     categories: ['legume'],
     nutrition: {

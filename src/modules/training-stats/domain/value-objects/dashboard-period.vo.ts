@@ -57,7 +57,3 @@ function monthBounds(date: Date): DashboardBounds {
     toExclusive: new Date(Date.UTC(year, month + 1, 1)),
   };
 }
-
-export function isDashboardPeriod(value: unknown): value is DashboardPeriod {
-  return (DASHBOARD_PERIODS as readonly unknown[]).includes(value);
-}

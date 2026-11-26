@@ -108,3 +108,16 @@ export class UpdateRecipeRequestDto {
   @Type(() => RecipeItemRequestDto)
   items?: RecipeItemRequestDto[];
 }
+
+export class PreviewRecipeNutritionRequestDto {
+  @ApiPropertyOptional({
+    type: () => [RecipeItemRequestDto],
+    description:
+      'Composition à évaluer ; rien n’est enregistré. Absente ou vide = synthèse nulle',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipeItemRequestDto)
+  items?: RecipeItemRequestDto[];
+}

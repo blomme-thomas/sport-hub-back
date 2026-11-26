@@ -85,7 +85,7 @@ describe('Export calendrier ICS avec heure de début (e2e)', () => {
       .expect(400);
   });
 
-  it('permet d’effacer l’heure par PATCH avec null', async () => {
+  it('refuse d’effacer l’heure de début par PATCH avec null (heure obligatoire)', async () => {
     const created = await http()
       .post('/api/sessions')
       .send({
@@ -100,8 +100,8 @@ describe('Export calendrier ICS avec heure de début (e2e)', () => {
     const res = await http()
       .patch(`/api/sessions/${created.body.id as string}`)
       .send({ startTime: null })
-      .expect(200);
+      .expect(400);
 
-    expect(res.body.startTime).toBeNull();
+    expect(res.body.code).toBe('VALIDATION_FAILED');
   });
 });

@@ -24,4 +24,15 @@ export class PrismaFoodRepositoryAdapter implements IFoodRepository {
       update: data,
     });
   }
+
+  async isUsedInRecipe(id: FoodId): Promise<boolean> {
+    const count = await this.prisma.recipeItem.count({
+      where: { foodId: id.toString() },
+    });
+    return count > 0;
+  }
+
+  async delete(id: FoodId): Promise<void> {
+    await this.prisma.food.deleteMany({ where: { id: id.toString() } });
+  }
 }

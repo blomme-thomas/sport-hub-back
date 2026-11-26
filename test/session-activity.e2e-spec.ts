@@ -55,6 +55,7 @@ describe('Rapprochement séances et activités (e2e)', () => {
     const res = await http()
       .post('/api/sessions')
       .send({
+        startTime: '18:00',
         targetHrZonePercentages: [10, 20, 40, 20, 10],
         date,
         disciplineTypeKey: 'running',

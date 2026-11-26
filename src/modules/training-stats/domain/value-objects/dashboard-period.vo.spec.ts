@@ -1,7 +1,4 @@
-import {
-  DashboardPeriodWindow,
-  isDashboardPeriod,
-} from './dashboard-period.vo.js';
+import { DashboardPeriodWindow } from './dashboard-period.vo.js';
 
 describe('DashboardPeriodWindow', () => {
   // 8 novembre 2026 : dimanche, donc la semaine ISO commence le lundi 2 novembre.
@@ -54,17 +51,4 @@ describe('DashboardPeriodWindow', () => {
 
     expect(window.previous.from.toISOString()).toBe('2025-12-01T00:00:00.000Z');
   });
-});
-
-describe('isDashboardPeriod', () => {
-  it.each(['week', 'month'])('accepte %s', (value) => {
-    expect(isDashboardPeriod(value)).toBe(true);
-  });
-
-  it.each(['7d', '30d', '3m', '1y', 'WEEK', '', undefined, 7])(
-    'refuse %s',
-    (value) => {
-      expect(isDashboardPeriod(value)).toBe(false);
-    },
-  );
 });

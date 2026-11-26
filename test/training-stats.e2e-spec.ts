@@ -17,6 +17,20 @@ import {
 const PROBLEM_JSON = /application\/problem\+json/;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Jour de la semaine ISO courante (0 = lundi), en UTC : la période « week » du tableau de bord. */
+function weekDay(offsetFromMonday: number): string {
+  const now = new Date();
+  const daysSinceMonday = (now.getUTCDay() + 6) % 7;
+  const monday = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() - daysSinceMonday,
+  );
+  return new Date(monday + offsetFromMonday * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 function utcDay(offset: number): string {
   const now = new Date();
   const midnight = Date.UTC(
@@ -520,11 +534,11 @@ describe('Tableau de bord des statistiques (e2e)', () => {
   }
 
   it('renvoie_les_calories_Garmin_de_chaque_jour_y_compris_sans_seance_et_leur_somme', async () => {
-    garmin.values.set(utcDay(-1), 2350);
-    garmin.values.set(utcDay(-3), 2100);
+    garmin.values.set(weekDay(0), 2350);
+    garmin.values.set(weekDay(2), 2100);
     await prisma.activity.create({
       data: {
-        ...activity('30', 'running', `${utcDay(-1)}T07:00:00.000Z`, 1800, 5000),
+        ...activity('30', 'running', `${weekDay(0)}T07:00:00.000Z`, 1800, 5000),
         calories: 500,
       },
     });
@@ -534,14 +548,14 @@ describe('Tableau de bord des statistiques (e2e)', () => {
     expect(res.body.daily).toHaveLength(7);
     expect(res.body.totals.calories).toBe(4450);
     expect(
-      res.body.daily.find((day: { date: string }) => day.date === utcDay(-1)),
+      res.body.daily.find((day: { date: string }) => day.date === weekDay(0)),
     ).toMatchObject({
       count: 1,
       durationSeconds: 1800,
       calories: 2350,
     });
     expect(
-      res.body.daily.find((day: { date: string }) => day.date === utcDay(-3)),
+      res.body.daily.find((day: { date: string }) => day.date === weekDay(2)),
     ).toMatchObject({
       count: 0,
       durationSeconds: 0,
