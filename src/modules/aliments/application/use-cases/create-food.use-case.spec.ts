@@ -27,6 +27,18 @@ const UUID_PATTERN =
 class FakeFoodRepository implements IFoodRepository {
   readonly foods = new Map<string, Food>();
 
+  findByNames(names: readonly string[]): Promise<Food[]> {
+    return Promise.resolve(
+      [...this.foods.values()].filter((food) =>
+        names.includes(food.name.toString()),
+      ),
+    );
+  }
+
+  saveAll(): Promise<void> {
+    return Promise.resolve();
+  }
+
   findById(id: FoodId): Promise<Food | null> {
     return Promise.resolve(this.foods.get(id.toString()) ?? null);
   }

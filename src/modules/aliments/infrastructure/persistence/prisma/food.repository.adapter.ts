@@ -35,4 +35,31 @@ export class PrismaFoodRepositoryAdapter implements IFoodRepository {
   async delete(id: FoodId): Promise<void> {
     await this.prisma.food.deleteMany({ where: { id: id.toString() } });
   }
+
+  async findByNames(names: readonly string[]): Promise<Food[]> {
+    if (names.length === 0) {
+      return [];
+    }
+    const records = await this.prisma.food.findMany({
+      where: {
+        OR: names.map((name) => ({
+          name: { equals: name, mode: 'insensitive' as const },
+        })),
+      },
+    });
+    return records.map((record) => FoodMapper.toDomain(record));
+  }
+
+  async saveAll(foods: readonly Food[]): Promise<void> {
+    await this.prisma.$transaction(
+      foods.map((food) => {
+        const data = FoodMapper.toPersistence(food);
+        return this.prisma.food.upsert({
+          where: { id: food.id.toString() },
+          create: data,
+          update: data,
+        });
+      }),
+    );
+  }
 }

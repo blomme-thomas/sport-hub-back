@@ -11,6 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -19,6 +20,9 @@ import {
 } from '@nestjs/swagger';
 import { ApiProblemResponses } from '../../../../../core/filters/api-problem-responses.decorator.js';
 import { CreateFoodUseCase } from '../../../application/use-cases/create-food.use-case.js';
+import { ImportFoodsUseCase } from '../../../application/use-cases/import-foods.use-case.js';
+import { AlimentsImportHttpMapper } from '../mappers/aliments-import.http-mapper.js';
+import { AlimentsImportResponseDto } from '../dtos/aliments-import.response.dto.js';
 import { DeleteFoodUseCase } from '../../../application/use-cases/delete-food.use-case.js';
 import { GetFoodUseCase } from '../../../application/use-cases/get-food.use-case.js';
 import { ListFoodsUseCase } from '../../../application/use-cases/list-foods.use-case.js';
@@ -39,7 +43,26 @@ export class FoodsController {
     private readonly getFood: GetFoodUseCase,
     private readonly listFoods: ListFoodsUseCase,
     private readonly deleteFood: DeleteFoodUseCase,
+    private readonly importFoods: ImportFoodsUseCase,
   ) {}
+
+  @Post('import')
+  @ApiOperation({
+    summary:
+      'Importe un fichier plan-aliments (ou un tableau brut d’aliments) : tous les aliments sont créés, ou aucun. Un nom déjà existant, sans tenir compte de la casse, fait refuser le fichier (409)',
+  })
+  @ApiBody({
+    description: 'Fichier plan-aliments, ou tableau brut d’aliments',
+    schema: { type: 'object' },
+  })
+  @ApiCreatedResponse({ type: AlimentsImportResponseDto })
+  @ApiProblemResponses(400, 409)
+  async importAliments(
+    @Body() body: unknown,
+  ): Promise<AlimentsImportResponseDto> {
+    const dto = await this.importFoods.execute(body);
+    return AlimentsImportHttpMapper.toResponse(dto);
+  }
 
   @Get()
   @ApiOperation({

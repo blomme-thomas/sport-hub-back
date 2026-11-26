@@ -17,6 +17,18 @@ const UNKNOWN_ID = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
 class FakeFoodRepository implements IFoodRepository {
   readonly foods = new Map<string, Food>();
 
+  findByNames(names: readonly string[]): Promise<Food[]> {
+    return Promise.resolve(
+      [...this.foods.values()].filter((food) =>
+        names.includes(food.name.toString()),
+      ),
+    );
+  }
+
+  saveAll(): Promise<void> {
+    return Promise.resolve();
+  }
+
   findById(id: FoodId): Promise<Food | null> {
     return Promise.resolve(this.foods.get(id.toString()) ?? null);
   }
