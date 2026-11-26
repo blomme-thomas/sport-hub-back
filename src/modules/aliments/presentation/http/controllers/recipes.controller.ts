@@ -11,6 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -19,6 +20,9 @@ import {
 } from '@nestjs/swagger';
 import { ApiProblemResponses } from '../../../../../core/filters/api-problem-responses.decorator.js';
 import { CreateRecipeUseCase } from '../../../application/use-cases/create-recipe.use-case.js';
+import { ImportRecipesUseCase } from '../../../application/use-cases/import-recipes.use-case.js';
+import { AlimentsImportHttpMapper } from '../mappers/aliments-import.http-mapper.js';
+import { AlimentsImportResponseDto } from '../dtos/aliments-import.response.dto.js';
 import { DeleteRecipeUseCase } from '../../../application/use-cases/delete-recipe.use-case.js';
 import { GetRecipeUseCase } from '../../../application/use-cases/get-recipe.use-case.js';
 import { ListRecipesUseCase } from '../../../application/use-cases/list-recipes.use-case.js';
@@ -52,7 +56,26 @@ export class RecipesController {
     private readonly listRecipes: ListRecipesUseCase,
     private readonly deleteRecipe: DeleteRecipeUseCase,
     private readonly previewRecipeNutrition: PreviewRecipeNutritionUseCase,
+    private readonly importRecipes: ImportRecipesUseCase,
   ) {}
+
+  @Post('import')
+  @ApiOperation({
+    summary:
+      'Importe un fichier plan-recettes (ou un tableau brut de recettes) : toutes les recettes sont créées, ou aucune. Chaque item désigne son aliment par son nom, qui doit correspondre à un seul aliment existant. Un nom déjà existant fait refuser le fichier (409)',
+  })
+  @ApiBody({
+    description: 'Fichier plan-recettes, ou tableau brut de recettes',
+    schema: { type: 'object' },
+  })
+  @ApiCreatedResponse({ type: AlimentsImportResponseDto })
+  @ApiProblemResponses(400, 409)
+  async importRecipesFile(
+    @Body() body: unknown,
+  ): Promise<AlimentsImportResponseDto> {
+    const dto = await this.importRecipes.execute(body);
+    return AlimentsImportHttpMapper.toResponse(dto);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Liste les recettes, triées par nom' })

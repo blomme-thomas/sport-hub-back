@@ -29,11 +29,36 @@ export class PrismaRecipeRepositoryAdapter implements IRecipeRepository {
     return record === null ? null : RecipeMapper.toDomain(record);
   }
 
+  async findByNames(names: readonly string[]): Promise<Recipe[]> {
+    if (names.length === 0) {
+      return [];
+    }
+    const records = await this.prisma.recipe.findMany({
+      where: {
+        OR: names.map((name) => ({
+          name: { equals: name, mode: 'insensitive' as const },
+        })),
+      },
+      include: INCLUDE_ITEMS,
+    });
+    return records.map((record) => RecipeMapper.toDomain(record));
+  }
+
   async save(recipe: Recipe): Promise<void> {
+    await this.upsert(recipe);
+  }
+
+  async saveAll(recipes: readonly Recipe[]): Promise<void> {
+    await this.prisma.$transaction(
+      recipes.map((recipe) => this.upsert(recipe)),
+    );
+  }
+
+  private upsert(recipe: Recipe) {
     const id = recipe.id.toString();
     const base = RecipeMapper.toRecipePersistence(recipe);
     const items = RecipeMapper.toItemsPersistence(recipe);
-    await this.prisma.recipe.upsert({
+    return this.prisma.recipe.upsert({
       where: { id },
       create: { id, ...base, items: { create: items } },
       update: { ...base, items: { deleteMany: {}, create: items } },

@@ -13,6 +13,12 @@ export interface IRecipeRepository {
 
   /** Supprime la recette et ses items. */
   delete(id: RecipeId): Promise<void>;
+
+  /** Renvoie les recettes dont le nom est égal à l'un des noms fournis, sans tenir compte de la casse. */
+  findByNames(names: readonly string[]): Promise<Recipe[]>;
+
+  /** Enregistre toutes les recettes dans une seule transaction : tout ou rien. */
+  saveAll(recipes: readonly Recipe[]): Promise<void>;
 }
 
 export const RECIPE_REPOSITORY = Symbol('RECIPE_REPOSITORY');

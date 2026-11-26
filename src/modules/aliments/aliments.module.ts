@@ -22,6 +22,8 @@ import { PLANNED_MEAL_REPOSITORY } from './domain/ports/outbound/planned-meal.re
 import { PrismaPlannedMealRepositoryAdapter } from './infrastructure/persistence/prisma/planned-meal.repository.adapter.js';
 import { MealPlanController } from './presentation/http/controllers/meal-plan.controller.js';
 import { GetShoppingListUseCase } from './application/use-cases/get-shopping-list.use-case.js';
+import { ImportFoodsUseCase } from './application/use-cases/import-foods.use-case.js';
+import { ImportRecipesUseCase } from './application/use-cases/import-recipes.use-case.js';
 import { ShoppingListController } from './presentation/http/controllers/shopping-list.controller.js';
 import { FOOD_LIST_READ_MODEL } from './domain/ports/outbound/food-list.read-model.port.js';
 import { PrismaFoodRepositoryAdapter } from './infrastructure/persistence/prisma/food.repository.adapter.js';
@@ -52,6 +54,8 @@ import { FoodsController } from './presentation/http/controllers/foods.controlle
     MovePlannedMealUseCase,
     RemovePlannedMealUseCase,
     GetShoppingListUseCase,
+    ImportFoodsUseCase,
+    ImportRecipesUseCase,
     { provide: FOOD_REPOSITORY, useClass: PrismaFoodRepositoryAdapter },
     { provide: FOOD_LIST_READ_MODEL, useClass: PrismaFoodListReadModel },
     { provide: RECIPE_REPOSITORY, useClass: PrismaRecipeRepositoryAdapter },
