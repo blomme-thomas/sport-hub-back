@@ -19,6 +19,17 @@ Base alimentaire : aliments, leur unité unique et leurs valeurs nutritionnelles
 
 Erreurs au format RFC 9457 (`FOOD_NOT_FOUND` 404, `INVALID_FOOD` 400, `FOOD_IN_USE` 409).
 
+## Import JSON d'aliments et de recettes
+
+- `POST /api/foods/import` : fichier `plan-aliments`, `schemaVersion` 1, avec la liste `aliments`. Un tableau brut d'aliments est aussi accepté.
+- `POST /api/recipes/import` : fichier `plan-recettes`, `schemaVersion` 1, avec la liste `recettes`. Un tableau brut de recettes est aussi accepté.
+- Chaque aliment porte `name`, `unit`, `categories` et, facultatifs, `calories`, `proteins`, `carbohydrates`, `fats`, `sugars`. Chaque recette porte `name`, `mealTags` et `items` (facultatifs) ; un item porte `food` (**nom** de l'aliment, pas identifiant), `component` et `quantity` facultatifs.
+- Le nom d'un item doit correspondre à un seul aliment existant, sans tenir compte de la casse. Un aliment inconnu, ambigu ou placé dans un composant qui ne lui correspond pas fait refuser le fichier.
+- Tout ou rien : un fichier invalide renvoie `400` (`FOOD_IMPORT_INVALID` ou `RECIPE_IMPORT_INVALID`) avec la liste `errors` (`field`, `code`, `message`) et n'enregistre rien. Chaque aliment ou recette est enregistré dans une seule transaction.
+- Doublon : un nom identique (sans tenir compte de la casse ni des espaces autour) à un aliment ou une recette déjà existant renvoie `409` (`FOOD_IMPORT_DUPLICATE` ou `RECIPE_IMPORT_DUPLICATE`). Les doublons à l'intérieur d'un même fichier ne sont pas contrôlés.
+- Pas d'`importId` ni de modèle téléchargeable : l'import n'est pas idempotent, contrairement à `plan-seances`.
+- Code : `shared/import/plan-import.ts` (lecture de l'enveloppe, champs, erreurs), `application/use-cases/import-foods.use-case.ts` et `import-recipes.use-case.ts`.
+
 ## Persistance
 
 Table `foods` (migration `20261130120100_create_foods`). Le seed Ciqual, les recettes et la suppression d'un aliment utilisé sont hors de cette story.
